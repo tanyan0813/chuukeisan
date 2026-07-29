@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>長方形と直角三角形の重なり</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&family=M+PLUS+Rounded+1c:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#FFF8EF;--paper:#FFFDF9;--line:#E9D9C4;--ink:#37424A;--teal:#19A199;--teal-deep:#0E6F6B;--accent:#F6B93B;--red:#EA5040;--soft:#F7EFE4;--shadow:0 10px 26px rgba(55,66,74,.10)}
+  *{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#FFF7EC,#FFFDF8 28%,#FFF8EF);color:var(--ink);font-family:"Zen Maru Gothic",system-ui,sans-serif}
+  .wrap{max-width:1200px;margin:0 auto;padding:14px}.app{background:var(--paper);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);overflow:hidden}
+  .top{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:#fff;border-bottom:1px solid var(--line)}
+  .logo{display:flex;align-items:center;gap:10px}.pin{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--teal);color:#fff;font-weight:900}.logo b{font-size:18px}
+  .hero{display:grid;grid-template-columns:340px 1fr;gap:16px;padding:16px}.panel{background:#fff;border:1px solid var(--line);border-radius:20px;padding:16px}
+  h1{margin:0 0 8px;font-size:clamp(24px,4vw,34px)} .sub{color:#6B7A84;line-height:1.7}.tag{display:inline-block;padding:7px 12px;border-radius:999px;background:#E8F7F4;color:var(--teal-deep);font-weight:900;font-size:12px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.fld{display:grid;gap:6px}.fld label{font-weight:700;font-size:14px;color:#586973}
+  .fld input{width:100%;padding:10px 12px;border-radius:13px;border:2px solid #D8E6E0;font:800 18px/1.2 "M PLUS Rounded 1c",sans-serif;color:var(--ink)} .fld input:focus{outline:none;border-color:var(--teal)}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.btn{border:none;background:#fff;border-radius:14px;padding:10px 14px;font-family:inherit;font-weight:900;cursor:pointer;box-shadow:0 3px 0 rgba(55,66,74,.10);color:var(--ink)} .btn.primary{background:var(--teal);color:#fff;box-shadow:0 3px 0 var(--teal-deep)} .btn.warn{background:var(--accent);color:#6A4A00;box-shadow:0 3px 0 #CF9D2E}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.stat{background:var(--soft);border:1px solid var(--line);border-radius:16px;padding:12px;text-align:center}.stat .k{font-size:12px;color:#6B7A84}.stat .v{font:900 28px/1 "M PLUS Rounded 1c",sans-serif;color:var(--teal)}
+  .note{background:var(--soft);border:1px solid var(--line);border-radius:16px;padding:12px 14px;line-height:1.7;margin-top:14px}.eq{margin-top:10px;padding:10px 12px;background:#FFF9E9;border:1px solid #F0D69A;border-radius:14px;font:800 19px/1.5 "M PLUS Rounded 1c",sans-serif}
+  .mainview{display:grid;grid-template-columns:1fr;gap:16px}.svghold{background:linear-gradient(180deg,#FFF,#FFF8F1);border:1px solid var(--line);border-radius:20px;padding:10px} svg{width:100%;height:auto;display:block}
+  .slider{margin-top:10px}.slider input{width:100%}.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:#586973;margin-top:8px}.dot{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;margin-right:6px}
+  .small{font-size:13px;color:#6B7A84}@media (max-width:920px){.hero{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="app">
+  <div class="top"><div class="logo"><span class="pin">△</span><b>長方形と直角三角形の重なり</b></div><div class="tag">面積の変化</div></div>
+  <div class="hero">
+    <div class="panel">
+      <h1>重なる部分の面積</h1>
+      <div class="sub">長方形 <b>ABCD</b> と直角三角形 <b>EFG</b> があり、三角形が右へ等速で動きます。<b>長方形と三角形が重なる部分の面積</b> が、時間とともにどう変化するかを、図とグラフで調べるWeb版です。</div>
+      <div class="grid2">
+        <div class="fld"><label>長方形の縦 AB（3〜10）</label><input id="tate" type="number" min="3" max="10" step="1" value="6"></div>
+        <div class="fld"><label>長方形の横 BC（2〜10）</label><input id="yoko" type="number" min="2" max="10" step="1" value="6"></div>
+        <div class="fld"><label>三角形の底辺 FG（2〜10）</label><input id="tei" type="number" min="2" max="10" step="1" value="6"></div>
+        <div class="fld"><label>三角形の高さ EF（2〜10）</label><input id="takasa" type="number" min="2" max="10" step="1" value="6"></div>
+        <div class="fld"><label>三角形の速さ（1〜5）</label><input id="hayasa" type="number" min="1" max="5" step="1" value="1"></div>
+      </div>
+      <div class="toolbar">
+        <button class="btn primary" id="applyBtn">図を更新</button>
+        <button class="btn primary" id="playBtn">再生</button>
+        <button class="btn" id="pauseBtn">一時停止</button>
+        <button class="btn warn" id="resetBtn">最初にもどす</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="k">時刻 x（秒）</div><div class="v" id="tNow">0</div></div>
+        <div class="stat"><div class="k">重なり面積 y（cm²）</div><div class="v" id="aNow">0</div></div>
+        <div class="stat"><div class="k">三角形全体の面積</div><div class="v" id="aFull">0</div></div>
+      </div>
+      <div class="slider"><input id="timeSlider" type="range" min="0" max="12" value="0" step="0.01"><div class="small">時間の範囲：0 〜 <span id="tEndTxt">12</span> 秒</div></div>
+      <div class="eq" id="eqBox">前半は2次関数、後半も2次関数</div>
+      <div class="note">前半は、三角形が長方形へ入り込むので重なり面積はだんだん増えます。後半は、三角形が通り過ぎていくので重なり面積はだんだん減ります。</div>
+    </div>
+    <div class="mainview">
+      <div class="panel svghold">
+        <svg id="geoSvg" viewBox="0 0 760 360" aria-label="図形の表示"></svg>
+        <div class="legend">
+          <span><span class="dot" style="background:#2E86DE"></span>長方形 ABCD</span>
+          <span><span class="dot" style="background:#F6B93B"></span>移動する三角形 EFG</span>
+          <span><span class="dot" style="background:#EA5040"></span>重なっている部分</span>
+        </div>
+      </div>
+      <div class="panel svghold">
+        <svg id="graphSvg" viewBox="0 0 760 300" aria-label="重なり面積グラフ"></svg>
+        <div class="small">グラフは、時間 x と重なり面積 y の関係を表しています。</div>
+      </div>
+    </div>
+  </div>
+</div></div>
+<script>
+const $=id=>document.getElementById(id);
+const S={cfg:{tate:6,yoko:6,tei:6,takasa:6,hayasa:1},t:0,playing:false,last:0};
+function clamp(v,min,max){return Math.min(max,Math.max(min,v));}
+function num(id,min,max){const v=parseFloat($(id).value||0);return clamp(isFinite(v)?v:min,min,max);}
+function fmt(v){const n=Math.round(v*100)/100;return String(n).replace(/\.0+$/,'').replace(/(\.\d*[1-9])0+$/,'$1');}
+function triArea(cfg){return cfg.tei*cfg.takasa/2;}
+function tEnd(cfg){return (cfg.yoko+cfg.tei)/cfg.hayasa;}
+function triAt(cfg,t){ const dx=cfg.hayasa*t; return [{x:-cfg.tei+dx,y:cfg.takasa},{x:-cfg.tei+dx,y:0},{x:dx,y:0}]; }
+function polyArea(poly){ if(poly.length<3) return 0; let s=0; for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length]; s+=a.x*b.y-b.x*a.y;} return Math.abs(s)/2; }
+function intersect(a,b,edge,val){ const dx=b.x-a.x,dy=b.y-a.y; if(edge==='left'||edge==='right'){ if(dx===0) return {x:val,y:a.y}; const t=(val-a.x)/dx; return {x:val,y:a.y+t*dy}; } if(dy===0) return {x:a.x,y:val}; const t=(val-a.y)/dy; return {x:a.x+t*dx,y:val}; }
+function clipHalf(poly,edge,val){ const inside=p=> edge==='left'?p.x>=val-1e-9 : edge==='right'?p.x<=val+1e-9 : edge==='bottom'?p.y>=val-1e-9 : p.y<=val+1e-9; const out=[]; for(let i=0;i<poly.length;i++){ const a=poly[i],b=poly[(i+1)%poly.length]; const ia=inside(a),ib=inside(b); if(ia&&ib) out.push(b); else if(ia&&!ib) out.push(intersect(a,b,edge,val)); else if(!ia&&ib){ out.push(intersect(a,b,edge,val)); out.push(b); } } return out; }
+function overlapPoly(cfg,t){ let poly=triAt(cfg,t); poly=clipHalf(poly,'left',0); poly=clipHalf(poly,'right',cfg.yoko); poly=clipHalf(poly,'bottom',0); poly=clipHalf(poly,'top',cfg.tate); return poly; }
+function overlapArea(cfg,t){ return polyArea(overlapPoly(cfg,t)); }
+function worldBounds(cfg){ return {xmin:-cfg.tei-1,xmax:cfg.yoko+cfg.tei+1,ymin:-0.5,ymax:Math.max(cfg.tate,cfg.takasa)+1}; }
+function mapXY(x,y,b,w,h,p=24){ return {x:p+(x-b.xmin)/(b.xmax-b.xmin)*(w-2*p), y:h-p-(y-b.ymin)/(b.ymax-b.ymin)*(h-2*p)}; }
+function pts(poly,b,w,h){ return poly.map(p=>{const q=mapXY(p.x,p.y,b,w,h); return q.x.toFixed(1)+','+q.y.toFixed(1);}).join(' '); }
+function drawGeometry(){
+  const cfg=S.cfg,t=S.t,svg=$('geoSvg'),w=760,h=360,b=worldBounds(cfg);
+  const rect=[{x:0,y:cfg.tate},{x:0,y:0},{x:cfg.yoko,y:0},{x:cfg.yoko,y:cfg.tate}], tri=triAt(cfg,t), ov=overlapPoly(cfg,t);
+  const pA=mapXY(0,cfg.tate,b,w,h), pB=mapXY(0,0,b,w,h), pC=mapXY(cfg.yoko,0,b,w,h), pD=mapXY(cfg.yoko,cfg.tate,b,w,h);
+  const pE=mapXY(tri[0].x,tri[0].y,b,w,h), pF=mapXY(tri[1].x,tri[1].y,b,w,h), pG=mapXY(tri[2].x,tri[2].y,b,w,h);
+  const label=(txt,p,dx,dy)=>'<text x="'+(p.x+dx)+'" y="'+(p.y+dy)+'" font-size="18" font-weight="900" fill="#37424A">'+txt+'</text>';
+  svg.innerHTML=''
+    +'<rect x="0" y="0" width="760" height="360" rx="18" fill="transparent"/>'
+    +'<polygon points="'+pts(rect,b,w,h)+'" fill="rgba(46,134,222,.10)" stroke="#2E86DE" stroke-width="3"/>'
+    +'<polygon points="'+pts(tri,b,w,h)+'" fill="rgba(246,185,59,.35)" stroke="#D89A2C" stroke-width="3"/>'
+    +(ov.length>=3?'<polygon points="'+pts(ov,b,w,h)+'" fill="rgba(234,80,64,.62)" stroke="#C0392B" stroke-width="2"/>':'')
+    +label('A',pA,-24,-8)+label('B',pB,-24,22)+label('C',pC,8,22)+label('D',pD,8,-8)
+    +label('E',pE,-22,-8)+label('F',pF,-20,22)+label('G',pG,8,22)
+    +'<text x="26" y="28" font-size="17" font-weight="900" fill="#0E6F6B">AB='+cfg.tate+'cm　BC='+cfg.yoko+'cm　EF='+cfg.takasa+'cm　FG='+cfg.tei+'cm　秒速='+cfg.hayasa+'cm</text>';
+}
+function drawGraph(){
+  const svg=$('graphSvg'),w=760,h=300,p=40,cfg=S.cfg,te=tEnd(cfg),maxY=triArea(cfg);
+  const map=(x,y)=>({x:p+x/Math.max(te,0.1)*(w-2*p), y:h-p-y/Math.max(maxY,1)*(h-2*p)});
+  let path=''; const N=240; for(let i=0;i<=N;i++){ const x=te*i/N,y=overlapArea(cfg,x),q=map(x,y); path+=(i?' L ':'M ')+q.x.toFixed(2)+' '+q.y.toFixed(2); }
+  let grids='';
+  for(let i=0;i<=6;i++){
+    const gx=p+i*(w-2*p)/6, x=i/6*te; grids+='<line x1="'+gx+'" y1="'+p+'" x2="'+gx+'" y2="'+(h-p)+'" stroke="#F0E4D4" stroke-dasharray="4 4"/>'+'<text x="'+(gx-8)+'" y="'+(h-10)+'" font-size="12" fill="#6B7A84">'+fmt(x)+'</text>';
+    const gy=p+i*(h-2*p)/6, y=(6-i)/6*maxY; grids+='<line x1="'+p+'" y1="'+gy+'" x2="'+(w-p)+'" y2="'+gy+'" stroke="#E9D9C4" stroke-dasharray="4 4"/>'+'<text x="8" y="'+(gy+5)+'" font-size="12" fill="#6B7A84">'+fmt(y)+'</text>';
+  }
+  const cur=map(S.t,overlapArea(cfg,S.t));
+  svg.innerHTML=''
+    +'<rect x="0" y="0" width="760" height="300" rx="18" fill="transparent"/>'
+    +grids
+    +'<line x1="'+p+'" y1="'+(h-p)+'" x2="'+(w-p)+'" y2="'+(h-p)+'" stroke="#37424A" stroke-width="2"/>'
+    +'<line x1="'+p+'" y1="'+p+'" x2="'+p+'" y2="'+(h-p)+'" stroke="#37424A" stroke-width="2"/>'
+    +'<path d="'+path+'" fill="none" stroke="#EA5040" stroke-width="4" stroke-linecap="round"/>'
+    +'<circle cx="'+cur.x+'" cy="'+cur.y+'" r="6" fill="#19A199" stroke="#fff" stroke-width="2"/>'
+    +'<text x="'+(w-26)+'" y="'+(h-p+24)+'" text-anchor="end" font-size="16" font-weight="900" fill="#37424A">x（秒）</text>'
+    +'<text x="18" y="24" font-size="16" font-weight="900" fill="#37424A">y（cm²）</text>';
+}
+function updateStats(){ const cfg=S.cfg; $('tNow').textContent=fmt(S.t); $('aNow').textContent=fmt(overlapArea(cfg,S.t)); $('aFull').textContent=fmt(triArea(cfg)); $('tEndTxt').textContent=fmt(tEnd(cfg)); $('timeSlider').max=String(tEnd(cfg)); $('timeSlider').value=String(S.t); $('eqBox').textContent='前半：重なりが増える / 後半：重なりが減る（2次関数の変化）'; }
+function render(){ drawGeometry(); drawGraph(); updateStats(); }
+function apply(){ S.cfg={tate:num('tate',3,10),yoko:num('yoko',2,10),tei:num('tei',2,10),takasa:num('takasa',2,10),hayasa:num('hayasa',1,5)}; ['tate','yoko','tei','takasa','hayasa'].forEach(id=>$(id).value=S.cfg[id]); S.t=0; render(); }
+function play(){ S.playing=true; S.last=performance.now(); requestAnimationFrame(tick); }
+function pause(){ S.playing=false; }
+function reset(){ S.t=0; pause(); render(); }
+function tick(ts){ if(!S.playing) return; const dt=(ts-S.last)/1000; S.last=ts; S.t=Math.min(tEnd(S.cfg),S.t+dt); render(); if(S.t>=tEnd(S.cfg)){ S.playing=false; return; } requestAnimationFrame(tick); }
+$('applyBtn').addEventListener('click',apply); $('playBtn').addEventListener('click',play); $('pauseBtn').addEventListener('click',pause); $('resetBtn').addEventListener('click',reset); $('timeSlider').addEventListener('input',e=>{ pause(); S.t=parseFloat(e.target.value||'0'); render(); }); ['tate','yoko','tei','takasa','hayasa'].forEach(id=>$(id).addEventListener('keydown',e=>{ if(e.key==='Enter') apply(); }));
+render();
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79"}' crossorigin="anonymous"></script>
+</body>
+</html>

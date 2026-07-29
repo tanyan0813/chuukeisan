@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>２元１次方程式のグラフ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=M+PLUS+Rounded+1c:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FCFBF4; --grid:#DDE7E3; --grid2:#EDF2EF;
+    --ink:#37424A; --ink-soft:#6A757C;
+    --red:#EA5040; --red-deep:#D33B2E;
+    --blue:#2E9BD6; --blue-deep:#1F7CAE;
+    --yellow:#F6B93B; --yellow-deep:#D89A2C;
+    --green:#34B37A; --green-deep:#279862;
+    --teal2:#1F8A70; --teal2-deep:#146754;
+    --card:#FFFFFF;
+    --shadow:0 6px 0 rgba(55,66,74,.10), 0 12px 28px rgba(55,66,74,.12);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;font-family:"Zen Maru Gothic",system-ui,sans-serif;color:var(--ink);
+    background:
+      linear-gradient(var(--grid2) 1px,transparent 1px) 0 0/24px 24px,
+      linear-gradient(90deg,var(--grid2) 1px,transparent 1px) 0 0/24px 24px,
+      linear-gradient(var(--grid) 1px,transparent 1px) 0 0/120px 120px,
+      linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/120px 120px,
+      var(--paper);
+    display:flex;align-items:flex-start;justify-content:center;min-height:100%;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{width:100%;max-width:760px;padding:18px 16px 44px;}
+  .num{font-family:"M PLUS Rounded 1c",sans-serif;}
+
+  header.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;}
+  .logo{display:flex;align-items:center;gap:10px;}
+  .logo .pin{width:34px;height:34px;border-radius:50%;background:var(--teal2);color:#fff;font-weight:900;
+    display:grid;place-items:center;font-size:15px;box-shadow:0 3px 0 var(--teal2-deep);transform:rotate(-8deg);}
+  .logo b{font-size:17px;font-weight:900;}
+  .who{display:flex;align-items:center;gap:6px;}
+  .who .badge{background:var(--card);border-radius:999px;padding:6px 12px;font-weight:900;font-size:12px;
+    box-shadow:0 3px 0 rgba(55,66,74,.10);color:var(--teal2);cursor:pointer;border:none;font-family:inherit;}
+  .who .badge:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(55,66,74,.10);}
+  .icon-btn{border:none;background:var(--card);border-radius:12px;width:44px;height:38px;font-size:16px;
+    cursor:pointer;color:var(--ink);box-shadow:0 3px 0 rgba(55,66,74,.12);font-family:inherit;}
+  .icon-btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(55,66,74,.12);}
+
+  .screen{display:none;animation:pop .3s ease;}
+  .screen.active{display:block;}
+  @keyframes pop{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+
+  .title-card{background:var(--card);border-radius:26px;padding:26px 22px 20px;box-shadow:var(--shadow);
+    text-align:center;position:relative;overflow:hidden;margin-bottom:16px;}
+  .title-card::before{content:"";position:absolute;inset:8px;border:3px dashed #CCE3DC;border-radius:20px;pointer-events:none;}
+  .title-card h1{margin:2px 0;font-size:clamp(21px,5.4vw,32px);font-weight:900;color:var(--teal2);
+    position:relative;text-shadow:2px 3px 0 #D2E8E0;}
+  .title-card .sub{color:var(--ink-soft);font-weight:700;font-size:14px;position:relative;}
+  .prompt{position:relative;margin-top:10px;color:var(--blue);font-weight:900;font-size:14px;}
+
+  .menu-head{display:flex;align-items:baseline;gap:10px;margin:2px 4px 12px;flex-wrap:wrap;}
+  .menu-head h2{font-size:19px;font-weight:900;margin:0;}
+  .menu-head p{margin:0;color:var(--ink-soft);font-weight:700;font-size:12px;}
+
+  .mlist{display:grid;grid-template-columns:1fr;gap:11px;}
+  .mcard{display:flex;align-items:center;gap:12px;background:var(--card);border:none;border-radius:16px;
+    padding:16px 14px;box-shadow:var(--shadow);cursor:pointer;font-family:inherit;text-align:left;
+    color:var(--ink);transition:transform .1s;}
+  .mcard:hover{transform:translateY(-3px);}
+  .mcard:active{transform:translateY(1px);box-shadow:0 3px 0 rgba(55,66,74,.10);}
+  .mcard .n{flex:none;width:30px;height:30px;border-radius:50%;background:var(--teal2);color:#fff;font-weight:900;
+    display:grid;place-items:center;font-size:14px;font-family:"M PLUS Rounded 1c";box-shadow:0 3px 0 var(--teal2-deep);}
+  .mcard.rand .n{background:var(--yellow);box-shadow:0 3px 0 var(--yellow-deep);color:#6a5000;}
+  .mcard.blue .n{background:var(--blue);box-shadow:0 3px 0 var(--blue-deep);}
+  .mcard .lbl{font-weight:900;font-size:15px;line-height:1.35;}
+  .mcard .sm{display:block;font-size:11px;color:var(--ink-soft);font-weight:700;margin-top:3px;}
+
+  .foot{display:flex;justify-content:center;margin-top:18px;}
+  .foot button{display:inline-flex;align-items:center;gap:8px;font-weight:900;border:none;border-radius:16px;
+    padding:12px 22px;font-size:15px;color:var(--ink);background:#fff;box-shadow:0 5px 0 rgba(55,66,74,.15);
+    font-family:inherit;cursor:pointer;}
+  .foot button:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(55,66,74,.15);}
+  .credit{text-align:center;margin-top:14px;font-size:11px;color:#9AA4A9;line-height:1.7;}
+
+  /* ---- play ---- */
+  .play-top{display:flex;align-items:center;gap:9px;margin-bottom:12px;flex-wrap:wrap;}
+  .chip{background:var(--card);border-radius:999px;padding:6px 13px;font-weight:700;font-size:12px;box-shadow:0 3px 0 rgba(55,66,74,.10);}
+  .chip.mode{color:var(--teal2);font-weight:900;}
+  .back-btn{border:none;background:var(--card);border-radius:12px;padding:8px 13px;font-family:inherit;
+    font-weight:700;cursor:pointer;color:var(--ink);box-shadow:0 3px 0 rgba(55,66,74,.12);font-size:13px;}
+  .back-btn:active{transform:translateY(2px);}
+  .dots{display:flex;gap:5px;margin-left:auto;}
+  .dot{width:15px;height:15px;border-radius:50%;background:#E4EAE8;display:grid;place-items:center;font-size:10px;color:#fff;font-weight:900;}
+  .dot.ok{background:var(--green);} .dot.ng{background:var(--red);}
+  .dot.now{background:var(--yellow);box-shadow:0 0 0 3px rgba(246,185,59,.35);}
+
+  .board{background:var(--card);border-radius:24px;box-shadow:var(--shadow);padding:24px 12px 18px;
+    text-align:center;position:relative;overflow:hidden;min-height:210px;}
+  .note{color:var(--blue);font-weight:900;font-size:13px;margin-bottom:12px;}
+  .qline{font-family:"M PLUS Rounded 1c";font-weight:900;font-size:clamp(22px,6vw,34px);margin:4px 0;}
+  .qline i{font-style:italic;color:var(--teal2);}
+  .qsub{font-family:"M PLUS Rounded 1c";font-weight:900;font-size:clamp(17px,4.4vw,23px);
+    color:var(--ink-soft);margin-top:6px;}
+  .qsub i{font-style:italic;color:var(--teal2);}
+  .answer-line{margin-top:16px;font-family:"M PLUS Rounded 1c";font-weight:900;
+    font-size:clamp(20px,5.2vw,28px);display:flex;align-items:center;justify-content:center;gap:.14em;flex-wrap:wrap;}
+  .answer-line .lb{font-family:"Zen Maru Gothic";color:var(--teal2);}
+  .answer-line i{font-style:italic;color:var(--teal2);}
+  .ansbox{min-width:3.2em;min-height:1.05em;padding:0 .16em;border-bottom:6px solid var(--blue);color:var(--blue);
+    border-radius:6px 6px 4px 4px;display:inline-flex;align-items:flex-end;justify-content:center;background:rgba(46,155,214,.10);}
+  .ansbox i{font-style:italic;color:var(--blue);}
+  .ansbox.blink{animation:bl 1s steps(2) infinite;}
+  @keyframes bl{50%{border-bottom-color:transparent;}}
+  .hintbtn{margin-top:10px;border:none;background:#E6F2EE;color:var(--teal2-deep);border-radius:999px;
+    padding:7px 16px;font-family:inherit;font-weight:900;font-size:12px;cursor:pointer;box-shadow:0 3px 0 #C2DED5;}
+  .hintbtn:active{transform:translateY(2px);box-shadow:0 1px 0 #C2DED5;}
+  .hintbox{display:none;margin-top:8px;background:#FDF0CF;color:#6a5000;border-radius:12px;
+    padding:9px 12px;font-size:12px;font-weight:700;line-height:1.7;text-align:left;}
+  .hintbox.show{display:block;}
+  .msg{margin-top:8px;font-weight:900;font-size:17px;min-height:24px;}
+  .msg.good{color:var(--green);} .msg.bad{color:var(--red);}
+  .reveal{display:none;margin-top:6px;font-family:"M PLUS Rounded 1c";font-weight:900;font-size:21px;}
+  .reveal.show{display:block;animation:pop .3s ease;}
+  .reveal b{color:var(--red);}
+  .reveal i{font-style:italic;}
+
+  .stamp{position:absolute;top:50%;left:50%;pointer-events:none;}
+  .stamp svg{display:block;width:126px;height:126px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.15));}
+  .stamp.maru{animation:si .45s cubic-bezier(.2,1.5,.4,1) both;}
+  .stamp.batsu{animation:sh .5s ease both;}
+  @keyframes si{0%{transform:translate(-50%,-50%) scale(2.4) rotate(-25deg);opacity:0;}60%{opacity:1;}100%{transform:translate(-50%,-50%) scale(1) rotate(-8deg);opacity:1;}}
+  @keyframes sh{0%{transform:translate(-50%,-50%) scale(1.4);opacity:0;}20%{opacity:1;}30%{transform:translate(-53%,-50%) rotate(-6deg);}45%{transform:translate(-47%,-50%) rotate(6deg);}60%{transform:translate(-52%,-50%) rotate(-4deg);}100%{transform:translate(-50%,-50%) rotate(0);opacity:1;}}
+
+  .keypad{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:14px;}
+  .key{border:none;background:var(--card);border-radius:15px;padding:14px 0;font-family:"M PLUS Rounded 1c";
+    font-weight:900;font-size:23px;color:var(--ink);cursor:pointer;box-shadow:0 5px 0 rgba(55,66,74,.14);}
+  .key:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(55,66,74,.14);}
+  .key.sign{color:var(--teal2-deep);background:#E6F2EE;box-shadow:0 5px 0 #C2DED5;}
+  .key.sign:active{box-shadow:0 1px 0 #C2DED5;}
+  .key.vk{color:#fff;background:var(--teal2);box-shadow:0 5px 0 var(--teal2-deep);font-style:italic;}
+  .key.vk:active{box-shadow:0 1px 0 var(--teal2-deep);}
+  .key.del{background:#FDECE9;color:var(--red);box-shadow:0 5px 0 #F3C4BC;font-size:19px;}
+  .key.del:active{box-shadow:0 1px 0 #F3C4BC;}
+  .key:disabled{opacity:.28;pointer-events:none;}
+  .enter-btn{width:100%;margin-top:10px;border:none;cursor:pointer;font-family:inherit;font-weight:900;
+    border-radius:16px;color:#fff;padding:14px 0;font-size:19px;background:var(--green);box-shadow:0 5px 0 var(--green-deep);}
+  .enter-btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--green-deep);}
+
+  /* ---- result ---- */
+  .result-card{background:var(--card);border-radius:26px;box-shadow:var(--shadow);padding:24px 18px 22px;text-align:center;}
+  .hanamaru-wrap{height:120px;display:grid;place-items:center;}
+  .score-line{font-weight:900;font-size:20px;margin:6px 0 2px;}
+  .score-line .big{font-family:"M PLUS Rounded 1c";font-size:52px;color:var(--red);vertical-align:-5px;margin:0 4px;}
+  .result-msg{font-weight:900;font-size:22px;margin:4px 0 6px;}
+  .time-line{color:var(--ink-soft);font-weight:700;font-size:13px;margin-bottom:14px;}
+  .review{display:flex;flex-direction:column;gap:7px;text-align:left;margin:0 auto 20px;max-width:480px;}
+  .review-row{display:flex;align-items:center;gap:10px;background:#F7FAF9;border-radius:14px;padding:9px 12px;
+    font-family:"M PLUS Rounded 1c";font-weight:900;font-size:14px;}
+  .review-row .rmark{width:26px;height:26px;flex:none;display:grid;place-items:center;border-radius:50%;font-size:14px;color:#fff;}
+  .review-row .rmark.ok{background:var(--green);} .review-row .rmark.ng{background:var(--red);}
+  .review-row .rq{flex:1;}
+  .review-row i{font-style:italic;}
+  .review-row .ra.wrong{color:var(--red);text-decoration:line-through;margin-right:6px;}
+  .review-row .rc{color:var(--green);}
+  .result-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+  .big-btn{border:none;cursor:pointer;font-family:inherit;font-weight:900;border-radius:16px;color:#fff;
+    padding:13px 20px;font-size:16px;background:var(--green);box-shadow:0 5px 0 var(--green-deep);}
+  .big-btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--green-deep);}
+  .big-btn.gray{background:#fff;color:var(--ink);box-shadow:0 5px 0 rgba(55,66,74,.15);}
+  .big-btn.gray:active{box-shadow:0 1px 0 rgba(55,66,74,.15);}
+
+  /* ---- 学習記録 ---- */
+  .panel{background:var(--card);border-radius:22px;box-shadow:var(--shadow);padding:18px 16px;margin-bottom:14px;}
+  .panel h3{margin:0 0 10px;font-size:16px;font-weight:900;display:flex;align-items:center;gap:8px;}
+  .panel h3 .bar2{width:6px;height:18px;border-radius:3px;background:var(--teal2);}
+  .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  @media(max-width:480px){.stat-row{grid-template-columns:1fr 1fr;}}
+  .stat{background:#F7FAF9;border-radius:14px;padding:12px 8px;text-align:center;}
+  .stat .v{font-family:"M PLUS Rounded 1c";font-weight:900;font-size:26px;color:var(--teal2);}
+  .stat .k{font-size:11px;color:var(--ink-soft);font-weight:700;margin-top:2px;}
+  table.rec{width:100%;border-collapse:collapse;font-size:13px;}
+  table.rec th,table.rec td{padding:7px 6px;border-bottom:1px solid #EDF2EF;text-align:left;}
+  table.rec th{font-size:11px;color:var(--ink-soft);font-weight:900;}
+  table.rec td.n{font-family:"M PLUS Rounded 1c";font-weight:900;text-align:right;white-space:nowrap;}
+  table.rec tr:last-child td{border-bottom:none;}
+  .scorepill{display:inline-block;min-width:44px;text-align:center;border-radius:999px;padding:2px 8px;
+    font-family:"M PLUS Rounded 1c";font-weight:900;color:#fff;font-size:12px;}
+  .sp100{background:var(--red);} .sp80{background:var(--yellow);color:#6a5000;} .sp0{background:var(--ink-soft);}
+  .miss-bars{display:flex;flex-direction:column;gap:8px;}
+  .mb{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;}
+  .mb .lab{flex:0 0 8.8em;}
+  .mb .track{flex:1;height:14px;background:#F0F4F2;border-radius:999px;overflow:hidden;}
+  .mb .fill{height:100%;border-radius:999px;}
+  .mb .cnt{flex:0 0 3.6em;text-align:right;font-family:"M PLUS Rounded 1c";font-weight:900;}
+  .spark{display:flex;align-items:flex-end;gap:3px;height:70px;padding-top:4px;}
+  .spark .b{flex:1;min-width:5px;background:var(--teal2);border-radius:3px 3px 0 0;}
+  .spark .b.s100{background:var(--red);} .spark .b.s80{background:var(--yellow);}
+  .empty{color:var(--ink-soft);font-weight:700;font-size:13px;text-align:center;padding:14px 0;}
+  .rowbtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:6px;}
+  .sbtn{border:none;border-radius:14px;padding:10px 16px;font-family:inherit;font-weight:900;font-size:13px;
+    cursor:pointer;color:var(--ink);background:#fff;box-shadow:0 4px 0 rgba(55,66,74,.14);}
+  .sbtn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(55,66,74,.14);}
+  .sbtn.pur{background:var(--teal2);color:#fff;box-shadow:0 4px 0 var(--teal2-deep);}
+  .sbtn.pur:active{box-shadow:0 1px 0 var(--teal2-deep);}
+  .sbtn.danger{background:#FDECE9;color:var(--red);box-shadow:0 4px 0 #F3C4BC;}
+  .sbtn.danger:active{box-shadow:0 1px 0 #F3C4BC;}
+  .form-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;justify-content:center;}
+  .fld{display:flex;flex-direction:column;gap:4px;}
+  .fld label{font-size:11px;font-weight:900;color:var(--ink-soft);}
+  .fld input{font-family:"M PLUS Rounded 1c";font-weight:900;font-size:18px;padding:8px 10px;width:74px;
+    border:2px solid #E1E8E5;border-radius:12px;text-align:center;color:var(--ink);background:#fff;}
+  .fld input.wide{width:150px;font-size:15px;text-align:left;font-family:"Zen Maru Gothic";}
+  .fld input:focus{outline:none;border-color:var(--teal2);}
+  .who-list{display:flex;flex-direction:column;gap:8px;}
+  .who-item{display:flex;align-items:center;gap:10px;background:#F7FAF9;border-radius:14px;padding:10px 12px;}
+  .who-item.on{background:#E6F2EE;box-shadow:0 0 0 2px var(--teal2) inset;}
+  .who-item .nm{flex:1;font-weight:900;font-size:14px;}
+  .who-item .sm2{font-size:11px;color:var(--ink-soft);font-weight:700;}
+  .mini{border:none;background:#fff;border-radius:10px;padding:6px 10px;font-family:inherit;font-weight:900;
+    font-size:12px;cursor:pointer;color:var(--ink);box-shadow:0 3px 0 rgba(55,66,74,.12);}
+  .mini:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(55,66,74,.12);}
+  .mini.red{color:var(--red);}
+  .notice{background:#FDF0CF;color:#6a5000;border-radius:12px;padding:9px 12px;font-size:12px;font-weight:700;margin-bottom:12px;}
+  .detail{display:none;background:#F7FAF9;border-radius:12px;padding:10px 12px;margin-top:6px;font-size:12px;}
+  .detail.show{display:block;}
+  .detail div{padding:3px 0;font-family:"M PLUS Rounded 1c";font-weight:900;}
+  .detail .ng{color:var(--red);}
+
+  @media (prefers-reduced-motion: reduce){*{animation-duration:.001ms !important;}}
+
+  .graph-wrap{margin:4px auto 0;max-width:320px}
+  .graph-card{background:#fff;border-radius:18px;padding:10px;box-shadow:inset 0 0 0 3px #E6F2EE, 0 4px 0 rgba(55,66,74,.08)}
+  .graph-card svg{display:block;width:100%;height:auto;touch-action:none}
+  .graphcap{margin-top:8px;font-size:12px;font-weight:900;color:var(--ink-soft);line-height:1.6}
+  .graphcap i{font-style:italic;color:var(--teal2)}
+  .pt-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .ptbtn{border:none;border-radius:999px;padding:9px 16px;font-family:inherit;font-weight:900;font-size:13px;cursor:pointer;box-shadow:0 4px 0 rgba(55,66,74,.12)}
+  .ptbtn.main{background:#E6F2EE;color:var(--teal2-deep);box-shadow:0 4px 0 #C2DED5}
+  .ptbtn.sub{background:#F5F7F8;color:var(--ink-soft)}
+  .ptbtn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(55,66,74,.12)}
+  .pick-note{margin-top:8px;font-size:12px;font-weight:900;color:var(--ink-soft)}
+  .formula-card{display:inline-flex;align-items:center;justify-content:center;min-height:54px;padding:10px 14px;background:#fff;border-radius:16px;box-shadow:inset 0 0 0 3px #E6F2EE, 0 4px 0 rgba(55,66,74,.08);font-family:"M PLUS Rounded 1c";font-weight:900;font-size:clamp(22px,5vw,30px);color:var(--teal2-deep)}
+  .formula-card i{font-style:italic;color:var(--teal2)}
+  .eq-note{margin-top:10px;font-size:14px;font-weight:900;color:var(--ink-soft);line-height:1.7}
+  .eq-note b{color:var(--teal2-deep)}
+  .reveal .formula-card{margin-top:8px}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bar">
+    <div class="logo"><span class="pin">図</span><b>２元１次</b></div>
+    <div class="who">
+      <button class="badge" id="whoBadge" title="学習者の切りかえ">学習者なし</button>
+      <button class="icon-btn" id="soundBtn" title="おと">🔊</button>
+    </div>
+  </header>
+
+  <!-- ===== メニュー ===== -->
+  <section class="screen active" id="mainScreen">
+    <div class="title-card">
+      <h1>２元１次方程式のグラフ</h1>
+      <div class="sub">式を見て座標平面上にグラフを示す</div>
+      <div class="prompt">つぎのなかから、勉強することを えらびましょう。</div>
+    </div>
+    <div class="menu-head"><h2>メニュー</h2><p>番号キーでも えらべます</p></div>
+    <div class="mlist" id="mainList"></div>
+    <div class="credit">
+      岐阜県中学校数学教育研究会・小学校算数教育研究会（安藤忠展）<br>
+      原作 N88-BASIC「KANSUU10」／ Web版
+    </div>
+  </section>
+
+  <!-- ===== 学習記録 ===== -->
+  <section class="screen" id="dataScreen">
+    <div class="title-card">
+      <h1>学習者反応データ処理システム</h1>
+      <div class="sub">学習の記録を 見る</div>
+    </div>
+    <div id="storeNotice"></div>
+    <div class="panel">
+      <h3><span class="bar2"></span>学習者</h3>
+      <div class="who-list" id="whoList"></div>
+      <div style="margin-top:12px" class="form-row">
+        <div class="fld"><label>学年</label><input id="fNen" inputmode="numeric" maxlength="1" placeholder="2"></div>
+        <div class="fld"><label>組</label><input id="fKumi" inputmode="numeric" maxlength="2" placeholder="01"></div>
+        <div class="fld"><label>番号</label><input id="fBan" inputmode="numeric" maxlength="2" placeholder="01"></div>
+        <div class="fld"><label>名前（任意）</label><input id="fName" class="wide" maxlength="12" placeholder="なまえ"></div>
+        <button class="sbtn pur" id="addWhoBtn">＋ 登録</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h3><span class="bar2"></span>成績のまとめ</h3>
+      <div class="stat-row">
+        <div class="stat"><div class="v" id="stCount">0</div><div class="k">練習した回数</div></div>
+        <div class="stat"><div class="v" id="stAvg">—</div><div class="k">平均点</div></div>
+        <div class="stat"><div class="v" id="stBest">—</div><div class="k">最高点</div></div>
+      </div>
+      <div style="margin-top:14px">
+        <div style="font-size:12px;font-weight:900;color:var(--ink-soft);margin-bottom:4px">点数の うつりかわり（古い→新しい）</div>
+        <div class="spark" id="spark"></div>
+      </div>
+    </div>
+    <div class="panel"><h3><span class="bar2"></span>まちがいの傾向</h3><div class="miss-bars" id="missBars"></div></div>
+    <div class="panel"><h3><span class="bar2"></span>種類べつの記録</h3><div id="byKind"></div></div>
+    <div class="panel"><h3><span class="bar2"></span>練習の履歴</h3><div id="history"></div></div>
+    <div class="rowbtns">
+      <button class="sbtn" id="csvBtn">CSVで書き出す</button>
+      <button class="sbtn danger" id="clearBtn">この学習者の記録を消す</button>
+    </div>
+    <div class="foot"><button id="dataBackBtn">← メニューへ</button></div>
+  </section>
+
+  <!-- ===== ドリル ===== -->
+  <section class="screen" id="playScreen">
+    <div class="play-top">
+      <button class="back-btn" id="playBackBtn">← メニュー</button>
+      <span class="chip mode" id="modeChip"></span>
+      <span class="chip" id="timerText">0びょう</span>
+      <div class="dots" id="dots"></div>
+    </div>
+    <div class="board">
+      <div class="note" id="note"></div>
+      <div class="qline" id="qline"></div>
+      <div class="qsub" id="qsub"></div>
+      <div class="answer-line"><span class="lb" id="alabel"></span><span class="ansbox blink" id="ans"></span></div>
+      <button class="hintbtn" id="hintBtn">ヒントを見る</button>
+      <div class="pt-actions">
+        <button class="ptbtn main" id="undoPtBtn">1つ もどす</button>
+        <button class="ptbtn sub" id="clearPtBtn">はじめから</button>
+      </div>
+      <div class="pick-note" id="pickNote"></div>
+
+      <div class="hintbox" id="hintBox"></div>
+      <div class="msg" id="msg"></div>
+      <div class="reveal" id="reveal"></div>
+      <div class="stamp" id="stamp"></div>
+    </div>
+    <div class="keypad" id="keypad">
+      <button class="key" data-k="1">1</button><button class="key" data-k="2">2</button>
+      <button class="key" data-k="3">3</button><button class="key sign" data-k="+" id="kplus">＋</button>
+      <button class="key" data-k="4">4</button><button class="key" data-k="5">5</button>
+      <button class="key" data-k="6">6</button><button class="key sign" data-k="-">－</button>
+      <button class="key" data-k="7">7</button><button class="key" data-k="8">8</button>
+      <button class="key" data-k="9">9</button><button class="key vk" data-k="x" id="kx">χ</button>
+      <button class="key" data-k="0">0</button>
+      <button class="key del" data-k="del" style="grid-column:span 3">⌫ けす</button>
+    </div>
+    <button class="enter-btn" id="enterBtn">こたえあわせ</button>
+  </section>
+
+  <!-- ===== けっか ===== -->
+  <section class="screen" id="resultScreen">
+    <div class="result-card">
+      <div class="hanamaru-wrap" id="hanamaruWrap"></div>
+      <div class="score-line"><span class="big num" id="scoreNum">0</span> 点 です。</div>
+      <div class="result-msg" id="resultMsg"></div>
+      <div class="time-line" id="resultTime"></div>
+      <div class="review" id="review"></div>
+      <div class="result-actions">
+        <button class="big-btn" id="againBtn">もっと練習する</button>
+        <button class="big-btn gray" id="homeBtn">メニューへ</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* =========================================================
+   ２元１次方程式のグラフ — Web版
+   原作: N88-BASIC "KANSUU10"
+        岐阜県中学校数学教育研究会・小学校算数教育研究会（安藤忠展）
+   ========================================================= */
+const $=id=>document.getElementById(id);
+const screens={main:$("mainScreen"),data:$("dataScreen"),play:$("playScreen"),result:$("resultScreen")};
+function show(n){for(const k in screens)screens[k].classList.toggle("active",k===n);window.scrollTo({top:0,behavior:"smooth"});}
+const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const sg=()=>rnd(0,1)?1:-1;
+const PRMSU=5, MISSN=3;
+const MISSMSG=["間違っていますよ！","もう一度　考えよう！","傾きが違います！","切片が違います！","ｘ座標が違います！","ｙ座標が違います！"];
+
+function signed(n){ return n<0?'－'+Math.abs(n):String(n); }
+function signedAscii(n){ return n<0?String(n):'+'+n; }
+function ptText(p){ return '（'+signed(p.x)+'，'+signed(p.y)+'）'; }
+function ptTextAscii(p){ return '('+p.x+','+p.y+')'; }
+function fmtEqPart(k, variable, first){
+  if(k===0) return first? '0' : '';
+  const abs=Math.abs(k), core=(abs===1?'':String(abs))+variable;
+  if(first) return (k<0?'-':'')+core;
+  return (k<0?'-':'+')+core;
+}
+function lineText(a,b){ return 'y='+ (a<0?'-':'') + (Math.abs(a)===1?'':Math.abs(a)) + 'x' + (b<0?'-':'+') + Math.abs(b); }
+function lineHTML(a,b){ return '<i>y</i>＝'+(a<0?'－':'')+(Math.abs(a)===1?'':Math.abs(a))+'<i>χ</i>'+(b<0?'－':'＋')+Math.abs(b); }
+function eqText(item){
+  if(item.kind===1) return item.k+'x='+item.c;
+  if(item.kind===2) return item.k+'y='+item.c;
+  return fmtEqPart(item.ax,'x',true)+fmtEqPart(item.by,'y',false)+'='+item.c;
+}
+function eqHTML(item){
+  return eqText(item)
+    .replace(/x/g,'<i>χ</i>')
+    .replace(/y/g,'<i>y</i>')
+    .replace(/\+/g,'＋')
+    .replace(/-/g,'－');
+}
+function answerText(item){
+  if(item.kind===1) return 'x='+item.xConst;
+  if(item.kind===2) return 'y='+item.yConst;
+  return '傾き='+signed(item.a)+' / 切片='+signed(item.b);
+}
+function answerTextJP(item){
+  if(item.kind===1) return 'ｙ軸に平行で x＝'+signed(item.xConst)+' の直線';
+  if(item.kind===2) return 'ｘ軸に平行で y＝'+signed(item.yConst)+' の直線';
+  return '傾き＝'+signed(item.a)+'、切片＝'+signed(item.b);
+}
+
+const MODES=[
+  {t:'ａｘ＋ｂｙ＝ｃ のグラフ', sm:'2元1次方程式のグラフを 2点で示す', gen:makeGeneral,
+   hint:'<b>ａｘ＋ｂｙ＝ｃ</b> を <b>ｙ＝ｍχ＋ｂ</b> の形にすると、<b>傾き</b> と <b>切片</b> が分かります。<br>切片を見つけて、そこから傾きにしたがって もう1点を選びましょう。'},
+  {t:'ａｘ＝ｃ のグラフ', sm:'ｙ軸に平行な直線を 2点で示す', gen:makeVertical,
+   hint:'<b>ａｘ＝ｃ</b> は <b>ｘ＝一定</b> の形です。<br><b>同じ x 座標</b> をもつ 2点を選ぶと、<b>ｙ軸に平行な直線</b> になります。'},
+  {t:'ｂｙ＝ｃ のグラフ', sm:'ｘ軸に平行な直線を 2点で示す', gen:makeHorizontal,
+   hint:'<b>ｂｙ＝ｃ</b> は <b>ｙ＝一定</b> の形です。<br><b>同じ y 座標</b> をもつ 2点を選ぶと、<b>ｘ軸に平行な直線</b> になります。'},
+  {t:'ランダムコース', rand:true, sm:'3つのパターンから ランダムに出題'},
+  {t:'学習者反応データ処理システム', data:true, sm:'学習の記録を 見る'}
+];
+
+function makeGeneral(){
+  while(true){
+    const a=rnd(1,3)*sg(), b0=rnd(1,8)*sg(), pb=rnd(1,3), ps=rnd(0,1);
+    const ax=ps?(-a*pb):(a*pb), by=ps?pb:(-pb), c=ps?(b0*pb):(-b0*pb);
+    return {kind:0,a:a,b:b0,ax:ax,by:by,c:c};
+  }
+}
+function makeVertical(){
+  const xConst=rnd(1,5)*sg(), k=rnd(1,3), c=k*xConst;
+  return {kind:1,xConst:xConst,k:k,c:c};
+}
+function makeHorizontal(){
+  const yConst=rnd(1,8)*sg(), k=rnd(1,3), c=k*yConst;
+  return {kind:2,yConst:yConst,k:k,c:c};
+}
+
+const KEY='kansuu10.records.v1';
+const Store=(function(){
+  let mem=null, usable=false;
+  try{ const k='__t'+Date.now(); localStorage.setItem(k,'1'); localStorage.removeItem(k); usable=true; }catch(e){ usable=false; }
+  return { usable:usable,
+    load:function(){ if(!usable) return mem||{people:[],cur:null,logs:[]};
+      try{ const s=localStorage.getItem(KEY); return s?JSON.parse(s):{people:[],cur:null,logs:[]}; }
+      catch(e){ return {people:[],cur:null,logs:[]}; } },
+    save:function(d){ if(!usable){mem=d;return;} try{ localStorage.setItem(KEY,JSON.stringify(d)); }catch(e){ mem=d; } } };
+})();
+let DB=Store.load();
+function dbSave(){ Store.save(DB); }
+function curPerson(){ if(!DB.cur) return null; for(let i=0;i<DB.people.length;i++) if(DB.people[i].id===DB.cur) return DB.people[i]; return null; }
+function personLabel(p){ if(!p) return '学習者なし'; const s=p.nen+'年'+p.kumi+'組'+p.ban+'番'; return p.name?s+' '+p.name:s; }
+function updateWhoBadge(){ $('whoBadge').textContent=personLabel(curPerson()); }
+function kindName(m){ return MODES[m].t; }
+function kaisuu(m){ const p=curPerson(); if(!p) return 0; const k=kindName(m); let n=0; DB.logs.forEach(g=>{ if(g.pid===p.id&&g.kind===k) n++; }); return n; }
+function qText(it){ return eqText(it)+' のグラフ'; }
+function saveLog(ten,sec){
+  const p=curPerson(); if(!p) return;
+  const items=S.list.map(it=>({q:qText(it), ans:answerText(it), user:(it.user&&it.user.length?it.user.map(ptText).join('・'):'—'), ok:it.correct, tries:it.tries, misses:it.misses||[], kind:it.kind}));
+  DB.logs.push({pid:p.id,at:Date.now(),mode:S.mode,kind:kindName(S.mode),ten:ten,sec:sec,items:items});
+  dbSave();
+}
+
+let soundOn=true, actx=null;
+function beep(type){ if(!soundOn) return;
+  try{ actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+    const now=actx.currentTime;
+    const pl=(f,s,d,v)=>{const o=actx.createOscillator(),g=actx.createGain();o.type='sine';o.frequency.value=f;
+      o.connect(g);g.connect(actx.destination);g.gain.setValueAtTime(0,now+s);g.gain.linearRampToValueAtTime(v||.16,now+s+.02);
+      g.gain.exponentialRampToValueAtTime(.0001,now+s+d);o.start(now+s);o.stop(now+s+d+.02);};
+    if(type==='correct'){pl(660,0,.14);pl(880,.12,.2);} else if(type==='wrong'){pl(200,0,.18,.2);} else if(type==='tap'){pl(520,0,.05,.08);} else if(type==='fanfare'){pl(523,0,.13);pl(659,.13,.13);pl(784,.26,.13);pl(1046,.39,.3);}  
+  }catch(e){}
+}
+
+function buildMain(){
+  const l=$('mainList'); l.innerHTML='';
+  MODES.forEach((m,i)=>{
+    const b=document.createElement('button');
+    b.className='mcard'+(m.rand?' rand':'')+(m.data?' blue':'');
+    b.innerHTML='<span class="n">'+(i+1)+'</span><span class="lbl">'+m.t+'<span class="sm">'+m.sm+'</span></span>';
+    b.addEventListener('click',function(){ beep('tap'); if(m.data) openData(); else startRound(i); });
+    l.appendChild(b);
+  });
+}
+
+let S={mode:0,list:[],cur:0,locked:false,t0:0};
+let timerId=null;
+
+function uniqueKey(p){ return [p.kind,p.ax,p.by,p.c,p.a,p.b,p.k,p.xConst,p.yConst].join(','); }
+function startRound(mode){
+  S={mode:mode,list:[],cur:0,locked:false,t0:Date.now()};
+  const seen={};
+  for(let i=0;i<PRMSU;i++){
+    let p, mm, key;
+    do{
+      mm = MODES[mode].rand ? rnd(0,2) : mode;
+      p = MODES[mm].gen();
+      key = uniqueKey(p);
+    }while(seen[key]);
+    seen[key]=1;
+    p.mode=mm; p.picks=[]; p.tries=0; p.correct=false; p.user=[]; p.misses=[];
+    S.list.push(p);
+  }
+  $('modeChip').textContent=kindName(mode);
+  buildDots(); show('play'); startTimer(); render();
+}
+function buildDots(){ const d=$('dots'); d.innerHTML=''; for(let i=0;i<PRMSU;i++){ const s=document.createElement('span'); s.className='dot'; d.appendChild(s);} }
+function updateDots(){ const ch=$('dots').children; for(let i=0;i<ch.length;i++){ const el=ch[i],it=S.list[i]; el.className='dot'; if(i<S.cur){ el.classList.add(it.correct?'ok':'ng'); el.textContent=it.correct?'○':'✕'; } else if(i===S.cur){ el.classList.add('now'); el.textContent=''; } else el.textContent=''; } }
+
+function plotLinePoints(item){
+  const pts=[];
+  if(item.kind===1){
+    for(let y=-10;y<=10;y+=0.1) pts.push({x:item.xConst,y:y});
+  }else if(item.kind===2){
+    for(let x=-10;x<=10;x+=0.1) pts.push({x:x,y:item.yConst});
+  }else{
+    for(let x=-10;x<=10;x+=0.1){ const y=item.a*x+item.b; if(y<-10||y>10) continue; pts.push({x:x,y:y}); }
+  }
+  return pts;
+}
+function previewLinePoints(it){
+  if(!it.picks || it.picks.length<2) return [];
+  const p1=it.picks[0], p2=it.picks[1];
+  if(p1.x===p2.x){ const pts=[]; for(let y=-10;y<=10;y+=0.1) pts.push({x:p1.x,y:y}); return pts; }
+  const m=(p2.y-p1.y)/(p2.x-p1.x), b=p1.y-m*p1.x, pts=[];
+  for(let x=-10;x<=10;x+=0.1){ const y=m*x+b; if(y<-10||y>10) continue; pts.push({x:x,y:y}); }
+  return pts;
+}
+function polylineSVG(points,cx,cy,unit,color,width,dash){
+  if(!points.length) return '';
+  const s=points.map(p=>((cx+p.x*unit).toFixed(2))+','+((cy-p.y*unit).toFixed(2))).join(' ');
+  return '<polyline points="'+s+'" fill="none" stroke="'+color+'" stroke-width="'+width+'" stroke-linecap="round" stroke-linejoin="round"'+(dash?' stroke-dasharray="'+dash+'"':'')+'/>';
+}
+function graphHTML(it,reveal){
+  const left=24, top=12, size=220, right=left+size, bottom=top+size, cx=left+size/2, cy=top+size/2, unit=size/20;
+  let grid='';
+  for(let i=0;i<=20;i++){
+    const x=left+i*unit, y=top+i*unit;
+    grid += '<line x1="'+x+'" y1="'+top+'" x2="'+x+'" y2="'+bottom+'" stroke="#DCE7E2" stroke-width="1"/>';
+    grid += '<line x1="'+left+'" y1="'+y+'" x2="'+right+'" y2="'+y+'" stroke="#DCE7E2" stroke-width="1"/>';
+  }
+  let hot='';
+  for(let y=10;y>=-10;y--){
+    for(let x=-10;x<=10;x++){
+      const px=cx+x*unit, py=cy-y*unit;
+      hot += '<rect class="gcell" data-x="'+x+'" data-y="'+y+'" x="'+(px-unit/2)+'" y="'+(py-unit/2)+'" width="'+unit+'" height="'+unit+'" fill="transparent"/>';
+    }
+  }
+  let picks='';
+  (it.picks||[]).forEach((p,idx)=>{
+    const px=(cx+p.x*unit).toFixed(2), py=(cy-p.y*unit).toFixed(2);
+    picks += '<circle cx="'+px+'" cy="'+py+'" r="4.8" fill="#EA5040"/>';
+    picks += '<text x="'+(Number(px)+6)+'" y="'+(Number(py)-6)+'" font-size="12" font-weight="900" fill="#EA5040">'+(idx+1)+'</text>';
+  });
+  let line='';
+  if(reveal) line = polylineSVG(plotLinePoints(it),cx,cy,unit,'#2E9BD6',4,'');
+  else if(it.picks && it.picks.length===2) line = polylineSVG(previewLinePoints(it),cx,cy,unit,'#F6B93B',3,'6 6');
+  return '<div class="graph-wrap"><div class="graph-card"><svg viewBox="0 0 268 248" aria-label="座標平面">'
+    +grid
+    +'<line x1="'+left+'" y1="'+cy+'" x2="'+right+'" y2="'+cy+'" stroke="#37424A" stroke-width="2.2"/>'
+    +'<line x1="'+cx+'" y1="'+top+'" x2="'+cx+'" y2="'+bottom+'" stroke="#37424A" stroke-width="2.2"/>'
+    +line+hot+picks
+    +'<circle cx="'+cx+'" cy="'+cy+'" r="3" fill="#2E9BD6"/>'
+    +'<text x="'+(right+8)+'" y="'+(cy+4)+'" font-size="14" font-weight="900" fill="#1F8A70">x</text>'
+    +'<text x="'+(cx-4)+'" y="'+(top-4)+'" font-size="14" font-weight="900" fill="#1F8A70">y</text>'
+    +'<text x="'+(cx-7)+'" y="'+(cy+16)+'" font-size="12" font-weight="900" fill="#37424A">0</text>'
+    +'<text x="'+(cx+48)+'" y="'+(cy+16)+'" font-size="12" font-weight="900" fill="#37424A">5</text>'
+    +'<text x="'+(cx-10)+'" y="'+(cy-52)+'" font-size="12" font-weight="900" fill="#37424A">5</text>'
+    +'<text x="'+(cx-62)+'" y="'+(cy+16)+'" font-size="12" font-weight="900" fill="#37424A">-5</text>'
+    +'<text x="'+(cx-18)+'" y="'+(cy+56)+'" font-size="12" font-weight="900" fill="#37424A">-5</text>'
+    +'</svg><div class="graphcap">マスをタップして <b>2点</b> をえらび、グラフを示しましょう。</div></div></div>';
+}
+
+function renderPrompt(it){
+  return '<div class="formula-card">'+eqHTML(it)+'</div><div class="eq-note">この式の <b>グラフ</b> を、座標平面上の <b>2点</b> をえらんで 表しましょう。</div>';
+}
+function render(){
+  const it=S.list[S.cur], m=MODES[it.mode];
+  S.locked=false;
+  $('msg').textContent=''; $('msg').className='msg';
+  $('reveal').classList.remove('show'); $('reveal').innerHTML='';
+  $('stamp').innerHTML=''; $('hintBox').classList.remove('show');
+  $('hintBox').innerHTML=m.hint;
+  $('alabel').textContent='えらんだ点';
+  $('note').textContent='式を見て、グラフ上の 2点 を決めましょう！';
+  $('qline').innerHTML=graphHTML(it,false);
+  $('qsub').innerHTML=renderPrompt(it);
+  $('keypad').style.display='none';
+  $('enterBtn').textContent='こたえあわせ';
+  bindGraph();
+  updateDots(); updateSelectionView();
+}
+function bindGraph(){
+  $('qline').querySelectorAll('.gcell').forEach(function(el){
+    el.addEventListener('click',function(){
+      if(S.locked) return;
+      const it=S.list[S.cur];
+      const x=parseInt(el.dataset.x,10), y=parseInt(el.dataset.y,10);
+      const same=it.picks.find(p=>p.x===x&&p.y===y);
+      if(same){ beep('wrong'); return; }
+      if(it.picks.length>=2){ beep('wrong'); return; }
+      it.picks.push({x:x,y:y}); beep('tap');
+      $('qline').innerHTML=graphHTML(it,false); bindGraph(); updateSelectionView();
+    });
+  });
+}
+function updateSelectionView(){
+  const it=S.list[S.cur];
+  $('ans').innerHTML = it.picks.length ? it.picks.map(ptText).join('　') : '—';
+  $('ans').classList.toggle('blink',it.picks.length===0&&!S.locked);
+  $('pickNote').textContent = it.picks.length===0 ? '1つめの点を えらびましょう。' : (it.picks.length===1 ? '2つめの点を えらびましょう。' : '2点そろいました。こたえあわせできます。');
+}
+function clearPicks(){ const it=S.list[S.cur]; if(S.locked) return; it.picks=[]; $('qline').innerHTML=graphHTML(it,false); bindGraph(); updateSelectionView(); beep('tap'); }
+function undoPick(){ const it=S.list[S.cur]; if(S.locked||!it.picks.length) return; it.picks.pop(); $('qline').innerHTML=graphHTML(it,false); bindGraph(); updateSelectionView(); beep('tap'); }
+$('undoPtBtn').addEventListener('click',undoPick);
+$('clearPtBtn').addEventListener('click',clearPicks);
+$('enterBtn').addEventListener('click',submit);
+$('hintBtn').addEventListener('click',function(){ beep('tap'); $('hintBox').classList.toggle('show'); });
+document.addEventListener('keydown',function(e){
+  if(screens.play.classList.contains('active') && e.key==='Enter'){ submit(); e.preventDefault(); return; }
+  if(screens.main.classList.contains('active')&&e.key>='1'&&e.key<='5'){
+    const i=parseInt(e.key,10)-1; if(MODES[i].data) openData(); else startRound(i);
+  }
+});
+
+function classify(it){
+  const p1=it.picks[0], p2=it.picks[1];
+  if(!p1 || !p2) return {ok:false, miss:1};
+  if(p1.x===p2.x && p1.y===p2.y) return {ok:false, miss:1};
+  if(it.kind===1){
+    if(p1.x===p2.x && p1.x===it.xConst) return {ok:true, miss:0};
+    if(p1.x===p2.x && p1.x!==it.xConst) return {ok:false, miss:4};
+    return {ok:false, miss:1};
+  }
+  if(it.kind===2){
+    if(p1.y===p2.y && p1.y===it.yConst) return {ok:true, miss:0};
+    if(p1.y===p2.y && p1.y!==it.yConst) return {ok:false, miss:5};
+    return {ok:false, miss:1};
+  }
+  if(p1.x===p2.x) return {ok:false, miss:1};
+  const slope=(p2.y-p1.y)/(p2.x-p1.x);
+  const intercept=p1.y-slope*p1.x;
+  if(slope===it.a && intercept===it.b) return {ok:true, miss:0};
+  if(slope!==it.a && intercept===it.b) return {ok:false, miss:2};
+  if(slope===it.a && intercept!==it.b) return {ok:false, miss:3};
+  return {ok:false, miss:1};
+}
+function revealHTML(it){
+  let msg='';
+  if(it.kind===1) msg='<div style="margin-top:8px"><b>x＝'+signed(it.xConst)+'</b> の直線</div>';
+  else if(it.kind===2) msg='<div style="margin-top:8px"><b>y＝'+signed(it.yConst)+'</b> の直線</div>';
+  else msg='<div style="margin-top:8px">正解： <b>傾き＝'+signed(it.a)+'　切片＝'+signed(it.b)+'</b></div><div style="margin-top:4px"><b>'+lineHTML(it.a,it.b)+'</b></div>';
+  return graphHTML(it,true)+msg;
+}
+function submit(){
+  if(S.locked) return;
+  const it=S.list[S.cur];
+  if(it.picks.length<2){ beep('wrong'); $('msg').textContent='2点を えらびましょう。'; $('msg').className='msg bad'; return; }
+  it.tries++;
+  const r=classify(it);
+  if(r.ok){
+    S.locked=true; it.correct=true; it.user=it.picks.slice();
+    stamp('maru'); beep('correct');
+    $('msg').textContent='正解！'; $('msg').className='msg good';
+    setTimeout(next,1100);
+  } else {
+    stamp('batsu'); beep('wrong');
+    it.misses.push(r.miss);
+    $('msg').textContent=MISSMSG[r.miss]||MISSMSG[1]; $('msg').className='msg bad';
+    if(it.tries>=MISSN){
+      S.locked=true; it.correct=false; it.user=it.picks.slice();
+      $('reveal').innerHTML=revealHTML(it);
+      $('reveal').classList.add('show');
+      setTimeout(next,2600);
+    } else {
+      setTimeout(function(){ $('stamp').innerHTML=''; $('msg').textContent=''; },1000);
+    }
+  }
+}
+function next(){ S.cur++; if(S.cur>=PRMSU) finish(); else render(); }
+function stamp(t){ const el=$('stamp'); if(t==='maru'){ el.className='stamp maru'; el.innerHTML='<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="#EA5040" stroke-width="9"/><circle cx="50" cy="50" r="27" fill="none" stroke="#EA5040" stroke-width="7"/></svg>'; } else { el.className='stamp batsu'; el.innerHTML='<svg viewBox="0 0 100 100"><line x1="22" y1="22" x2="78" y2="78" stroke="#EA5040" stroke-width="11" stroke-linecap="round"/><line x1="78" y1="22" x2="22" y2="78" stroke="#EA5040" stroke-width="11" stroke-linecap="round"/></svg>'; } }
+function startTimer(){ clearInterval(timerId); timerId=setInterval(function(){ $('timerText').textContent=fmtTime(Math.floor((Date.now()-S.t0)/1000)); },500); }
+function fmtTime(s){ const m=Math.floor(s/60); return m===0?s+'びょう':m+'ふん'+(s%60)+'びょう'; }
+
+function finish(){
+  clearInterval(timerId);
+  let ok=0; for(let i=0;i<S.list.length;i++) if(S.list[i].correct) ok++;
+  const ten=Math.floor(ok/PRMSU*100), sec=Math.floor((Date.now()-S.t0)/1000);
+  saveLog(ten,sec);
+  $('scoreNum').textContent=ten;
+  const w=$('hanamaruWrap'), m=$('resultMsg');
+  if(ten===100){ m.textContent='よくできました！'; m.style.color='var(--red)'; w.innerHTML=hanamaru(); beep('fanfare'); }
+  else if(ten>=80){ m.textContent='あともうすこし！'; m.style.color='var(--yellow-deep)'; w.innerHTML=star(); beep('correct'); }
+  else { m.textContent='もっとがんばろう！'; m.style.color='var(--green)'; w.innerHTML=face(); }
+  const p0=curPerson();
+  $('resultTime').textContent='じかん： '+fmtTime(sec)+(p0?('　／　この種類は '+kaisuu(S.mode)+'回目'):'');
+  const rv=$('review'); rv.innerHTML='';
+  S.list.forEach(function(it){
+    const row=document.createElement('div'); row.className='review-row';
+    row.innerHTML='<span class="rmark '+(it.correct?'ok':'ng')+'">'+(it.correct?'○':'✕')+'</span>'
+      +'<span class="rq">'+eqText(it)+' のグラフ</span>'
+      +'<span>'+(it.correct?'<span class="rc">'+(it.user&&it.user.length?it.user.map(ptText).join('・'):'—')+'</span>':'<span class="ra wrong">'+(it.user&&it.user.length?it.user.map(ptText).join('・'):'—')+'</span><span class="rc">'+answerTextJP(it)+'</span>')+'</span>';
+    rv.appendChild(row);
+  });
+  show('result');
+}
+function hanamaru(){let p=''; for(let i=0;i<8;i++){const a=i/8*Math.PI*2; p+='<circle cx="'+(60+30*Math.cos(a)).toFixed(1)+'" cy="'+(60+30*Math.sin(a)).toFixed(1)+'" r="17" fill="#F6B93B"/>'; } return '<svg width="115" height="115" viewBox="0 0 120 120">'+p+'<circle cx="60" cy="60" r="30" fill="#FDE9BE"/><circle cx="60" cy="60" r="24" fill="none" stroke="#EA5040" stroke-width="6"/><circle cx="60" cy="60" r="15" fill="none" stroke="#EA5040" stroke-width="5"/></svg>'; }
+function star(){let pts=''; for(let i=0;i<10;i++){const r=i%2===0?42:18,a=(-90+i*36)*Math.PI/180; pts+=(60+r*Math.cos(a)).toFixed(1)+','+(60+r*Math.sin(a)).toFixed(1)+' '; } return '<svg width="115" height="115" viewBox="0 0 120 120"><polygon points="'+pts+'" fill="#F6B93B" stroke="#D89A2C" stroke-width="4" stroke-linejoin="round"/></svg>'; }
+function face(){ return '<svg width="115" height="115" viewBox="0 0 120 120"><circle cx="60" cy="60" r="42" fill="#EAF6F0" stroke="#34B37A" stroke-width="5"/><circle cx="46" cy="52" r="5" fill="#34B37A"/><circle cx="74" cy="52" r="5" fill="#34B37A"/><path d="M42 74 Q60 90 78 74" fill="none" stroke="#34B37A" stroke-width="5" stroke-linecap="round"/></svg>'; }
+
+function openData(){ renderData(); show('data'); }
+function renderData(){
+  $('storeNotice').innerHTML=Store.usable?'' : '<div class="notice">※ このかんきょうでは 記録を ブラウザに 保存できません。いまの記録は 画面を とじると 消えます。のこしたいときは「CSVで書き出す」を つかってください。</div>';
+  renderWhoList();
+  const p=curPerson();
+  const logs=DB.logs.filter(g=>p&&g.pid===p.id);
+  $('stCount').textContent=logs.length;
+  if(logs.length){ let sum=0,best=0; logs.forEach(g=>{ sum+=g.ten; if(g.ten>best) best=g.ten; }); $('stAvg').textContent=Math.round(sum/logs.length); $('stBest').textContent=best; }
+  else { $('stAvg').textContent='—'; $('stBest').textContent='—'; }
+  const sp=$('spark'); sp.innerHTML='';
+  if(!logs.length) sp.innerHTML='<div class="empty" style="width:100%">まだ 記録が ありません</div>';
+  else logs.slice(-24).forEach(function(g){ const b=document.createElement('div'); b.className='b'+(g.ten===100?' s100':(g.ten>=80?' s80':'')); b.style.height=Math.max(6,g.ten*0.6)+'px'; b.title=fmtDate(g.at)+' '+g.kind+' '+g.ten+'点'; sp.appendChild(b); });
+  const mc=[0,0,0,0,0,0], miss=logs.reduce((t,g)=>t+g.items.reduce((s,it)=>s+((it.misses&&it.misses.length)||0),0),0);
+  logs.forEach(g=>g.items.forEach(it=>(it.misses||[]).forEach(m=>{ if(m>=0&&m<=5) mc[m]++; })));
+  const order=[2,3,4,5,1], labels=['傾きが違う','切片が違う','x座標が違う','y座標が違う','そのほか'], colors=['var(--teal2)','var(--blue)','var(--yellow-deep)','var(--red)','#B9C3C0'];
+  const mb=$('missBars'); mb.innerHTML='';
+  if(!miss) mb.innerHTML='<div class="empty">まちがいの 記録が ありません</div>';
+  else order.forEach(function(idx,i){ const n=mc[idx], pc=Math.round(n/miss*100); const d=document.createElement('div'); d.className='mb'; d.innerHTML='<span class="lab">'+labels[i]+'</span><span class="track"><span class="fill" style="width:'+pc+'%;background:'+colors[i]+'"></span></span><span class="cnt">'+n+'回</span>'; mb.appendChild(d); });
+  const bk={}; logs.forEach(function(g){ if(!bk[g.kind]) bk[g.kind]={n:0,sum:0,best:0}; bk[g.kind].n++; bk[g.kind].sum+=g.ten; if(g.ten>bk[g.kind].best) bk[g.kind].best=g.ten; });
+  const keys=Object.keys(bk), byk=$('byKind');
+  if(!keys.length) byk.innerHTML='<div class="empty">まだ 記録が ありません</div>';
+  else { let h='<table class="rec"><tr><th>種類</th><th style="text-align:right">回数</th><th style="text-align:right">平均</th><th style="text-align:right">最高</th></tr>'; keys.forEach(function(k){ const v=bk[k]; h+='<tr><td>'+k+'</td><td class="n">'+v.n+'</td><td class="n">'+Math.round(v.sum/v.n)+'</td><td class="n">'+v.best+'</td></tr>'; }); byk.innerHTML=h+'</table>'; }
+  const hs=$('history');
+  if(!logs.length) hs.innerHTML='<div class="empty">まだ 記録が ありません</div>';
+  else { let h='<table class="rec"><tr><th>日時</th><th>種類</th><th style="text-align:right">点数</th><th style="text-align:right">時間</th></tr>'; logs.slice().reverse().slice(0,30).forEach(function(g,i){ const cls=g.ten===100?'sp100':(g.ten>=80?'sp80':'sp0'); h+='<tr class="hrow" data-i="'+i+'" style="cursor:pointer"><td>'+fmtDate(g.at)+'</td><td>'+g.kind+'</td><td class="n"><span class="scorepill '+cls+'">'+g.ten+'点</span></td><td class="n">'+fmtTime(g.sec)+'</td></tr><tr><td colspan="4" style="padding:0"><div class="detail" id="dt'+i+'">'+detailHTML(g)+'</div></td></tr>'; }); hs.innerHTML=h+'</table>'; hs.querySelectorAll('.hrow').forEach(function(tr){ tr.addEventListener('click',function(){ $('dt'+tr.dataset.i).classList.toggle('show'); }); }); }
+}
+function detailHTML(g){ let h=''; g.items.forEach(function(it){ h+='<div class="'+(it.ok?'':'ng')+'">'+(it.ok?'○':'✕')+' '+it.q+' → '+(it.user||'—')+(it.ok?'':'　（正解＝'+it.ans+'）')+'</div>'; }); return h; }
+function fmtDate(t){ const d=new Date(t); return (d.getMonth()+1)+'/'+d.getDate()+' '+d.getHours()+':'+('0'+d.getMinutes()).slice(-2); }
+function renderWhoList(){ const l=$('whoList'); l.innerHTML=''; if(!DB.people.length){ l.innerHTML='<div class="empty">学習者を 登録すると 記録が のこせます</div>'; return; } DB.people.forEach(function(p){ const d=document.createElement('div'); d.className='who-item'+(p.id===DB.cur?' on':''); const n=DB.logs.filter(g=>g.pid===p.id).length; d.innerHTML='<span class="nm">'+personLabel(p)+'<span class="sm2">　'+n+'回</span></span>'; const b1=document.createElement('button'); b1.className='mini'; b1.textContent=(p.id===DB.cur?'えらび中':'えらぶ'); b1.addEventListener('click',function(){ DB.cur=p.id; dbSave(); updateWhoBadge(); renderData(); }); const b2=document.createElement('button'); b2.className='mini red'; b2.textContent='けす'; b2.addEventListener('click',function(){ if(!confirm(personLabel(p)+' を 記録ごと 消しますか？')) return; DB.people=DB.people.filter(x=>x.id!==p.id); DB.logs=DB.logs.filter(g=>g.pid!==p.id); if(DB.cur===p.id) DB.cur=DB.people.length?DB.people[0].id:null; dbSave(); updateWhoBadge(); renderData(); }); d.appendChild(b1); d.appendChild(b2); l.appendChild(d); }); }
+function pad2(s){ s=String(s).replace(/[^0-9]/g,''); return s.length?('0'+s).slice(-2):'00'; }
+$('addWhoBtn').addEventListener('click',function(){ const nen=(String($('fNen').value).replace(/[^0-9]/g,'')||'2').slice(0,1); const kumi=pad2($('fKumi').value), ban=pad2($('fBan').value), name=$('fName').value.trim(); const id=nen+kumi+ban+'-'+Date.now().toString(36); DB.people.push({id:id,nen:nen,kumi:kumi,ban:ban,name:name}); DB.cur=id; dbSave(); $('fNen').value=''; $('fKumi').value=''; $('fBan').value=''; $('fName').value=''; updateWhoBadge(); renderData(); beep('tap'); });
+$('csvBtn').addEventListener('click',function(){ const p=curPerson(); const logs=DB.logs.filter(g=>p&&g.pid===p.id); if(!p||!logs.length){ alert('書き出す記録が ありません。'); return; } const rows=[["学年","組","番号","名前","日時","種類","点数","時間(秒)","問題","解答","正解","正誤","回数"]]; logs.forEach(function(g){ g.items.forEach(function(it){ rows.push([p.nen,p.kumi,p.ban,p.name,new Date(g.at).toLocaleString('ja-JP'),g.kind,g.ten,g.sec,it.q,it.user,it.ans,it.ok?'○':'×',it.tries]); }); }); const csv=rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\r\n'); const blob=new Blob([new Uint8Array([0xEF,0xBB,0xBF]),csv],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='2元1次方程式_グラフ_学習記録_'+p.nen+p.kumi+p.ban+'.csv'; document.body.appendChild(a); a.click(); document.body.removeChild(a); });
+$('clearBtn').addEventListener('click',function(){ const p=curPerson(); if(!p){ alert('学習者が えらばれていません。'); return; } if(!confirm(personLabel(p)+' の 記録を すべて 消しますか？')) return; DB.logs=DB.logs.filter(g=>g.pid!==p.id); dbSave(); renderData(); });
+$('dataBackBtn').addEventListener('click',function(){ beep('tap'); show('main'); });
+$('whoBadge').addEventListener('click',function(){ beep('tap'); openData(); });
+$('playBackBtn').addEventListener('click',function(){ clearInterval(timerId); show('main'); });
+$('againBtn').addEventListener('click',function(){ beep('tap'); startRound(S.mode); });
+$('homeBtn').addEventListener('click',function(){ beep('tap'); show('main'); });
+$('soundBtn').addEventListener('click',function(){ soundOn=!soundOn; $('soundBtn').textContent=soundOn?'🔊':'🔇'; });
+document.addEventListener('pointerdown',function(){ if(!actx){ try{ actx=new(window.AudioContext||window.webkitAudioContext)(); }catch(e){} } },{once:true});
+
+buildMain(); updateWhoBadge();
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79"}' crossorigin="anonymous"></script>
+</body>
+</html>

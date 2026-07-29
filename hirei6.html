@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>グラフを座標平面上に示す</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=M+PLUS+Rounded+1c:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FCFBF4; --grid:#DDE7E3; --grid2:#EDF2EF;
+    --ink:#37424A; --ink-soft:#6A757C;
+    --red:#EA5040; --red-deep:#D33B2E;
+    --blue:#2E9BD6; --blue-deep:#1F7CAE;
+    --yellow:#F6B93B; --yellow-deep:#D89A2C;
+    --green:#34B37A; --green-deep:#279862;
+    --sky:#2E86C1; --sky-deep:#1B5E8A;
+    --card:#FFFFFF;
+    --shadow:0 6px 0 rgba(55,66,74,.10), 0 12px 28px rgba(55,66,74,.12);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;font-family:"Zen Maru Gothic",system-ui,sans-serif;color:var(--ink);
+    background:
+      linear-gradient(var(--grid2) 1px,transparent 1px) 0 0/24px 24px,
+      linear-gradient(90deg,var(--grid2) 1px,transparent 1px) 0 0/24px 24px,
+      linear-gradient(var(--grid) 1px,transparent 1px) 0 0/120px 120px,
+      linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/120px 120px,
+      var(--paper);
+    display:flex;align-items:flex-start;justify-content:center;min-height:100%;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{width:100%;max-width:760px;padding:18px 16px 44px;}
+  .num{font-family:"M PLUS Rounded 1c",sans-serif;}
+
+  header.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;}
+  .logo{display:flex;align-items:center;gap:10px;}
+  .logo .pin{width:34px;height:34px;border-radius:50%;background:var(--sky);color:#fff;font-weight:900;
+    display:grid;place-items:center;font-size:16px;box-shadow:0 3px 0 var(--sky-deep);transform:rotate(-8deg);}
+  .logo b{font-size:17px;font-weight:900;}
+  .who{display:flex;align-items:center;gap:6px;}
+  .who .badge{background:var(--card);border-radius:999px;padding:6px 12px;font-weight:900;font-size:12px;
+    box-shadow:0 3px 0 rgba(55,66,74,.10);color:var(--sky);cursor:pointer;border:none;font-family:inherit;}
+  .who .badge:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(55,66,74,.10);}
+  .icon-btn{border:none;background:var(--card);border-radius:12px;width:44px;height:38px;font-size:16px;
+    cursor:pointer;color:var(--ink);box-shadow:0 3px 0 rgba(55,66,74,.12);font-family:inherit;}
+  .icon-btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(55,66,74,.12);}
+
+  .screen{display:none;animation:pop .3s ease;}
+  .screen.active{display:block;}
+  @keyframes pop{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+
+  .title-card{background:var(--card);border-radius:26px;padding:26px 22px 20px;box-shadow:var(--shadow);
+    text-align:center;position:relative;overflow:hidden;margin-bottom:16px;}
+  .title-card::before{content:"";position:absolute;inset:8px;border:3px dashed #CDE0EE;border-radius:20px;pointer-events:none;}
+  .title-card h1{margin:2px 0;font-size:clamp(21px,5.4vw,32px);font-weight:900;color:var(--sky);
+    position:relative;text-shadow:2px 3px 0 #D3E5F2;}
+  .title-card .sub{color:var(--ink-soft);font-weight:700;font-size:14px;position:relative;}
+  .prompt{position:relative;margin-top:10px;color:var(--blue);font-weight:900;font-size:14px;}
+
+  .menu-head{display:flex;align-items:baseline;gap:10px;margin:2px 4px 12px;flex-wrap:wrap;}
+  .menu-head h2{font-size:19px;font-weight:900;margin:0;}
+  .menu-head p{margin:0;color:var(--ink-soft);font-weight:700;font-size:12px;}
+
+  .mlist{display:grid;grid-template-columns:1fr;gap:11px;}
+  .mcard{display:flex;align-items:center;gap:12px;background:var(--card);border:none;border-radius:16px;
+    padding:16px 14px;box-shadow:var(--shadow);cursor:pointer;font-family:inherit;text-align:left;
+    color:var(--ink);transition:transform .1s;}
+  .mcard:hover{transform:translateY(-3px);}
+  .mcard:active{transform:translateY(1px);box-shadow:0 3px 0 rgba(55,66,74,.10);}
+  .mcard .n{flex:none;width:30px;height:30px;border-radius:50%;background:var(--sky);color:#fff;font-weight:900;
+    display:grid;place-items:center;font-size:14px;font-family:"M PLUS Rounded 1c";box-shadow:0 3px 0 var(--sky-deep);}
+  .mcard.blue .n{background:var(--blue);box-shadow:0 3px 0 var(--blue-deep);}
+  .mcard .lbl{font-weight:900;font-size:15px;line-height:1.35;}
+  .mcard .sm{display:block;font-size:11px;color:var(--ink-soft);font-weight:700;margin-top:3px;}
+
+  .foot{display:flex;justify-content:center;margin-top:18px;}
+  .foot button{display:inline-flex;align-items:center;gap:8px;font-weight:900;border:none;border-radius:16px;
+    padding:12px 22px;font-size:15px;color:var(--ink);background:#fff;box-shadow:0 5px 0 rgba(55,66,74,.15);
+    font-family:inherit;cursor:pointer;}
+  .foot button:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(55,66,74,.15);}
+  .credit{text-align:center;margin-top:14px;font-size:11px;color:#9AA4A9;line-height:1.7;}
+
+  /* ---- play ---- */
+  .play-top{display:flex;align-items:center;gap:9px;margin-bottom:12px;flex-wrap:wrap;}
+  .chip{background:var(--card);border-radius:999px;padding:6px 13px;font-weight:700;font-size:12px;box-shadow:0 3px 0 rgba(55,66,74,.10);}
+  .chip.mode{color:var(--sky);font-weight:900;}
+  .back-btn{border:none;background:var(--card);border-radius:12px;padding:8px 13px;font-family:inherit;
+    font-weight:700;cursor:pointer;color:var(--ink);box-shadow:0 3px 0 rgba(55,66,74,.12);font-size:13px;}
+  .back-btn:active{transform:translateY(2px);}
+  .dots{display:flex;gap:5px;margin-left:auto;}
+  .dot{width:15px;height:15px;border-radius:50%;background:#E4EAE8;display:grid;place-items:center;font-size:10px;color:#fff;font-weight:900;}
+  .dot.ok{background:var(--green);} .dot.ng{background:var(--red);}
+  .dot.now{background:var(--yellow);box-shadow:0 0 0 3px rgba(246,185,59,.35);}
+
+  .board{background:var(--card);border-radius:24px;box-shadow:var(--shadow);padding:20px 12px 18px;
+    text-align:center;position:relative;overflow:hidden;}
+  .qline{font-family:"M PLUS Rounded 1c";font-weight:900;font-size:clamp(22px,5.8vw,32px);margin-bottom:4px;}
+  .qline i{font-style:italic;color:var(--sky);}
+  .note{color:var(--blue);font-weight:900;font-size:13px;margin-bottom:10px;}
+  .graph-wrap{display:flex;justify-content:center;}
+  .graph-wrap svg{width:min(340px,88vw);height:auto;display:block;touch-action:manipulation;}
+  .picked{margin-top:10px;font-family:"M PLUS Rounded 1c";font-weight:900;font-size:15px;color:var(--sky);min-height:22px;}
+  .hintbtn{margin-top:8px;border:none;background:#E7F1F8;color:var(--sky-deep);border-radius:999px;
+    padding:7px 16px;font-family:inherit;font-weight:900;font-size:12px;cursor:pointer;box-shadow:0 3px 0 #C6DDEC;}
+  .hintbtn:active{transform:translateY(2px);box-shadow:0 1px 0 #C6DDEC;}
+  .hintbox{display:none;margin-top:8px;background:#FDF0CF;color:#6a5000;border-radius:12px;
+    padding:9px 12px;font-size:12px;font-weight:700;line-height:1.7;text-align:left;}
+  .hintbox.show{display:block;}
+  .msg{margin-top:8px;font-weight:900;font-size:16px;min-height:24px;}
+  .msg.good{color:var(--green);} .msg.bad{color:var(--red);}
+  .reveal{display:none;margin-top:6px;font-family:"M PLUS Rounded 1c";font-weight:900;font-size:19px;}
+  .reveal.show{display:block;animation:pop .3s ease;}
+  .reveal b{color:var(--red);}
+
+  .stamp{position:absolute;top:46%;left:50%;pointer-events:none;}
+  .stamp svg{display:block;width:126px;height:126px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.15));}
+  .stamp.maru{animation:si .45s cubic-bezier(.2,1.5,.4,1) both;}
+  .stamp.batsu{animation:sh .5s ease both;}
+  @keyframes si{0%{transform:translate(-50%,-50%) scale(2.4) rotate(-25deg);opacity:0;}60%{opacity:1;}100%{transform:translate(-50%,-50%) scale(1) rotate(-8deg);opacity:1;}}
+  @keyframes sh{0%{transform:translate(-50%,-50%) scale(1.4);opacity:0;}20%{opacity:1;}30%{transform:translate(-53%,-50%) rotate(-6deg);}45%{transform:translate(-47%,-50%) rotate(6deg);}60%{transform:translate(-52%,-50%) rotate(-4deg);}100%{transform:translate(-50%,-50%) rotate(0);opacity:1;}}
+
+  .padrow{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap;}
+  .pbtn{border:none;background:var(--card);border-radius:14px;padding:12px 18px;font-family:inherit;
+    font-weight:900;font-size:14px;color:var(--ink);cursor:pointer;box-shadow:0 4px 0 rgba(55,66,74,.14);}
+  .pbtn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(55,66,74,.14);}
+  .pbtn.del{background:#FDECE9;color:var(--red);box-shadow:0 4px 0 #F3C4BC;}
+  .pbtn.del:active{box-shadow:0 1px 0 #F3C4BC;}
+  .arrows{display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,46px);
+    gap:7px;justify-content:center;margin-top:12px;}
+  .arrows button{border:none;background:var(--card);border-radius:14px;font-size:20px;font-family:inherit;
+    color:var(--ink);cursor:pointer;box-shadow:0 4px 0 rgba(55,66,74,.14);font-weight:900;}
+  .arrows button:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(55,66,74,.14);}
+  .arrows .sp{visibility:hidden;}
+  .enter-btn{width:100%;margin-top:12px;border:none;cursor:pointer;font-family:inherit;font-weight:900;
+    border-radius:16px;color:#fff;padding:14px 0;font-size:19px;background:var(--green);box-shadow:0 5px 0 var(--green-deep);}
+  .enter-btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--green-deep);}
+
+  /* ---- result ---- */
+  .result-card{background:var(--card);border-radius:26px;box-shadow:var(--shadow);padding:24px 18px 22px;text-align:center;}
+  .hanamaru-wrap{height:120px;display:grid;place-items:center;}
+  .score-line{font-weight:900;font-size:20px;margin:6px 0 2px;}
+  .score-line .big{font-family:"M PLUS Rounded 1c";font-size:52px;color:var(--red);vertical-align:-5px;margin:0 4px;}
+  .result-msg{font-weight:900;font-size:22px;margin:4px 0 6px;}
+  .time-line{color:var(--ink-soft);font-weight:700;font-size:13px;margin-bottom:14px;}
+  .review{display:flex;flex-direction:column;gap:7px;text-align:left;margin:0 auto 20px;max-width:470px;}
+  .review-row{display:flex;align-items:center;gap:10px;background:#F7FAF9;border-radius:14px;padding:9px 12px;
+    font-family:"M PLUS Rounded 1c";font-weight:900;font-size:14px;}
+  .review-row .rmark{width:26px;height:26px;flex:none;display:grid;place-items:center;border-radius:50%;font-size:14px;color:#fff;}
+  .review-row .rmark.ok{background:var(--green);} .review-row .rmark.ng{background:var(--red);}
+  .review-row .rq{flex:1;}
+  .review-row .ra.wrong{color:var(--red);margin-right:6px;}
+  .review-row .rc{color:var(--green);}
+  .result-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+  .big-btn{border:none;cursor:pointer;font-family:inherit;font-weight:900;border-radius:16px;color:#fff;
+    padding:13px 20px;font-size:16px;background:var(--green);box-shadow:0 5px 0 var(--green-deep);}
+  .big-btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--green-deep);}
+  .big-btn.gray{background:#fff;color:var(--ink);box-shadow:0 5px 0 rgba(55,66,74,.15);}
+  .big-btn.gray:active{box-shadow:0 1px 0 rgba(55,66,74,.15);}
+
+  /* ---- 学習記録 ---- */
+  .panel{background:var(--card);border-radius:22px;box-shadow:var(--shadow);padding:18px 16px;margin-bottom:14px;}
+  .panel h3{margin:0 0 10px;font-size:16px;font-weight:900;display:flex;align-items:center;gap:8px;}
+  .panel h3 .bar2{width:6px;height:18px;border-radius:3px;background:var(--sky);}
+  .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  @media(max-width:480px){.stat-row{grid-template-columns:1fr 1fr;}}
+  .stat{background:#F7FAF9;border-radius:14px;padding:12px 8px;text-align:center;}
+  .stat .v{font-family:"M PLUS Rounded 1c";font-weight:900;font-size:26px;color:var(--sky);}
+  .stat .k{font-size:11px;color:var(--ink-soft);font-weight:700;margin-top:2px;}
+  table.rec{width:100%;border-collapse:collapse;font-size:13px;}
+  table.rec th,table.rec td{padding:7px 6px;border-bottom:1px solid #EDF2EF;text-align:left;}
+  table.rec th{font-size:11px;color:var(--ink-soft);font-weight:900;}
+  table.rec td.n{font-family:"M PLUS Rounded 1c";font-weight:900;text-align:right;white-space:nowrap;}
+  table.rec tr:last-child td{border-bottom:none;}
+  .scorepill{display:inline-block;min-width:44px;text-align:center;border-radius:999px;padding:2px 8px;
+    font-family:"M PLUS Rounded 1c";font-weight:900;color:#fff;font-size:12px;}
+  .sp100{background:var(--red);} .sp80{background:var(--yellow);color:#6a5000;} .sp0{background:var(--ink-soft);}
+  .miss-bars{display:flex;flex-direction:column;gap:8px;}
+  .mb{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;}
+  .mb .lab{flex:0 0 9.6em;}
+  .mb .track{flex:1;height:14px;background:#F0F4F2;border-radius:999px;overflow:hidden;}
+  .mb .fill{height:100%;border-radius:999px;}
+  .mb .cnt{flex:0 0 3.6em;text-align:right;font-family:"M PLUS Rounded 1c";font-weight:900;}
+  .spark{display:flex;align-items:flex-end;gap:3px;height:70px;padding-top:4px;}
+  .spark .b{flex:1;min-width:5px;background:var(--sky);border-radius:3px 3px 0 0;}
+  .spark .b.s100{background:var(--red);} .spark .b.s80{background:var(--yellow);}
+  .empty{color:var(--ink-soft);font-weight:700;font-size:13px;text-align:center;padding:14px 0;}
+  .rowbtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:6px;}
+  .sbtn{border:none;border-radius:14px;padding:10px 16px;font-family:inherit;font-weight:900;font-size:13px;
+    cursor:pointer;color:var(--ink);background:#fff;box-shadow:0 4px 0 rgba(55,66,74,.14);}
+  .sbtn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(55,66,74,.14);}
+  .sbtn.pur{background:var(--sky);color:#fff;box-shadow:0 4px 0 var(--sky-deep);}
+  .sbtn.pur:active{box-shadow:0 1px 0 var(--sky-deep);}
+  .sbtn.danger{background:#FDECE9;color:var(--red);box-shadow:0 4px 0 #F3C4BC;}
+  .sbtn.danger:active{box-shadow:0 1px 0 #F3C4BC;}
+  .form-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;justify-content:center;}
+  .fld{display:flex;flex-direction:column;gap:4px;}
+  .fld label{font-size:11px;font-weight:900;color:var(--ink-soft);}
+  .fld input{font-family:"M PLUS Rounded 1c";font-weight:900;font-size:18px;padding:8px 10px;width:74px;
+    border:2px solid #E1E8E5;border-radius:12px;text-align:center;color:var(--ink);background:#fff;}
+  .fld input.wide{width:150px;font-size:15px;text-align:left;font-family:"Zen Maru Gothic";}
+  .fld input:focus{outline:none;border-color:var(--sky);}
+  .who-list{display:flex;flex-direction:column;gap:8px;}
+  .who-item{display:flex;align-items:center;gap:10px;background:#F7FAF9;border-radius:14px;padding:10px 12px;}
+  .who-item.on{background:#E7F1F8;box-shadow:0 0 0 2px var(--sky) inset;}
+  .who-item .nm{flex:1;font-weight:900;font-size:14px;}
+  .who-item .sm2{font-size:11px;color:var(--ink-soft);font-weight:700;}
+  .mini{border:none;background:#fff;border-radius:10px;padding:6px 10px;font-family:inherit;font-weight:900;
+    font-size:12px;cursor:pointer;color:var(--ink);box-shadow:0 3px 0 rgba(55,66,74,.12);}
+  .mini:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(55,66,74,.12);}
+  .mini.red{color:var(--red);}
+  .notice{background:#FDF0CF;color:#6a5000;border-radius:12px;padding:9px 12px;font-size:12px;font-weight:700;margin-bottom:12px;}
+  .detail{display:none;background:#F7FAF9;border-radius:12px;padding:10px 12px;margin-top:6px;font-size:12px;}
+  .detail.show{display:block;}
+  .detail div{padding:3px 0;font-family:"M PLUS Rounded 1c";font-weight:900;}
+  .detail .ng{color:var(--red);}
+
+  @media (prefers-reduced-motion: reduce){*{animation-duration:.001ms !important;}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bar">
+    <div class="logo"><span class="pin">📉</span><b>グラフをかく</b></div>
+    <div class="who">
+      <button class="badge" id="whoBadge" title="学習者の切りかえ">学習者なし</button>
+      <button class="icon-btn" id="soundBtn" title="おと">🔊</button>
+    </div>
+  </header>
+
+  <!-- ===== メニュー ===== -->
+  <section class="screen active" id="mainScreen">
+    <div class="title-card">
+      <h1>グラフを座標平面上に示す</h1>
+      <div class="sub">比例 y＝aχ のグラフ</div>
+      <div class="prompt">つぎのなかから、勉強することを えらびましょう。</div>
+    </div>
+    <div class="menu-head"><h2>メニュー</h2><p>番号キー 1・2 でも えらべます</p></div>
+    <div class="mlist" id="mainList"></div>
+    <div class="credit">
+      岐阜県中学校数学教育研究会・小学校算数教育研究会（安藤忠展）<br>
+      原作 N88-BASIC「HIREI6」／ Web版
+    </div>
+  </section>
+
+  <!-- ===== 学習記録 ===== -->
+  <section class="screen" id="dataScreen">
+    <div class="title-card">
+      <h1>学習者反応データ処理システム</h1>
+      <div class="sub">学習の記録を 見る</div>
+    </div>
+    <div id="storeNotice"></div>
+    <div class="panel">
+      <h3><span class="bar2"></span>学習者</h3>
+      <div class="who-list" id="whoList"></div>
+      <div style="margin-top:12px" class="form-row">
+        <div class="fld"><label>学年</label><input id="fNen" inputmode="numeric" maxlength="1" placeholder="1"></div>
+        <div class="fld"><label>組</label><input id="fKumi" inputmode="numeric" maxlength="2" placeholder="01"></div>
+        <div class="fld"><label>番号</label><input id="fBan" inputmode="numeric" maxlength="2" placeholder="01"></div>
+        <div class="fld"><label>名前（任意）</label><input id="fName" class="wide" maxlength="12" placeholder="なまえ"></div>
+        <button class="sbtn pur" id="addWhoBtn">＋ 登録</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h3><span class="bar2"></span>成績のまとめ</h3>
+      <div class="stat-row">
+        <div class="stat"><div class="v" id="stCount">0</div><div class="k">練習した回数</div></div>
+        <div class="stat"><div class="v" id="stAvg">—</div><div class="k">平均点</div></div>
+        <div class="stat"><div class="v" id="stBest">—</div><div class="k">最高点</div></div>
+      </div>
+      <div style="margin-top:14px">
+        <div style="font-size:12px;font-weight:900;color:var(--ink-soft);margin-bottom:4px">点数の うつりかわり（古い→新しい）</div>
+        <div class="spark" id="spark"></div>
+      </div>
+    </div>
+    <div class="panel"><h3><span class="bar2"></span>まちがいの傾向</h3><div class="miss-bars" id="missBars"></div></div>
+    <div class="panel"><h3><span class="bar2"></span>まちがえた問題</h3><div id="weak"></div></div>
+    <div class="panel"><h3><span class="bar2"></span>練習の履歴</h3><div id="history"></div></div>
+    <div class="rowbtns">
+      <button class="sbtn" id="csvBtn">CSVで書き出す</button>
+      <button class="sbtn danger" id="clearBtn">この学習者の記録を消す</button>
+    </div>
+    <div class="foot"><button id="dataBackBtn">← メニューへ</button></div>
+  </section>
+
+  <!-- ===== ドリル ===== -->
+  <section class="screen" id="playScreen">
+    <div class="play-top">
+      <button class="back-btn" id="playBackBtn">← メニュー</button>
+      <span class="chip mode">グラフを座標平面上に示す</span>
+      <span class="chip" id="timerText">0びょう</span>
+      <div class="dots" id="dots"></div>
+    </div>
+    <div class="board">
+      <div class="qline" id="qline"></div>
+      <div class="note">この式の グラフが 通る点を ２つ えらびましょう！</div>
+      <div class="graph-wrap" id="graphWrap"></div>
+      <div class="picked" id="picked"></div>
+      <div class="padrow">
+        <button class="pbtn" id="placeBtn">この点をえらぶ</button>
+        <button class="pbtn del" id="undoBtn">ひとつ もどす</button>
+      </div>
+      <div class="arrows">
+        <button class="sp"></button><button data-d="up">↑</button><button class="sp"></button>
+        <button data-d="left">←</button><button data-d="down">↓</button><button data-d="right">→</button>
+      </div>
+      <button class="hintbtn" id="hintBtn">ヒントを見る</button>
+      <div class="hintbox" id="hintBox">
+        比例のグラフは かならず <b>原点（0, 0）</b> を通ります。<br>
+        まず 原点を えらび、つぎに χ に 1 や 2 を入れて y＝aχ を計算した点を えらびましょう。<br>
+        （例： y＝3χ なら χ＝1 のとき y＝3 → 点(1, 3)）
+      </div>
+      <div class="msg" id="msg"></div>
+      <div class="reveal" id="reveal"></div>
+      <div class="stamp" id="stamp"></div>
+    </div>
+    <button class="enter-btn" id="enterBtn">こたえあわせ</button>
+  </section>
+
+  <!-- ===== けっか ===== -->
+  <section class="screen" id="resultScreen">
+    <div class="result-card">
+      <div class="hanamaru-wrap" id="hanamaruWrap"></div>
+      <div class="score-line"><span class="big num" id="scoreNum">0</span> 点 です。</div>
+      <div class="result-msg" id="resultMsg"></div>
+      <div class="time-line" id="resultTime"></div>
+      <div class="review" id="review"></div>
+      <div class="result-actions">
+        <button class="big-btn" id="againBtn">もっと練習する</button>
+        <button class="big-btn gray" id="homeBtn">メニューへ</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* =========================================================
+   グラフを座標平面上に示す — Web版
+   原作: N88-BASIC "HIREI6"
+        岐阜県中学校数学教育研究会・小学校算数教育研究会（安藤忠展）
+   比例 y＝aχ （a は ±1〜±4）の グラフを 2点で 示す
+   ========================================================= */
+const $=id=>document.getElementById(id);
+const screens={main:$("mainScreen"),data:$("dataScreen"),play:$("playScreen"),result:$("resultScreen")};
+function show(n){for(const k in screens)screens[k].classList.toggle("active",k===n);window.scrollTo({top:0,behavior:"smooth"});}
+const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+
+const PRMSU=5, MISSN=3, RANGE=10;
+const MISSMSG=["間違っていますよ！","もう一度　考えよう！","傾きの符号が違います！","傾きの大きさが違います！",
+               "原点を通っていません！","同じ χ の点です。ちがう点を えらぼう！"];
+
+/* ---- グラフ（SVG）---- */
+const GW=320, GM=24, GP=GW-2*GM, GU=GP/(2*RANGE), GC=GM+GP/2;
+const gx=v=>GC+v*GU, gy=v=>GC-v*GU;
+function graphSVG(a, pts, cur, showAns){
+  let s='<svg viewBox="0 0 '+GW+' '+GW+'" xmlns="http://www.w3.org/2000/svg" id="gsvg">';
+  s+='<rect x="'+GM+'" y="'+GM+'" width="'+GP+'" height="'+GP+'" fill="#FFFFFF" stroke="#DDE7E3"/>';
+  for(let i=-RANGE;i<=RANGE;i++){
+    const c=(i%5===0)?'#C6D6D2':'#E7EEEC', w=(i%5===0)?1:0.7;
+    s+='<line x1="'+gx(i)+'" y1="'+GM+'" x2="'+gx(i)+'" y2="'+(GM+GP)+'" stroke="'+c+'" stroke-width="'+w+'"/>';
+    s+='<line x1="'+GM+'" y1="'+gy(i)+'" x2="'+(GM+GP)+'" y2="'+gy(i)+'" stroke="'+c+'" stroke-width="'+w+'"/>';
+  }
+  s+='<line x1="'+GM+'" y1="'+gy(0)+'" x2="'+(GM+GP)+'" y2="'+gy(0)+'" stroke="#37424A" stroke-width="2"/>';
+  s+='<line x1="'+gx(0)+'" y1="'+GM+'" x2="'+gx(0)+'" y2="'+(GM+GP)+'" stroke="#37424A" stroke-width="2"/>';
+  [-5,5].forEach(function(v){
+    s+='<text x="'+gx(v)+'" y="'+(gy(0)+13)+'" font-size="9" text-anchor="middle" fill="#6A757C" font-family="sans-serif">'+v+'</text>';
+    s+='<text x="'+(gx(0)-6)+'" y="'+(gy(v)+3)+'" font-size="9" text-anchor="end" fill="#6A757C" font-family="sans-serif">'+v+'</text>';
+  });
+  s+='<text x="'+(gx(0)-6)+'" y="'+(gy(0)+12)+'" font-size="9" text-anchor="end" fill="#6A757C" font-family="sans-serif">O</text>';
+  s+='<text x="'+(GM+GP-4)+'" y="'+(gy(0)-6)+'" font-size="11" text-anchor="end" fill="#37424A" font-style="italic" font-family="serif">x</text>';
+  s+='<text x="'+(gx(0)+7)+'" y="'+(GM+11)+'" font-size="11" fill="#37424A" font-style="italic" font-family="serif">y</text>';
+  // 正解の直線（3回まちがえたとき）
+  if(showAns){
+    const lim=RANGE/Math.max(1,Math.abs(a));
+    s+='<line x1="'+gx(-lim)+'" y1="'+gy(-a*lim)+'" x2="'+gx(lim)+'" y2="'+gy(a*lim)+'" stroke="#EA5040" stroke-width="2.4" stroke-dasharray="5 4"/>';
+  }
+  // えらんだ2点を通る直線
+  if(pts.length===2&&pts[0][0]!==pts[1][0]){
+    const m=(pts[1][1]-pts[0][1])/(pts[1][0]-pts[0][0]), b=pts[0][1]-m*pts[0][0];
+    const x1=-RANGE, x2=RANGE;
+    s+='<line x1="'+gx(x1)+'" y1="'+gy(m*x1+b)+'" x2="'+gx(x2)+'" y2="'+gy(m*x2+b)+'" stroke="#2E86C1" stroke-width="2.6" opacity="0.9"/>';
+  } else if(pts.length===2){
+    s+='<line x1="'+gx(pts[0][0])+'" y1="'+GM+'" x2="'+gx(pts[0][0])+'" y2="'+(GM+GP)+'" stroke="#2E86C1" stroke-width="2.6" opacity="0.9"/>';
+  }
+  // クリック用の あたり判定（格子点）
+  for(let X=-RANGE;X<=RANGE;X++) for(let Y=-RANGE;Y<=RANGE;Y++){
+    s+='<circle class="hit" data-x="'+X+'" data-y="'+Y+'" cx="'+gx(X)+'" cy="'+gy(Y)+'" r="'+(GU*0.48).toFixed(2)+'" fill="transparent" style="cursor:pointer"/>';
+  }
+  // えらんだ点
+  pts.forEach(function(p,i){
+    s+='<circle cx="'+gx(p[0])+'" cy="'+gy(p[1])+'" r="4.6" fill="#2E86C1"/>';
+    s+='<text x="'+(gx(p[0])+7)+'" y="'+(gy(p[1])-6)+'" font-size="9" fill="#1B5E8A" font-weight="bold" font-family="sans-serif">'+(i+1)+'</text>';
+  });
+  // カーソル
+  if(cur) s+='<circle cx="'+gx(cur[0])+'" cy="'+gy(cur[1])+'" r="6.4" fill="none" stroke="#F6B93B" stroke-width="2.6"/>';
+  s+='</svg>';
+  return s;
+}
+
+/* =========================================================
+   学習記録
+   ========================================================= */
+const KEY="hirei6.records.v1";
+const Store=(function(){
+  let mem=null, usable=false;
+  try{ const k="__t"+Date.now(); localStorage.setItem(k,"1"); localStorage.removeItem(k); usable=true; }catch(e){ usable=false; }
+  return { usable:usable,
+    load:function(){ if(!usable) return mem||{people:[],cur:null,logs:[]};
+      try{ const s=localStorage.getItem(KEY); return s?JSON.parse(s):{people:[],cur:null,logs:[]}; }
+      catch(e){ return {people:[],cur:null,logs:[]}; } },
+    save:function(d){ if(!usable){mem=d;return;} try{ localStorage.setItem(KEY,JSON.stringify(d)); }catch(e){ mem=d; } } };
+})();
+let DB=Store.load();
+function dbSave(){ Store.save(DB); }
+function curPerson(){ if(!DB.cur) return null;
+  for(let i=0;i<DB.people.length;i++) if(DB.people[i].id===DB.cur) return DB.people[i]; return null; }
+function personLabel(p){ if(!p) return "学習者なし";
+  const s=p.nen+"年"+p.kumi+"組"+p.ban+"番"; return p.name?s+" "+p.name:s; }
+function updateWhoBadge(){ $("whoBadge").textContent=personLabel(curPerson()); }
+const KIND="グラフを座標平面上に示す";
+function kaisuu(){ const p=curPerson(); if(!p) return 0;
+  let n=0; DB.logs.forEach(function(g){ if(g.pid===p.id) n++; }); return n; }
+function eqText(a){ return "y＝"+(a<0?"－":"")+(Math.abs(a)===1?"":Math.abs(a))+"χ"; }
+function ptsText(ps){ return ps.length?ps.map(function(p){return "("+p[0]+", "+p[1]+")";}).join(" と "):"―"; }
+function saveLog(ten,sec){
+  const p=curPerson(); if(!p) return;
+  const items=S.list.map(function(it){
+    return {q:eqText(it.a), a:it.a, user:ptsText(it.userPts||[]), ok:it.correct,
+            tries:it.tries, miss:it.lastMiss==null?-1:it.lastMiss}; });
+  DB.logs.push({pid:p.id,at:Date.now(),kind:KIND,ten:ten,sec:sec,items:items});
+  dbSave();
+}
+
+/* ---- おと ---- */
+let soundOn=true, actx=null;
+function beep(type){ if(!soundOn) return;
+  try{ actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+    const now=actx.currentTime;
+    const pl=(f,s,d,v)=>{const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+      o.connect(g);g.connect(actx.destination);g.gain.setValueAtTime(0,now+s);g.gain.linearRampToValueAtTime(v||.16,now+s+.02);
+      g.gain.exponentialRampToValueAtTime(.0001,now+s+d);o.start(now+s);o.stop(now+s+d+.02);};
+    if(type==="correct"){pl(660,0,.14);pl(880,.12,.2);}
+    else if(type==="wrong"){pl(200,0,.18,.2);}
+    else if(type==="type"){pl(680,0,.03,.06);}
+    else if(type==="tap"){pl(520,0,.05,.08);}
+    else if(type==="fanfare"){pl(523,0,.13);pl(659,.13,.13);pl(784,.26,.13);pl(1046,.39,.3);}
+  }catch(e){}
+}
+
+/* ---- メニュー ---- */
+const MODES=[
+ {t:'グラフを座標平面上に示す', sm:'比例 y＝aχ の グラフを 2点で 示す'},
+ {t:'学習者反応データ処理システム', data:true, sm:'学習の記録を 見る'},
+];
+function buildMain(){
+  const l=$("mainList"); l.innerHTML="";
+  MODES.forEach((m,i)=>{
+    const b=document.createElement("button");
+    b.className="mcard"+(m.data?" blue":"");
+    b.innerHTML='<span class="n">'+(i+1)+'</span><span class="lbl">'+m.t+'<span class="sm">'+m.sm+'</span></span>';
+    b.addEventListener("click",function(){beep("tap"); if(m.data) openData(); else startRound();});
+    l.appendChild(b);
+  });
+}
+
+/* ---- じょうたい ---- */
+let S={list:[],cur:0,pts:[],cursor:[0,0],locked:false,t0:0,showAns:false};
+let timerId=null;
+
+function startRound(){
+  S={list:[],cur:0,pts:[],cursor:[0,0],locked:false,t0:Date.now(),showAns:false};
+  const used={};
+  for(let i=0;i<PRMSU;i++){
+    let a,guard=0;
+    do{ a=rnd(1,4)*(rnd(1,2)===1?1:-1); guard++; }while(used[a]&&guard<30);
+    used[a]=1;
+    S.list.push({a:a,tries:0,correct:false,userPts:null});
+  }
+  buildDots(); show("play"); startTimer(); render();
+}
+function buildDots(){const d=$("dots");d.innerHTML="";
+  for(let i=0;i<PRMSU;i++){const s=document.createElement("span");s.className="dot";d.appendChild(s);}}
+function updateDots(){const ch=$("dots").children;
+  for(let i=0;i<ch.length;i++){const el=ch[i],it=S.list[i];el.className="dot";
+    if(i<S.cur){el.classList.add(it.correct?"ok":"ng");el.textContent=it.correct?"○":"✕";}
+    else if(i===S.cur){el.classList.add("now");el.textContent="";}else el.textContent="";}}
+
+function render(){
+  const it=S.list[S.cur];
+  S.pts=[]; S.cursor=[0,0]; S.locked=false; S.showAns=false;
+  $("msg").textContent=""; $("msg").className="msg";
+  $("reveal").classList.remove("show"); $("reveal").innerHTML="";
+  $("stamp").innerHTML=""; $("hintBox").classList.remove("show");
+  $("qline").innerHTML=eqText(it.a).replace(/χ/g,'<i>χ</i>').replace(/y/g,'<i>y</i>');
+  drawGraph(); updatePicked(); updateDots();
+}
+function drawGraph(){
+  const it=S.list[S.cur];
+  $("graphWrap").innerHTML=graphSVG(it.a, S.pts, S.locked?null:S.cursor, S.showAns);
+  const svg=document.getElementById("gsvg");
+  if(svg) svg.querySelectorAll('.hit').forEach(function(c){
+    c.addEventListener('click',function(){
+      if(S.locked) return;
+      S.cursor=[parseInt(c.dataset.x,10),parseInt(c.dataset.y,10)];
+      place();
+    });
+  });
+}
+function updatePicked(){
+  $("picked").textContent = S.pts.length
+    ? "えらんだ点： "+ptsText(S.pts) + (S.pts.length<2?"　（あと1つ）":"")
+    : "カーソル（0, 0）　矢印キーで うごかして えらびます";
+}
+function place(){
+  if(S.locked) return;
+  if(S.pts.length>=2){ beep("wrong"); return; }
+  const p=S.cursor;
+  if(S.pts.length===1&&S.pts[0][0]===p[0]&&S.pts[0][1]===p[1]){ beep("wrong");
+    $("msg").textContent="同じ点は えらべません"; $("msg").className="msg bad";
+    setTimeout(function(){if(!S.locked)$("msg").textContent="";},1200); return; }
+  S.pts.push([p[0],p[1]]); beep("type"); drawGraph(); updatePicked();
+}
+function undo(){ if(S.locked) return; S.pts.pop(); beep("type"); drawGraph(); updatePicked(); }
+function moveCur(dx,dy){
+  if(S.locked) return;
+  const nx=Math.max(-RANGE,Math.min(RANGE,S.cursor[0]+dx));
+  const ny=Math.max(-RANGE,Math.min(RANGE,S.cursor[1]+dy));
+  S.cursor=[nx,ny]; beep("type"); drawGraph();
+  $("picked").textContent = (S.pts.length?"えらんだ点： "+ptsText(S.pts)+"　／　":"")+"カーソル（"+nx+", "+ny+"）";
+}
+$("placeBtn").addEventListener("click",place);
+$("undoBtn").addEventListener("click",undo);
+document.querySelectorAll('.arrows button[data-d]').forEach(function(b){
+  b.addEventListener('click',function(){
+    const d=b.dataset.d;
+    moveCur(d==='left'?-1:d==='right'?1:0, d==='up'?1:d==='down'?-1:0);
+  });
+});
+$("hintBtn").addEventListener("click",function(){beep("tap");$("hintBox").classList.toggle("show");});
+$("enterBtn").addEventListener("click",function(){ if(S.locked) next(); else submit(); });
+document.addEventListener("keydown",function(e){
+  if(screens.play.classList.contains("active")){
+    if(e.key==="ArrowLeft"){moveCur(-1,0);e.preventDefault();}
+    else if(e.key==="ArrowRight"){moveCur(1,0);e.preventDefault();}
+    else if(e.key==="ArrowUp"){moveCur(0,1);e.preventDefault();}
+    else if(e.key==="ArrowDown"){moveCur(0,-1);e.preventDefault();}
+    else if(e.key===" "){place();e.preventDefault();}
+    else if(e.key==="Backspace"){undo();e.preventDefault();}
+    else if(e.key==="Enter"){ if(S.locked) next(); else if(S.pts.length<2) place(); else submit(); e.preventDefault(); }
+    return;
+  }
+  if(screens.main.classList.contains("active")&&(e.key==="1"||e.key==="2")){
+    if(e.key==="1") startRound(); else openData();
+  }
+});
+
+/* ---- こたえあわせ（原作: 2点を通る直線の 傾きと切片で 判定）---- */
+function judge(pts,a){
+  if(pts.length<2) return {ok:false,type:1};
+  const [p1,p2]=pts;
+  if(p1[0]===p2[0]) return {ok:false,type:5};                 // 同じ χ
+  const m=(p2[1]-p1[1])/(p2[0]-p1[0]);
+  const b=p1[1]-m*p1[0];
+  if(m===a&&b===0) return {ok:true};
+  if(b!==0&&m===a) return {ok:false,type:4};                  // 原点を通らない
+  if(m===-a&&a!==0) return {ok:false,type:2};                 // 傾きの符号ちがい
+  if(Math.abs(m)!==Math.abs(a)&&b===0) return {ok:false,type:3}; // 傾きの大きさちがい
+  return {ok:false,type:null};
+}
+function submit(){
+  if(S.locked) return;
+  const it=S.list[S.cur];
+  if(S.pts.length<2){ beep("wrong");
+    $("msg").textContent="点を ２つ えらびましょう"; $("msg").className="msg bad";
+    setTimeout(function(){if(!S.locked)$("msg").textContent="";},1400); return; }
+  it.tries++;
+  const r=judge(S.pts,it.a);
+  if(r.ok){
+    S.locked=true; it.correct=true; it.userPts=S.pts.slice();
+    stamp("maru"); beep("correct");
+    $("msg").textContent="正解！"; $("msg").className="msg good";
+    drawGraph();
+    setTimeout(next,1200);
+  } else {
+    stamp("batsu"); beep("wrong");
+    const last=it.tries>=MISSN;
+    const mt = r.type!==null ? r.type : (last?0:1);
+    it.lastMiss=mt;
+    $("msg").textContent=MISSMSG[mt]; $("msg").className="msg bad";
+    if(last){
+      S.locked=true; it.correct=false; it.userPts=S.pts.slice(); S.showAns=true;
+      drawGraph();
+      $("reveal").innerHTML='正解の グラフは <b>'+eqText(it.a)+'</b>（赤い点線）';
+      $("reveal").classList.add("show");
+      setTimeout(next,2800);
+    } else {
+      setTimeout(function(){ $("stamp").innerHTML=""; $("msg").textContent="";
+        S.pts=[]; drawGraph(); updatePicked(); },1300);
+    }
+  }
+}
+function next(){ S.cur++; if(S.cur>=PRMSU) finish(); else render(); }
+function stamp(t){const el=$("stamp");
+  if(t==="maru"){el.className="stamp maru";
+    el.innerHTML='<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="#EA5040" stroke-width="9"/><circle cx="50" cy="50" r="27" fill="none" stroke="#EA5040" stroke-width="7"/></svg>';
+  }else{el.className="stamp batsu";
+    el.innerHTML='<svg viewBox="0 0 100 100"><line x1="22" y1="22" x2="78" y2="78" stroke="#EA5040" stroke-width="11" stroke-linecap="round"/><line x1="78" y1="22" x2="22" y2="78" stroke="#EA5040" stroke-width="11" stroke-linecap="round"/></svg>';}}
+function startTimer(){clearInterval(timerId);
+  timerId=setInterval(function(){$("timerText").textContent=fmtTime(Math.floor((Date.now()-S.t0)/1000));},500);}
+function fmtTime(s){const m=Math.floor(s/60);return m===0?s+"びょう":m+"ふん"+(s%60)+"びょう";}
+
+/* ---- けっか ---- */
+function finish(){
+  clearInterval(timerId);
+  let ok=0; for(let i=0;i<S.list.length;i++) if(S.list[i].correct) ok++;
+  const ten=Math.floor(ok/PRMSU*100), sec=Math.floor((Date.now()-S.t0)/1000);
+  saveLog(ten,sec);
+  $("scoreNum").textContent=ten;
+  const w=$("hanamaruWrap"), m=$("resultMsg");
+  if(ten===100){m.textContent="よくできました！";m.style.color="var(--red)";w.innerHTML=hanamaru();beep("fanfare");}
+  else if(ten>=80){m.textContent="あともうすこし！";m.style.color="var(--yellow-deep)";w.innerHTML=star();beep("correct");}
+  else{m.textContent="もっとがんばろう！";m.style.color="var(--green)";w.innerHTML=face();}
+  const p0=curPerson();
+  $("resultTime").textContent="じかん： "+fmtTime(sec)+(p0?("　／　"+kaisuu()+"回目"):"");
+  const rv=$("review"); rv.innerHTML="";
+  S.list.forEach(function(it){
+    const row=document.createElement("div"); row.className="review-row";
+    row.innerHTML='<span class="rmark '+(it.correct?"ok":"ng")+'">'+(it.correct?"○":"✕")+'</span>'
+      +'<span class="rq">'+eqText(it.a)+'</span>'
+      +'<span>'+(it.correct?'<span class="rc">'+ptsText(it.userPts||[])+'</span>'
+        :'<span class="ra wrong">'+ptsText(it.userPts||[])+'</span>')+'</span>';
+    rv.appendChild(row);
+  });
+  show("result");
+}
+function hanamaru(){let p="";
+  for(let i=0;i<8;i++){const a=i/8*Math.PI*2;p+='<circle cx="'+(60+30*Math.cos(a)).toFixed(1)+'" cy="'+(60+30*Math.sin(a)).toFixed(1)+'" r="17" fill="#F6B93B"/>';}
+  return '<svg width="115" height="115" viewBox="0 0 120 120">'+p+'<circle cx="60" cy="60" r="30" fill="#FDE9BE"/><circle cx="60" cy="60" r="24" fill="none" stroke="#EA5040" stroke-width="6"/><circle cx="60" cy="60" r="15" fill="none" stroke="#EA5040" stroke-width="5"/></svg>';}
+function star(){let pts="";
+  for(let i=0;i<10;i++){const r=i%2===0?42:18,a=(-90+i*36)*Math.PI/180;pts+=(60+r*Math.cos(a)).toFixed(1)+","+(60+r*Math.sin(a)).toFixed(1)+" ";}
+  return '<svg width="115" height="115" viewBox="0 0 120 120"><polygon points="'+pts+'" fill="#F6B93B" stroke="#D89A2C" stroke-width="4" stroke-linejoin="round"/></svg>';}
+function face(){return '<svg width="115" height="115" viewBox="0 0 120 120"><circle cx="60" cy="60" r="42" fill="#EAF6F0" stroke="#34B37A" stroke-width="5"/><circle cx="46" cy="52" r="5" fill="#34B37A"/><circle cx="74" cy="52" r="5" fill="#34B37A"/><path d="M42 74 Q60 90 78 74" fill="none" stroke="#34B37A" stroke-width="5" stroke-linecap="round"/></svg>';}
+
+/* =========================================================
+   学習記録がめん
+   ========================================================= */
+function openData(){ renderData(); show("data"); }
+function renderData(){
+  $("storeNotice").innerHTML=Store.usable?"":
+    '<div class="notice">※ このかんきょうでは 記録を ブラウザに 保存できません。'
+    +'いまの記録は 画面を とじると 消えます。のこしたいときは「CSVで書き出す」を つかってください。</div>';
+  renderWhoList();
+  const p=curPerson();
+  const logs=DB.logs.filter(function(g){return p&&g.pid===p.id;});
+  $("stCount").textContent=logs.length;
+  if(logs.length){let sum=0,best=0;
+    logs.forEach(function(g){sum+=g.ten;if(g.ten>best)best=g.ten;});
+    $("stAvg").textContent=Math.round(sum/logs.length); $("stBest").textContent=best;
+  }else{$("stAvg").textContent="—";$("stBest").textContent="—";}
+  const sp=$("spark"); sp.innerHTML="";
+  if(!logs.length) sp.innerHTML='<div class="empty" style="width:100%">まだ 記録が ありません</div>';
+  else logs.slice(-24).forEach(function(g){
+    const b=document.createElement("div");
+    b.className="b"+(g.ten===100?" s100":(g.ten>=80?" s80":""));
+    b.style.height=Math.max(6,g.ten*0.6)+"px";
+    b.title=fmtDate(g.at)+" "+g.ten+"点"; sp.appendChild(b);});
+  const mc=[0,0,0,0,0,0]; let miss=0;
+  logs.forEach(function(g){g.items.forEach(function(it){
+    if(!it.ok||it.tries>1){ if(it.miss>=0&&it.miss<=5){mc[it.miss]++;miss++;} } });});
+  const order=[2,3,4,5,1,0];
+  const labels=["傾きの符号ちがい","傾きの大きさちがい","原点を通らない","同じχの点","そのほか","（3回目）"];
+  const colors=["var(--sky)","var(--blue)","var(--red)","var(--yellow)","#B9C3C0","var(--ink-soft)"];
+  const mb=$("missBars"); mb.innerHTML="";
+  if(!miss) mb.innerHTML='<div class="empty">まちがいの 記録が ありません</div>';
+  else order.forEach(function(idx,i){
+    const n=mc[idx], pc=Math.round(n/miss*100);
+    const d=document.createElement("div"); d.className="mb";
+    d.innerHTML='<span class="lab">'+labels[i]+'</span>'
+      +'<span class="track"><span class="fill" style="width:'+pc+'%;background:'+colors[i]+'"></span></span>'
+      +'<span class="cnt">'+n+'回</span>';
+    mb.appendChild(d);});
+  const wc={}; logs.forEach(function(g){g.items.forEach(function(it){
+    if(!it.ok){ if(!wc[it.q])wc[it.q]={n:0}; wc[it.q].n++; } });});
+  const wk=Object.keys(wc).sort(function(a,b){return wc[b].n-wc[a].n;});
+  const we=$("weak");
+  if(!wk.length) we.innerHTML='<div class="empty">まちがえた問題は ありません</div>';
+  else{let h='<table class="rec"><tr><th>式</th><th style="text-align:right">まちがえた回数</th></tr>';
+    wk.slice(0,12).forEach(function(k){
+      h+='<tr><td class="n" style="text-align:left">'+k+'</td><td class="n">'+wc[k].n+'回</td></tr>';});
+    we.innerHTML=h+'</table>';}
+  const hs=$("history");
+  if(!logs.length) hs.innerHTML='<div class="empty">まだ 記録が ありません</div>';
+  else{
+    let h='<table class="rec"><tr><th>日時</th><th style="text-align:right">点数</th><th style="text-align:right">時間</th></tr>';
+    logs.slice().reverse().slice(0,30).forEach(function(g,i){
+      const cls=g.ten===100?"sp100":(g.ten>=80?"sp80":"sp0");
+      h+='<tr class="hrow" data-i="'+i+'" style="cursor:pointer"><td>'+fmtDate(g.at)+'</td>'
+        +'<td class="n"><span class="scorepill '+cls+'">'+g.ten+'点</span></td><td class="n">'+fmtTime(g.sec)+'</td></tr>'
+        +'<tr><td colspan="3" style="padding:0"><div class="detail" id="dt'+i+'">'+detailHTML(g)+'</div></td></tr>';});
+    hs.innerHTML=h+'</table>';
+    hs.querySelectorAll('.hrow').forEach(function(tr){
+      tr.addEventListener('click',function(){$("dt"+tr.dataset.i).classList.toggle('show');});});
+  }
+}
+function detailHTML(g){
+  let h='';
+  g.items.forEach(function(it){
+    h+='<div class="'+(it.ok?'':'ng')+'">'+(it.ok?'○':'✕')+' '+it.q+'　えらんだ点： '+(it.user||'―')+'</div>';});
+  return h;
+}
+function fmtDate(t){const d=new Date(t);
+  return (d.getMonth()+1)+"/"+d.getDate()+" "+d.getHours()+":"+("0"+d.getMinutes()).slice(-2);}
+function renderWhoList(){
+  const l=$("whoList"); l.innerHTML="";
+  if(!DB.people.length){ l.innerHTML='<div class="empty">学習者を 登録すると 記録が のこせます</div>'; return; }
+  DB.people.forEach(function(p){
+    const d=document.createElement("div");
+    d.className="who-item"+(p.id===DB.cur?" on":"");
+    const n=DB.logs.filter(function(g){return g.pid===p.id;}).length;
+    d.innerHTML='<span class="nm">'+personLabel(p)+'<span class="sm2">　'+n+'回</span></span>';
+    const b1=document.createElement("button"); b1.className="mini";
+    b1.textContent=(p.id===DB.cur?"えらび中":"えらぶ");
+    b1.addEventListener("click",function(){DB.cur=p.id;dbSave();updateWhoBadge();renderData();});
+    const b2=document.createElement("button"); b2.className="mini red"; b2.textContent="けす";
+    b2.addEventListener("click",function(){
+      if(!confirm(personLabel(p)+" を 記録ごと 消しますか？")) return;
+      DB.people=DB.people.filter(function(x){return x.id!==p.id;});
+      DB.logs=DB.logs.filter(function(g){return g.pid!==p.id;});
+      if(DB.cur===p.id) DB.cur=DB.people.length?DB.people[0].id:null;
+      dbSave();updateWhoBadge();renderData();});
+    d.appendChild(b1); d.appendChild(b2); l.appendChild(d);});
+}
+function pad2(s){ s=String(s).replace(/[^0-9]/g,""); return s.length?("0"+s).slice(-2):"00"; }
+$("addWhoBtn").addEventListener("click",function(){
+  const nen=(String($("fNen").value).replace(/[^0-9]/g,"")||"1").slice(0,1);
+  const kumi=pad2($("fKumi").value), ban=pad2($("fBan").value), name=$("fName").value.trim();
+  const id=nen+kumi+ban+"-"+Date.now().toString(36);
+  DB.people.push({id:id,nen:nen,kumi:kumi,ban:ban,name:name});
+  DB.cur=id; dbSave();
+  $("fNen").value="";$("fKumi").value="";$("fBan").value="";$("fName").value="";
+  updateWhoBadge(); renderData(); beep("tap");});
+$("csvBtn").addEventListener("click",function(){
+  const p=curPerson();
+  const logs=DB.logs.filter(function(g){return p&&g.pid===p.id;});
+  if(!p||!logs.length){ alert("書き出す記録が ありません。"); return; }
+  const rows=[["学年","組","番号","名前","日時","種類","点数","時間(秒)","式","えらんだ点","正誤","回数"]];
+  logs.forEach(function(g){g.items.forEach(function(it){
+    rows.push([p.nen,p.kumi,p.ban,p.name,new Date(g.at).toLocaleString("ja-JP"),g.kind,g.ten,g.sec,
+      it.q,it.user,it.ok?"○":"×",it.tries]);});});
+  const csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(",");}).join("\r\n");
+  const blob=new Blob([new Uint8Array([0xEF,0xBB,0xBF]),csv],{type:"text/csv"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="グラフをかく_学習記録_"+p.nen+p.kumi+p.ban+".csv";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);});
+$("clearBtn").addEventListener("click",function(){
+  const p=curPerson(); if(!p){alert("学習者が えらばれていません。");return;}
+  if(!confirm(personLabel(p)+" の 記録を すべて 消しますか？")) return;
+  DB.logs=DB.logs.filter(function(g){return g.pid!==p.id;}); dbSave(); renderData();});
+$("dataBackBtn").addEventListener("click",function(){beep("tap");show("main");});
+$("whoBadge").addEventListener("click",function(){beep("tap");openData();});
+$("playBackBtn").addEventListener("click",function(){clearInterval(timerId);show("main");});
+$("againBtn").addEventListener("click",function(){beep("tap");startRound();});
+$("homeBtn").addEventListener("click",function(){beep("tap");show("main");});
+$("soundBtn").addEventListener("click",function(){soundOn=!soundOn;$("soundBtn").textContent=soundOn?"🔊":"🔇";});
+document.addEventListener("pointerdown",function(){if(!actx){try{actx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}},{once:true});
+
+buildMain(); updateWhoBadge();
+</script>
+</body>
+</html>

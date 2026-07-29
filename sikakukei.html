@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>四角形での面積の変化</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=M+PLUS+Rounded+1c:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FCFBF4; --grid:#DDE7E3; --grid2:#EDF2EF;
+    --ink:#37424A; --ink-soft:#6A757C;
+    --red:#EA5040; --red-deep:#D33B2E;
+    --blue:#2E9BD6; --blue-deep:#1F7CAE;
+    --yellow:#F6B93B; --yellow-deep:#D89A2C;
+    --green:#34B37A; --green-deep:#279862;
+    --purple:#8B72D6;
+    --teal2:#1F8A70; --teal2-deep:#146754;
+    --card:#FFFFFF;
+    --shadow:0 6px 0 rgba(55,66,74,.10), 0 12px 28px rgba(55,66,74,.12);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;font-family:"Zen Maru Gothic",system-ui,sans-serif;color:var(--ink);
+    background:
+      linear-gradient(var(--grid2) 1px,transparent 1px) 0 0/24px 24px,
+      linear-gradient(90deg,var(--grid2) 1px,transparent 1px) 0 0/24px 24px,
+      linear-gradient(var(--grid) 1px,transparent 1px) 0 0/120px 120px,
+      linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/120px 120px,
+      var(--paper);
+    display:flex;align-items:flex-start;justify-content:center;min-height:100%;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{width:100%;max-width:760px;padding:18px 16px 44px;}
+
+  header.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;}
+  .logo{display:flex;align-items:center;gap:10px;}
+  .logo .pin{width:34px;height:34px;border-radius:50%;background:var(--teal2);color:#fff;font-weight:900;
+    display:grid;place-items:center;font-size:15px;box-shadow:0 3px 0 var(--teal2-deep);transform:rotate(-8deg);}
+  .logo b{font-size:17px;font-weight:900;}
+  .icon-btn{border:none;background:var(--card);border-radius:12px;width:44px;height:38px;font-size:16px;
+    cursor:pointer;color:var(--ink);box-shadow:0 3px 0 rgba(55,66,74,.12);font-family:inherit;}
+  .icon-btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(55,66,74,.12);}
+
+  .screen{display:none;animation:pop .3s ease;}
+  .screen.active{display:block;}
+  @keyframes pop{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+
+  .title-card{background:var(--card);border-radius:26px;padding:26px 22px 20px;box-shadow:var(--shadow);
+    text-align:center;position:relative;overflow:hidden;margin-bottom:16px;}
+  .title-card::before{content:"";position:absolute;inset:8px;border:3px dashed #CCE3DC;border-radius:20px;pointer-events:none;}
+  .title-card h1{margin:2px 0;font-size:clamp(21px,5.4vw,32px);font-weight:900;color:var(--teal2);
+    position:relative;text-shadow:2px 3px 0 #D2E8E0;}
+  .title-card .sub{color:var(--ink-soft);font-weight:700;font-size:14px;position:relative;}
+
+  .mondai{background:var(--card);border-radius:22px;box-shadow:var(--shadow);padding:18px 16px;margin-bottom:14px;
+    display:flex;gap:14px;align-items:center;flex-wrap:wrap;justify-content:center;}
+  .mondai .fig{flex:none;width:150px;}
+  .mondai .fig svg{display:block;width:100%;height:auto;}
+  .mondai .tx{flex:1;min-width:220px;font-weight:700;font-size:14px;line-height:1.9;}
+  .mondai .tx i{font-style:italic;color:var(--teal2);}
+  .mondai .tx b{color:var(--teal2-deep);}
+
+  .panel{background:var(--card);border-radius:22px;box-shadow:var(--shadow);padding:18px 16px;margin-bottom:14px;}
+  .panel h3{margin:0 0 12px;font-size:16px;font-weight:900;display:flex;align-items:center;gap:8px;}
+  .panel h3 .bar2{width:6px;height:18px;border-radius:3px;background:var(--teal2);}
+  .panel h3 .unit{margin-left:auto;font-size:11px;color:var(--ink-soft);font-weight:700;}
+
+  .selrow{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:12px;}
+  .selrow .lab{font-size:12px;font-weight:900;color:var(--ink-soft);flex:0 0 6.4em;}
+  .pill{border:none;background:#F5F7F8;border-radius:999px;padding:8px 13px;font-family:"M PLUS Rounded 1c";
+    font-weight:900;font-size:14px;color:var(--ink);cursor:pointer;box-shadow:0 3px 0 rgba(55,66,74,.10);min-width:2.6em;}
+  .pill:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(55,66,74,.10);}
+  .pill.on{background:var(--teal2);color:#fff;box-shadow:0 3px 0 var(--teal2-deep);}
+  .pill.wide{min-width:auto;font-family:"Zen Maru Gothic";font-size:13px;}
+
+  .foot{display:flex;justify-content:center;margin-top:6px;}
+  .enter-btn{width:100%;border:none;cursor:pointer;font-family:inherit;font-weight:900;
+    border-radius:16px;color:#fff;padding:14px 0;font-size:19px;background:var(--green);box-shadow:0 5px 0 var(--green-deep);}
+  .enter-btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--green-deep);}
+  .credit{text-align:center;margin-top:14px;font-size:11px;color:#9AA4A9;line-height:1.7;}
+
+  /* ---- sim ---- */
+  .play-top{display:flex;align-items:center;gap:9px;margin-bottom:12px;flex-wrap:wrap;}
+  .chip{background:var(--card);border-radius:999px;padding:6px 13px;font-weight:700;font-size:12px;box-shadow:0 3px 0 rgba(55,66,74,.10);}
+  .chip.mode{color:var(--teal2);font-weight:900;}
+  .back-btn{border:none;background:var(--card);border-radius:12px;padding:8px 13px;font-family:inherit;
+    font-weight:700;cursor:pointer;color:var(--ink);box-shadow:0 3px 0 rgba(55,66,74,.12);font-size:13px;}
+  .back-btn:active{transform:translateY(2px);}
+
+  .board{background:var(--card);border-radius:24px;box-shadow:var(--shadow);padding:16px 12px 14px;
+    text-align:center;position:relative;overflow:hidden;}
+  .stage{margin:0 auto;max-width:520px;}
+  .stage svg{display:block;width:100%;height:auto;}
+  .readout{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:10px;}
+  .rd{background:#F7FAF9;border-radius:14px;padding:9px 14px;min-width:8.4em;}
+  .rd .k{font-size:11px;font-weight:900;color:var(--ink-soft);}
+  .rd .k i{font-style:italic;color:var(--teal2);}
+  .rd .v{font-family:"M PLUS Rounded 1c";font-weight:900;font-size:22px;color:var(--teal2-deep);}
+  .rd.now .v{color:var(--red);}
+  .rd .u{font-size:12px;font-weight:900;color:var(--ink-soft);margin-left:2px;}
+  .kubun{margin-top:8px;font-size:12px;font-weight:900;color:var(--blue);}
+
+  .sliderow{display:flex;align-items:center;gap:10px;margin-top:14px;}
+  .sliderow span{font-size:12px;font-weight:900;color:var(--ink-soft);white-space:nowrap;}
+  input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:26px;background:transparent;cursor:pointer;}
+  input[type=range]::-webkit-slider-runnable-track{height:10px;border-radius:999px;background:#E4EAE8;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;
+    background:var(--red);margin-top:-8px;box-shadow:0 2px 0 var(--red-deep);}
+  input[type=range]::-moz-range-track{height:10px;border-radius:999px;background:#E4EAE8;}
+  input[type=range]::-moz-range-thumb{width:26px;height:26px;border:none;border-radius:50%;background:var(--red);}
+
+  .tools{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px;}
+  .sbtn{border:none;border-radius:14px;padding:11px 18px;font-family:inherit;font-weight:900;font-size:14px;
+    cursor:pointer;color:var(--ink);background:#fff;box-shadow:0 4px 0 rgba(55,66,74,.14);}
+  .sbtn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(55,66,74,.14);}
+  .sbtn.go{background:var(--green);color:#fff;box-shadow:0 4px 0 var(--green-deep);}
+  .sbtn.go:active{box-shadow:0 1px 0 var(--green-deep);}
+  .sbtn.pause{background:var(--yellow);color:#6a5000;box-shadow:0 4px 0 var(--yellow-deep);}
+  .sbtn.pause:active{box-shadow:0 1px 0 var(--yellow-deep);}
+
+  .tblwrap{overflow-x:auto;padding-bottom:4px;}
+  table.hyou{border-collapse:collapse;font-size:13px;margin-bottom:14px;}
+  table.hyou caption{text-align:left;font-size:12px;font-weight:900;color:var(--blue);padding-bottom:5px;white-space:nowrap;}
+  table.hyou th,table.hyou td{border:1px solid #E1E8E5;padding:5px 9px;text-align:center;
+    font-family:"M PLUS Rounded 1c";font-weight:900;white-space:nowrap;}
+  table.hyou th{background:#F0F5F3;color:var(--ink-soft);font-size:12px;}
+  table.hyou th i{font-style:italic;color:var(--teal2);}
+  table.hyou td.yet{color:#C8D2CE;}
+  table.hyou td.cur{background:#FDECE9;color:var(--red);}
+  table.hyou tr.yrow td{color:var(--teal2-deep);}
+
+  .shiki{display:flex;flex-direction:column;gap:9px;}
+  .shiki .row{display:flex;gap:11px;align-items:flex-start;background:#F7FAF9;border-radius:16px;padding:12px 13px;text-align:left;}
+  .shiki .row.on{background:#E6F2EE;box-shadow:0 0 0 2px var(--teal2) inset;}
+  .shiki .k{flex:none;width:26px;height:26px;border-radius:8px;color:#fff;font-weight:900;font-size:13px;
+    display:grid;place-items:center;font-family:"M PLUS Rounded 1c";}
+  .shiki .tx{flex:1;font-size:12px;font-weight:700;line-height:1.7;color:var(--ink-soft);}
+  .shiki .tx b{display:block;font-family:"M PLUS Rounded 1c";font-size:17px;font-weight:900;color:var(--teal2-deep);margin-bottom:2px;}
+  .shiki .tx i{font-style:italic;}
+  .note-s{font-size:12px;font-weight:700;color:var(--ink-soft);line-height:1.8;margin-top:10px;}
+  .note-s i{font-style:italic;}
+
+  :focus-visible{outline:3px solid var(--blue);outline-offset:2px;}
+  @media (prefers-reduced-motion: reduce){*{animation-duration:.001ms !important;}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bar">
+    <div class="logo"><span class="pin">面積</span><b>四角形での面積の変化</b></div>
+    <button class="icon-btn" id="soundBtn" title="おと">🔊</button>
+  </header>
+
+  <!-- ===== 設定 ===== -->
+  <section class="screen active" id="setScreen">
+    <div class="title-card">
+      <h1>四角形での面積の変化</h1>
+      <div class="sub">点Ｐが動くとき、三角形の面積は どう変わるか</div>
+    </div>
+
+    <div class="mondai">
+      <div class="fig" id="introFig"></div>
+      <div class="tx">
+        長方形ＡＢＣＤがある。点ＰがＢを出発して、辺ＢＣ・ＣＤ・ＤＡ上を Ａまで動く。<br>
+        出発してから <b><i>x</i> 秒後</b>の <b>△ＡＢＰ の面積</b>を <b><i>y</i> cm²</b> として、
+        <i>x</i> と <i>y</i> の関係を 調べましょう。
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3><span class="bar2"></span>長方形の大きさと 点Ｐの速さ</h3>
+      <div class="selrow"><span class="lab">縦ＡＢ</span><span id="pillsA" style="display:flex;gap:7px;flex-wrap:wrap"></span></div>
+      <div class="selrow"><span class="lab">横ＡＤ</span><span id="pillsB" style="display:flex;gap:7px;flex-wrap:wrap"></span></div>
+      <div class="selrow"><span class="lab">点Ｐの速さ</span><span id="pillsV" style="display:flex;gap:7px;flex-wrap:wrap"></span></div>
+      <div class="note-s" id="setNote"></div>
+    </div>
+
+    <button class="enter-btn" id="startBtn">はじめる</button>
+    <div class="credit">
+      原案 S.USHIMARU（1990年8月）／ Arranged by T.Ando（2002.8.6.）<br>
+      toWin 関市学習情報センター　遠藤和弘 ／ 原作 N88-BASIC「四角形」・Web版
+    </div>
+  </section>
+
+  <!-- ===== シミュレーション ===== -->
+  <section class="screen" id="simScreen">
+    <div class="play-top">
+      <button class="back-btn" id="backBtn">← 設定</button>
+      <span class="chip mode" id="sizeChip"></span>
+      <span class="chip" id="speedChip"></span>
+    </div>
+
+    <div class="board">
+      <div class="stage" id="stage"></div>
+      <div class="readout">
+        <div class="rd now"><div class="k">時間 <i>x</i></div><div class="v"><span id="rdX">0</span><span class="u">秒</span></div></div>
+        <div class="rd"><div class="k">△ＡＢＰの面積 <i>y</i></div><div class="v"><span id="rdY">0</span><span class="u">cm²</span></div></div>
+      </div>
+      <div class="kubun" id="kubun"></div>
+      <div class="sliderow">
+        <span>0秒</span>
+        <input type="range" id="tRange" min="0" max="100" step="0.1" value="0">
+        <span id="tEnd">秒</span>
+      </div>
+      <div class="tools">
+        <button class="sbtn go" id="playBtn">▶ うごかす</button>
+        <button class="sbtn" id="resetBtn">⏮ さいしょから</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3><span class="bar2"></span>表示するもの<span class="unit">原作の「５」キーと同じ 段階表示</span></h3>
+      <div class="selrow" style="margin-bottom:0">
+        <span class="lab">レベル</span>
+        <span id="pillsLevel" style="display:flex;gap:7px;flex-wrap:wrap"></span>
+      </div>
+      <div class="selrow" style="margin-top:12px;margin-bottom:0">
+        <span class="lab">再生の速さ</span>
+        <span id="pillsSpeed" style="display:flex;gap:7px;flex-wrap:wrap"></span>
+      </div>
+    </div>
+
+    <div class="panel" id="hyouPanel" style="display:none">
+      <h3><span class="bar2"></span>表<span class="unit">点Ｐが 通ったところまで 数が入ります</span></h3>
+      <div class="tblwrap" id="hyouBox"></div>
+    </div>
+
+    <div class="panel" id="graphPanel" style="display:none">
+      <h3><span class="bar2"></span>グラフ</h3>
+      <div class="stage" id="graph"></div>
+    </div>
+
+    <div class="panel">
+      <h3><span class="bar2"></span>式</h3>
+      <button class="sbtn" id="shikiBtn" style="width:100%">式をみる</button>
+      <div id="shikiBox" style="display:none;margin-top:12px"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* =========================================================
+   四角形での面積の変化 — Web版
+   原作: N88-BASIC「四角形」 S.USHIMARU (1990.8) /
+        Arranged by T.Ando (2002.8.6.) / toWin 遠藤和弘
+   ========================================================= */
+const $=id=>document.getElementById(id);
+const screens={set:$("setScreen"),sim:$("simScreen")};
+function show(n){for(const k in screens)screens[k].classList.toggle("active",k===n);window.scrollTo({top:0,behavior:"smooth"});}
+function fmt(n){ const r=Math.round(n*100)/100; return String(r); }
+
+/* 原作の入力範囲：縦3〜10, 横2〜10, 速さ1〜5 */
+const RA=[3,4,5,6,7,8,9,10], RB=[2,3,4,5,6,7,8,9,10], RV=[1,2,3,4,5];
+const LEVELS=['図だけ','＋ 表','＋ グラフ'];
+const SPEEDS=[1,2,4];
+
+let ST={a:6,b:8,v:2,t:0,level:0,speed:2,playing:false};
+let raf=null, last=0;
+
+let soundOn=true, actx=null;
+function beep(type){ if(!soundOn) return;
+  try{ actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+    const now=actx.currentTime;
+    const pl=(f,s,d,v)=>{const o=actx.createOscillator(),g=actx.createGain();o.type='sine';o.frequency.value=f;
+      o.connect(g);g.connect(actx.destination);g.gain.setValueAtTime(0,now+s);g.gain.linearRampToValueAtTime(v||.14,now+s+.02);
+      g.gain.exponentialRampToValueAtTime(.0001,now+s+d);o.start(now+s);o.stop(now+s+d+.02);};
+    if(type==='tap'){pl(560,0,.05,.09);} else if(type==='tick'){pl(880,0,.04,.06);}
+    else if(type==='go'){pl(523,0,.10);pl(784,.10,.16);} else if(type==='fin'){pl(659,0,.12);pl(880,.12,.2);}
+  }catch(e){}
+}
+
+/* ---------- モデル ---------- */
+function T1(){ return ST.b/ST.v; }
+function T2(){ return (ST.b+ST.a)/ST.v; }
+function T3(){ return (2*ST.b+ST.a)/ST.v; }
+function YMAX(){ return ST.a*ST.b/2; }
+function phaseOf(t){ if(t<T1()-1e-9) return 1; if(t<T2()-1e-9) return 2; return 3; }
+/* △ＡＢＰの面積 */
+function areaAt(t){
+  if(t<=T1()) return ST.a*ST.v*t/2;
+  if(t<=T2()) return ST.a*ST.b/2;
+  return ST.a*(2*ST.b+ST.a-ST.v*t)/2;
+}
+/* Ｐの位置（Ｂを原点、右＋・上＋、単位cm） */
+function posAt(t){
+  if(t<=T1()) return {x:ST.v*t,y:0};
+  if(t<=T2()) return {x:ST.b,y:ST.v*t-ST.b};
+  return {x:ST.b-(ST.v*t-ST.b-ST.a),y:ST.a};
+}
+
+/* ---------- 図 ---------- */
+function figSVG(a,b,t,small){
+  const S=small?11:26, pad=small?22:44;
+  const W=b*S, H=a*S;
+  const ox=pad, oy=pad;                      /* 左上＝Ａ */
+  const px=x=>ox+x*S, py=y=>oy+(a-y)*S;      /* cm→画面 */
+  const A={x:0,y:a},B={x:0,y:0},C={x:b,y:0},D={x:b,y:a};
+  const P=posAt(t);
+  const vbw=W+pad*2+(small?0:96), vbh=H+pad*2;
+  let s='<svg viewBox="0 0 '+vbw+' '+vbh+'" aria-label="長方形ABCDと点P">';
+  /* 三角形ＡＢＰ */
+  s+='<polygon points="'+px(A.x)+','+py(A.y)+' '+px(B.x)+','+py(B.y)+' '+px(P.x)+','+py(P.y)+'" '
+    +'fill="rgba(31,138,112,.16)" stroke="#1F8A70" stroke-width="'+(small?1.4:2.4)+'" stroke-linejoin="round"/>';
+  /* 長方形 */
+  s+='<rect x="'+px(0)+'" y="'+py(a)+'" width="'+W+'" height="'+H+'" fill="none" stroke="#37424A" stroke-width="'+(small?1.4:2.4)+'"/>';
+  /* 辺ＡＢを強調（三角形の底辺） */
+  s+='<line x1="'+px(0)+'" y1="'+py(a)+'" x2="'+px(0)+'" y2="'+py(0)+'" stroke="#EA5040" stroke-width="'+(small?2:4)+'" stroke-linecap="round"/>';
+  if(!small){
+    /* 頂点ラベル */
+    const lb=(x,y,tx,dx,dy)=>'<text x="'+(px(x)+dx)+'" y="'+(py(y)+dy)+'" font-size="17" font-weight="900" fill="#1F8A70" text-anchor="middle">'+tx+'</text>';
+    s+=lb(0,a,'A',-14,-8)+lb(0,0,'B',-14,20)+lb(b,0,'C',14,20)+lb(b,a,'D',14,-8);
+    /* 寸法 */
+    s+='<text x="'+(px(b)+16)+'" y="'+(oy+16)+'" font-size="13" font-weight="900" fill="#6A757C">AD＝'+b+'cm</text>';
+    s+='<text x="'+(px(b)+16)+'" y="'+(oy+36)+'" font-size="13" font-weight="900" fill="#6A757C">AB＝'+a+'cm</text>';
+    s+='<text x="'+(px(b)+16)+'" y="'+(oy+60)+'" font-size="13" font-weight="900" fill="#6A757C">点Ｐの速さ</text>';
+    s+='<text x="'+(px(b)+16)+'" y="'+(oy+78)+'" font-size="13" font-weight="900" fill="#6A757C">秒速'+ST.v+'cm</text>';
+    /* Ｐの通る道すじ */
+    s+='<polyline points="'+px(0)+','+py(0)+' '+px(b)+','+py(0)+' '+px(b)+','+py(a)+' '+px(0)+','+py(a)
+      +'" fill="none" stroke="#F6B93B" stroke-width="3" stroke-dasharray="2 7" stroke-linecap="round" opacity=".9"/>';
+  }
+  /* 点Ｐ */
+  s+='<circle cx="'+px(P.x)+'" cy="'+py(P.y)+'" r="'+(small?4:7)+'" fill="#EA5040"/>';
+  if(!small) s+='<text x="'+(px(P.x)+(P.x>b/2?-16:16))+'" y="'+(py(P.y)+(P.y>a/2?-12:24))+'" font-size="17" font-weight="900" fill="#EA5040" text-anchor="middle">P</text>';
+  s+='</svg>';
+  return s;
+}
+
+/* ---------- グラフ ---------- */
+function niceStep(max){ const cands=[1,2,5,10,20,50]; for(const c of cands) if(max/c<=10) return c; return 100; }
+function graphSVG(){
+  const t3=T3(), ymax=YMAX();
+  const L=52,R=18,T=18,Bt=40, W=520,H=300;
+  const gw=W-L-R, gh=H-T-Bt;
+  const sx=x=>L+x/t3*gw, sy=y=>T+gh-(y/ymax)*gh;
+  const xs=niceStep(t3), ys=niceStep(ymax);
+  let s='<svg viewBox="0 0 '+W+' '+H+'" aria-label="xとyのグラフ">';
+  for(let x=0;x<=t3+1e-9;x+=xs){
+    s+='<line x1="'+sx(x).toFixed(1)+'" y1="'+T+'" x2="'+sx(x).toFixed(1)+'" y2="'+(T+gh)+'" stroke="#EDF2EF" stroke-width="1"/>';
+    s+='<text x="'+sx(x).toFixed(1)+'" y="'+(T+gh+18)+'" font-size="12" font-weight="900" fill="#6A757C" text-anchor="middle">'+fmt(x)+'</text>';
+  }
+  for(let y=0;y<=ymax+1e-9;y+=ys){
+    s+='<line x1="'+L+'" y1="'+sy(y).toFixed(1)+'" x2="'+(L+gw)+'" y2="'+sy(y).toFixed(1)+'" stroke="#EDF2EF" stroke-width="1"/>';
+    s+='<text x="'+(L-8)+'" y="'+(sy(y)+4).toFixed(1)+'" font-size="12" font-weight="900" fill="#6A757C" text-anchor="end">'+fmt(y)+'</text>';
+  }
+  /* 区切りの点線（t1, t2） */
+  [T1(),T2()].forEach(function(tb){
+    s+='<line x1="'+sx(tb).toFixed(1)+'" y1="'+T+'" x2="'+sx(tb).toFixed(1)+'" y2="'+(T+gh)+'" stroke="#CCE3DC" stroke-width="1.5" stroke-dasharray="4 4"/>';
+  });
+  /* 軸 */
+  s+='<line x1="'+L+'" y1="'+(T+gh)+'" x2="'+(L+gw)+'" y2="'+(T+gh)+'" stroke="#37424A" stroke-width="2"/>';
+  s+='<line x1="'+L+'" y1="'+T+'" x2="'+L+'" y2="'+(T+gh)+'" stroke="#37424A" stroke-width="2"/>';
+  s+='<text x="'+(L+gw)+'" y="'+(T+gh+34)+'" font-size="13" font-weight="900" font-style="italic" fill="#1F8A70" text-anchor="end">x（秒）</text>';
+  s+='<text x="'+(L-40)+'" y="'+(T+10)+'" font-size="13" font-weight="900" font-style="italic" fill="#1F8A70">y（cm²）</text>';
+  /* 通ったところまでの折れ線 */
+  const vs=[{x:0,y:0},{x:T1(),y:ymax},{x:T2(),y:ymax},{x:t3,y:0}];
+  const pts=[];
+  for(const v of vs){ if(v.x<=ST.t+1e-9) pts.push(v); }
+  pts.push({x:ST.t,y:areaAt(ST.t)});
+  s+='<polyline points="'+pts.map(p=>sx(p.x).toFixed(1)+','+sy(p.y).toFixed(1)).join(' ')
+    +'" fill="none" stroke="#2E9BD6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>';
+  const cp=pts[pts.length-1];
+  s+='<circle cx="'+sx(cp.x).toFixed(1)+'" cy="'+sy(cp.y).toFixed(1)+'" r="6" fill="#EA5040"/>';
+  s+='</svg>';
+  return s;
+}
+
+/* ---------- 表 ---------- */
+function timesOf(from,to){
+  const list=[];
+  for(let n=Math.ceil(from-1e-9);n<=to+1e-9;n++) list.push(n);
+  if(Math.abs(from-Math.round(from))>1e-9) list.unshift(from);
+  if(Math.abs(to-Math.round(to))>1e-9) list.push(to);
+  return list.filter((v,i,arr)=>arr.indexOf(v)===i).sort((p,q)=>p-q);
+}
+function hyouHTML(){
+  const secs=[
+    {cap:'① Ｂ→Ｃ（0〜'+fmt(T1())+'秒）', ts:timesOf(0,T1())},
+    {cap:'② Ｃ→Ｄ（'+fmt(T1())+'〜'+fmt(T2())+'秒）', ts:timesOf(T1(),T2())},
+    {cap:'③ Ｄ→Ａ（'+fmt(T2())+'〜'+fmt(T3())+'秒）', ts:timesOf(T2(),T3())}
+  ];
+  let h='';
+  secs.forEach(function(sec){
+    h+='<table class="hyou"><caption>'+sec.cap+'</caption>';
+    h+='<tr><th><i>x</i>（秒）</th>';
+    sec.ts.forEach(function(t){
+      const cur=Math.abs(t-ST.t)<1e-9;
+      h+='<td class="'+(t<=ST.t+1e-9?(cur?'cur':''):'yet')+'">'+(t<=ST.t+1e-9?fmt(t):'・')+'</td>';
+    });
+    h+='</tr><tr class="yrow"><th><i>y</i>（cm²）</th>';
+    sec.ts.forEach(function(t){
+      const cur=Math.abs(t-ST.t)<1e-9;
+      h+='<td class="'+(t<=ST.t+1e-9?(cur?'cur':''):'yet')+'">'+(t<=ST.t+1e-9?fmt(areaAt(t)):'・')+'</td>';
+    });
+    h+='</tr></table>';
+  });
+  return h;
+}
+
+/* ---------- 式 ---------- */
+function shikiHTML(){
+  const a=ST.a,b=ST.b,v=ST.v, k=a*v/2, t1=T1(),t2=T2(),t3=T3(), ym=YMAX();
+  const ph=phaseOf(ST.t);
+  const rows=[
+    {k:'①',c:'var(--teal2)',on:ph===1,
+     t:'<b><i>y</i>＝'+fmt(k)+'<i>x</i></b>ＢＰ＝'+fmt(v)+'<i>x</i> cm なので <i>y</i>＝'+a+'×'+fmt(v)+'<i>x</i>÷2。'
+       +'（0≦<i>x</i>≦'+fmt(t1)+'）　右上がりの直線'},
+    {k:'②',c:'var(--blue)',on:ph===2,
+     t:'<b><i>y</i>＝'+fmt(ym)+'</b>Ｐが辺ＣＤ上にあるあいだ、底辺ＡＢ＝'+a+'cm、高さ＝'+b+'cm のままなので 面積は 変わらない。'
+       +'（'+fmt(t1)+'≦<i>x</i>≦'+fmt(t2)+'）　<i>x</i>軸に平行な直線'},
+    {k:'③',c:'var(--red)',on:ph===3,
+     t:'<b><i>y</i>＝－'+fmt(k)+'<i>x</i>＋'+fmt(k*t3)+'</b>ＡＰ＝'+fmt(2*b+a)+'－'+fmt(v)+'<i>x</i> cm なので <i>y</i>＝'+a+'×ＡＰ÷2。'
+       +'（'+fmt(t2)+'≦<i>x</i>≦'+fmt(t3)+'）　右下がりの直線'}
+  ];
+  let h='<div class="shiki">';
+  rows.forEach(function(r){
+    h+='<div class="row'+(r.on?' on':'')+'"><span class="k" style="background:'+r.c+'">'+r.k+'</span><span class="tx">'+r.t+'</span></div>';
+  });
+  h+='</div><div class="note-s">面積が いちばん大きいのは <i>x</i>＝'+fmt(t1)+'〜'+fmt(t2)+' 秒のあいだで <b>'+fmt(ym)
+   +' cm²</b>。①と③の直線の傾きは <b>'+fmt(k)+'</b> と <b>－'+fmt(k)+'</b> で、大きさが同じになります。</div>';
+  return h;
+}
+
+/* ---------- 描画 ---------- */
+function renderStage(){
+  $('stage').innerHTML=figSVG(ST.a,ST.b,ST.t,false);
+  $('rdX').textContent=fmt(ST.t);
+  $('rdY').textContent=fmt(areaAt(ST.t));
+  const ph=phaseOf(ST.t);
+  const names=['','Ｐは 辺ＢＣ上（面積は ふえる）','Ｐは 辺ＣＤ上（面積は 変わらない）','Ｐは 辺ＤＡ上（面積は へる）'];
+  $('kubun').textContent = ST.t>=T3()-1e-9 ? 'ＰがＡに着きました。' : names[ph];
+  $('tRange').value=ST.t;
+  if(ST.level>=1) $('hyouBox').innerHTML=hyouHTML();
+  if(ST.level>=2) $('graph').innerHTML=graphSVG();
+  if($('shikiBox').style.display!=='none') $('shikiBox').innerHTML=shikiHTML();
+}
+function renderAll(){
+  $('sizeChip').textContent='縦'+ST.a+'cm × 横'+ST.b+'cm';
+  $('speedChip').textContent='秒速'+ST.v+'cm';
+  $('tRange').max=T3(); $('tEnd').textContent=fmt(T3())+'秒';
+  $('hyouPanel').style.display=ST.level>=1?'block':'none';
+  $('graphPanel').style.display=ST.level>=2?'block':'none';
+  updatePills();
+  renderStage();
+}
+
+/* ---------- 再生 ---------- */
+function tick(now){
+  if(!ST.playing) return;
+  const dt=(now-last)/1000; last=now;
+  const before=Math.floor(ST.t);
+  ST.t=Math.min(T3(), ST.t+dt*ST.speed);
+  if(Math.floor(ST.t)!==before) beep('tick');
+  renderStage();
+  if(ST.t>=T3()-1e-9){ stop(); beep('fin'); return; }
+  raf=requestAnimationFrame(tick);
+}
+function play(){ if(ST.t>=T3()-1e-9) ST.t=0; ST.playing=true; last=performance.now();
+  $('playBtn').textContent='⏸ 一時停止'; $('playBtn').className='sbtn pause'; beep('go');
+  raf=requestAnimationFrame(tick); }
+function stop(){ ST.playing=false; if(raf) cancelAnimationFrame(raf);
+  $('playBtn').textContent='▶ うごかす'; $('playBtn').className='sbtn go'; }
+
+/* ---------- 設定画面 ---------- */
+function pill(text,on){ const b=document.createElement('button'); b.className='pill'+(on?' on':''); b.textContent=text; return b; }
+function buildSetPills(){
+  const mk=(host,arr,key,suffix)=>{
+    const el=$(host); el.innerHTML='';
+    arr.forEach(function(n){
+      const b=pill(n+suffix,ST[key]===n);
+      b.addEventListener('click',function(){ ST[key]=n; beep('tap'); buildSetPills(); drawIntro(); });
+      el.appendChild(b);
+    });
+  };
+  mk('pillsA',RA,'a','');
+  mk('pillsB',RB,'b','');
+  mk('pillsV',RV,'v','');
+  $('setNote').innerHTML='縦は3〜10cm、横は2〜10cm、速さは秒速1〜5cm から えらべます（原作と同じ範囲）。'
+    +'Ｐが１周するのに かかる時間は <b>'+fmt(T3())+'秒</b>、△ＡＢＰの面積の いちばん大きい値は <b>'+fmt(YMAX())+'cm²</b> です。';
+}
+function drawIntro(){ const keep=ST.t; ST.t=T1()*0.55; $('introFig').innerHTML=figSVG(ST.a,ST.b,ST.t,true); ST.t=keep; }
+
+function buildSimPills(){
+  const lv=$('pillsLevel'); lv.innerHTML='';
+  LEVELS.forEach(function(name,i){
+    const b=pill(name,ST.level===i); b.classList.add('wide');
+    b.addEventListener('click',function(){ ST.level=i; beep('tap'); renderAll(); });
+    lv.appendChild(b);
+  });
+  const sp=$('pillsSpeed'); sp.innerHTML='';
+  SPEEDS.forEach(function(s){
+    const b=pill('×'+s,ST.speed===s);
+    b.addEventListener('click',function(){ ST.speed=s; beep('tap'); updatePills(); });
+    sp.appendChild(b);
+  });
+}
+function updatePills(){ buildSimPills(); }
+
+/* ---------- 操作 ---------- */
+$('startBtn').addEventListener('click',function(){ ST.t=0; ST.level=0; beep('go'); show('sim'); renderAll(); });
+$('backBtn').addEventListener('click',function(){ stop(); beep('tap'); show('set'); buildSetPills(); drawIntro(); });
+$('playBtn').addEventListener('click',function(){ ST.playing?stop():play(); });
+$('resetBtn').addEventListener('click',function(){ stop(); ST.t=0; beep('tap'); renderStage(); });
+$('tRange').addEventListener('input',function(){ stop(); ST.t=Number($('tRange').value); renderStage(); });
+$('shikiBtn').addEventListener('click',function(){
+  const box=$('shikiBox'), open=box.style.display!=='none';
+  box.style.display=open?'none':'block';
+  $('shikiBtn').textContent=open?'式をみる':'式をかくす';
+  if(!open) box.innerHTML=shikiHTML();
+  beep('tap');
+});
+$('soundBtn').addEventListener('click',function(){ soundOn=!soundOn; $('soundBtn').textContent=soundOn?'🔊':'🔇'; });
+document.addEventListener('keydown',function(e){
+  if(!screens.sim.classList.contains('active')) return;
+  if(e.key==='Enter'||e.key===' '){ ST.playing?stop():play(); e.preventDefault(); }        /* 原作：リターンで移動開始／PF1で一時停止 */
+  if(e.key==='5'){ ST.level=(ST.level+1)%3; renderAll(); }                                 /* 原作：５で表→グラフ */
+  if(e.key==='ArrowRight'){ stop(); ST.t=Math.min(T3(),ST.t+0.5); renderStage(); }
+  if(e.key==='ArrowLeft'){ stop(); ST.t=Math.max(0,ST.t-0.5); renderStage(); }
+});
+document.addEventListener('pointerdown',function(){ if(!actx){ try{ actx=new(window.AudioContext||window.webkitAudioContext)(); }catch(e){} } },{once:true});
+
+buildSetPills(); drawIntro(); buildSimPills();
+</script>
+</body>
+</html>

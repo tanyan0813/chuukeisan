@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ご石の個数 ― 正ｎ角形</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=M+PLUS+Rounded+1c:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FCFBF4; --grid:#DDE7E3; --grid2:#EDF2EF;
+    --ink:#37424A; --ink-soft:#6A757C;
+    --red:#EA5040; --red-deep:#D33B2E;
+    --blue:#2E9BD6; --blue-deep:#1F7CAE;
+    --yellow:#F6B93B; --yellow-deep:#D89A2C;
+    --green:#34B37A; --green-deep:#279862;
+    --purple:#8B72D6; --orange:#F08A3C;
+    --teal2:#1F8A70; --teal2-deep:#146754;
+    --card:#FFFFFF;
+    --stone:#DCE4E1; --stone-line:#AFBCB7;
+    --shadow:0 6px 0 rgba(55,66,74,.10), 0 12px 28px rgba(55,66,74,.12);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;font-family:"Zen Maru Gothic",system-ui,sans-serif;color:var(--ink);
+    background:
+      linear-gradient(var(--grid2) 1px,transparent 1px) 0 0/24px 24px,
+      linear-gradient(90deg,var(--grid2) 1px,transparent 1px) 0 0/24px 24px,
+      linear-gradient(var(--grid) 1px,transparent 1px) 0 0/120px 120px,
+      linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/120px 120px,
+      var(--paper);
+    display:flex;align-items:flex-start;justify-content:center;min-height:100%;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{width:100%;max-width:760px;padding:18px 16px 44px;}
+  .num{font-family:"M PLUS Rounded 1c",sans-serif;}
+
+  header.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;}
+  .logo{display:flex;align-items:center;gap:10px;}
+  .logo .pin{width:34px;height:34px;border-radius:50%;background:var(--teal2);color:#fff;font-weight:900;
+    display:grid;place-items:center;font-size:13px;box-shadow:0 3px 0 var(--teal2-deep);transform:rotate(-8deg);}
+  .logo b{font-size:17px;font-weight:900;}
+  .icon-btn{border:none;background:var(--card);border-radius:12px;width:44px;height:38px;font-size:16px;
+    cursor:pointer;color:var(--ink);box-shadow:0 3px 0 rgba(55,66,74,.12);font-family:inherit;}
+  .icon-btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(55,66,74,.12);}
+
+  .screen{display:none;animation:pop .3s ease;}
+  .screen.active{display:block;}
+  @keyframes pop{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+
+  .title-card{background:var(--card);border-radius:26px;padding:26px 22px 20px;box-shadow:var(--shadow);
+    text-align:center;position:relative;overflow:hidden;margin-bottom:16px;}
+  .title-card::before{content:"";position:absolute;inset:8px;border:3px dashed #CCE3DC;border-radius:20px;pointer-events:none;}
+  .title-card h1{margin:2px 0;font-size:clamp(21px,5.4vw,32px);font-weight:900;color:var(--teal2);
+    position:relative;text-shadow:2px 3px 0 #D2E8E0;}
+  .title-card h1 i{font-style:italic;}
+  .title-card .sub{color:var(--ink-soft);font-weight:700;font-size:14px;position:relative;}
+  .prompt{position:relative;margin-top:10px;color:var(--blue);font-weight:900;font-size:14px;}
+
+  .menu-head{display:flex;align-items:baseline;gap:10px;margin:2px 4px 12px;flex-wrap:wrap;}
+  .menu-head h2{font-size:19px;font-weight:900;margin:0;}
+  .menu-head p{margin:0;color:var(--ink-soft);font-weight:700;font-size:12px;}
+
+  .mlist{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+  @media(max-width:480px){.mlist{grid-template-columns:1fr;}}
+  .mcard{display:flex;align-items:center;gap:12px;background:var(--card);border:none;border-radius:16px;
+    padding:14px 13px;box-shadow:var(--shadow);cursor:pointer;font-family:inherit;text-align:left;
+    color:var(--ink);transition:transform .1s;}
+  .mcard:hover{transform:translateY(-3px);}
+  .mcard:active{transform:translateY(1px);box-shadow:0 3px 0 rgba(55,66,74,.10);}
+  .mcard .n{flex:none;width:30px;height:30px;border-radius:50%;background:var(--teal2);color:#fff;font-weight:900;
+    display:grid;place-items:center;font-size:14px;font-family:"M PLUS Rounded 1c";box-shadow:0 3px 0 var(--teal2-deep);}
+  .mcard.var .n{background:var(--yellow);box-shadow:0 3px 0 var(--yellow-deep);color:#6a5000;}
+  .mcard .lbl{font-weight:900;font-size:15px;line-height:1.35;}
+  .mcard .lbl i{font-style:italic;color:var(--teal2);}
+  .mcard .sm{display:block;font-size:11px;color:var(--ink-soft);font-weight:700;margin-top:3px;}
+  .mcard .fig{flex:none;width:34px;height:34px;}
+
+  .credit{text-align:center;margin-top:16px;font-size:11px;color:#9AA4A9;line-height:1.7;}
+
+  /* ---- sim ---- */
+  .play-top{display:flex;align-items:center;gap:9px;margin-bottom:12px;flex-wrap:wrap;}
+  .chip{background:var(--card);border-radius:999px;padding:6px 13px;font-weight:700;font-size:12px;box-shadow:0 3px 0 rgba(55,66,74,.10);}
+  .chip.mode{color:var(--teal2);font-weight:900;}
+  .chip.count{color:var(--red);font-weight:900;font-family:"M PLUS Rounded 1c";margin-left:auto;}
+  .back-btn{border:none;background:var(--card);border-radius:12px;padding:8px 13px;font-family:inherit;
+    font-weight:700;cursor:pointer;color:var(--ink);box-shadow:0 3px 0 rgba(55,66,74,.12);font-size:13px;}
+  .back-btn:active{transform:translateY(2px);}
+
+  .board{background:var(--card);border-radius:24px;box-shadow:var(--shadow);padding:16px 12px 14px;
+    text-align:center;position:relative;overflow:hidden;}
+  .board-head{display:flex;align-items:baseline;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
+  .board-head .q{color:var(--blue);font-weight:900;font-size:clamp(15px,4vw,19px);}
+  .board-head .s{color:var(--ink-soft);font-weight:900;font-size:13px;}
+  .board-head i{font-style:italic;}
+  .stage{margin:0 auto;max-width:520px;}
+  .stage svg{display:block;width:100%;height:auto;touch-action:manipulation;}
+  .stone{cursor:pointer;}
+  .hit{cursor:pointer;fill:transparent;}
+  .cap{margin-top:8px;font-size:12px;font-weight:900;color:var(--ink-soft);line-height:1.7;}
+  .cap i{font-style:italic;color:var(--teal2);}
+
+  .selrow{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:14px;}
+  .selrow .lab{font-size:12px;font-weight:900;color:var(--ink-soft);flex:0 0 5.6em;}
+  .pill{border:none;background:var(--card);border-radius:999px;padding:8px 13px;font-family:"M PLUS Rounded 1c";
+    font-weight:900;font-size:14px;color:var(--ink);cursor:pointer;box-shadow:0 3px 0 rgba(55,66,74,.12);}
+  .pill:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(55,66,74,.12);}
+  .pill.on{background:var(--teal2);color:#fff;box-shadow:0 3px 0 var(--teal2-deep);}
+  .pill i{font-style:italic;}
+  .swatch{width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;box-shadow:0 3px 0 rgba(55,66,74,.18);}
+  .swatch.on{box-shadow:0 0 0 3px #fff, 0 0 0 6px rgba(55,66,74,.25);}
+
+  .tools{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px;}
+  .sbtn{border:none;border-radius:14px;padding:10px 16px;font-family:inherit;font-weight:900;font-size:13px;
+    cursor:pointer;color:var(--ink);background:#fff;box-shadow:0 4px 0 rgba(55,66,74,.14);}
+  .sbtn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(55,66,74,.14);}
+  .sbtn.danger{background:#FDECE9;color:var(--red);box-shadow:0 4px 0 #F3C4BC;}
+  .sbtn.danger:active{box-shadow:0 1px 0 #F3C4BC;}
+  .enter-btn{width:100%;margin-top:12px;border:none;cursor:pointer;font-family:inherit;font-weight:900;
+    border-radius:16px;color:#fff;padding:14px 0;font-size:19px;background:var(--green);box-shadow:0 5px 0 var(--green-deep);}
+  .enter-btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--green-deep);}
+
+  .panel{background:var(--card);border-radius:22px;box-shadow:var(--shadow);padding:18px 16px;margin-top:14px;}
+  .panel h3{margin:0 0 10px;font-size:16px;font-weight:900;display:flex;align-items:center;gap:8px;}
+  .panel h3 .bar2{width:6px;height:18px;border-radius:3px;background:var(--teal2);}
+  .answer-big{text-align:center;font-family:"M PLUS Rounded 1c";font-weight:900;
+    font-size:clamp(22px,5.6vw,30px);color:var(--teal2-deep);line-height:1.6;}
+  .answer-big i{font-style:italic;color:var(--teal2);}
+  .answer-big .v{color:var(--red);font-size:1.25em;}
+  .ideas{display:flex;flex-direction:column;gap:9px;}
+  .idea{display:flex;align-items:flex-start;gap:11px;background:#F7FAF9;border:none;border-radius:16px;
+    padding:12px 13px;text-align:left;font-family:inherit;color:var(--ink);cursor:pointer;width:100%;
+    box-shadow:0 3px 0 rgba(55,66,74,.08);}
+  .idea:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(55,66,74,.08);}
+  .idea.on{background:#E6F2EE;box-shadow:0 0 0 2px var(--teal2) inset;}
+  .idea .k{flex:none;width:26px;height:26px;border-radius:8px;color:#fff;font-weight:900;font-size:13px;
+    display:grid;place-items:center;font-family:"M PLUS Rounded 1c";}
+  .idea .tx{flex:1;font-size:13px;font-weight:700;line-height:1.7;}
+  .idea .tx b{display:block;font-family:"M PLUS Rounded 1c";font-size:16px;font-weight:900;color:var(--teal2-deep);margin-top:3px;}
+  .idea .tx i{font-style:italic;}
+  table.rec{width:100%;border-collapse:collapse;font-size:13px;margin-top:2px;}
+  table.rec th,table.rec td{padding:6px 5px;border-bottom:1px solid #EDF2EF;text-align:center;}
+  table.rec th{font-size:11px;color:var(--ink-soft);font-weight:900;}
+  table.rec td{font-family:"M PLUS Rounded 1c";font-weight:900;}
+  table.rec tr:last-child td{border-bottom:none;}
+  table.rec td.hi{color:var(--red);}
+  .note-s{font-size:12px;font-weight:700;color:var(--ink-soft);line-height:1.8;margin-top:8px;}
+  .note-s i{font-style:italic;}
+
+  :focus-visible{outline:3px solid var(--blue);outline-offset:2px;}
+  @media (prefers-reduced-motion: reduce){*{animation-duration:.001ms !important;}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bar">
+    <div class="logo"><span class="pin">ご石</span><b>ご石の個数</b></div>
+    <button class="icon-btn" id="soundBtn" title="おと">🔊</button>
+  </header>
+
+  <!-- ===== メニュー ===== -->
+  <section class="screen active" id="mainScreen">
+    <div class="title-card">
+      <h1>ご石のシミュレーション</h1>
+      <div class="sub">正ｎ角形にならべたご石の 全部の個数を 調べる</div>
+      <div class="prompt">ご石をどのように並べますか？</div>
+    </div>
+    <div class="menu-head"><h2>ならべかた</h2><p>番号キーでも えらべます</p></div>
+    <div class="mlist" id="mainList"></div>
+    <div class="credit">
+      中学校数学教育研究会コンピュータ委員会（安藤忠展）Ver 2.11<br>
+      原作 N88-BASIC「12goisinn」（1993年7月）／ Web版
+    </div>
+  </section>
+
+  <!-- ===== シミュレーション ===== -->
+  <section class="screen" id="simScreen">
+    <div class="play-top">
+      <button class="back-btn" id="backBtn">← ならべかた</button>
+      <span class="chip mode" id="shapeChip"></span>
+      <span class="chip count" id="countChip">印 0個</span>
+    </div>
+
+    <div class="board">
+      <div class="board-head">
+        <span class="q">全部の個数は？</span>
+        <span class="s" id="sideChipText"></span>
+      </div>
+      <div class="stage" id="stage"></div>
+      <div class="cap" id="cap">ご石をタップすると 印がつきます。数えながら 印をつけてみましょう。</div>
+    </div>
+
+    <div class="selrow">
+      <span class="lab">１辺の個数</span>
+      <span id="sidePills" style="display:flex;gap:7px;flex-wrap:wrap"></span>
+    </div>
+    <div class="selrow">
+      <span class="lab">印の色</span>
+      <span id="colorPills" style="display:flex;gap:7px;flex-wrap:wrap"></span>
+    </div>
+    <div class="tools">
+      <button class="sbtn" id="undoBtn">1つ もどす</button>
+      <button class="sbtn danger" id="clearBtn">印を 全部けす</button>
+    </div>
+    <button class="enter-btn" id="checkBtn">全部の個数を たしかめる</button>
+
+    <div class="panel" id="ansPanel" style="display:none">
+      <h3><span class="bar2"></span>全部の個数</h3>
+      <div class="answer-big" id="ansBig"></div>
+      <div class="note-s" id="ansNote"></div>
+    </div>
+
+    <div class="panel" id="ideaPanel" style="display:none">
+      <h3><span class="bar2"></span>数えかたを 色でみる</h3>
+      <div class="ideas" id="ideaList"></div>
+      <div class="note-s">どの数えかたでも 答えは同じになります。式のちがいを くらべてみましょう。</div>
+    </div>
+
+    <div class="panel" id="tablePanel" style="display:none">
+      <h3><span class="bar2"></span>１辺の個数と 全部の個数</h3>
+      <div id="tableBox"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* =========================================================
+   ご石の個数（正ｎ角形） — Web版
+   原作: N88-BASIC "12goisinn" (1993.7 / Arranged 2001.9.23)
+        中学校数学教育研究会コンピュータ委員会（安藤忠展）
+   ========================================================= */
+const $=id=>document.getElementById(id);
+const screens={main:$("mainScreen"),sim:$("simScreen")};
+function show(n){for(const k in screens)screens[k].classList.toggle("active",k===n);window.scrollTo({top:0,behavior:"smooth"});}
+
+/* 原作メニュー：正三角形〜正八角形／正ｎ角形（kaku=9 で「ｎ」を表す） */
+const SHAPES=[
+  {kaku:3,name:'正三角形'},
+  {kaku:4,name:'正方形'},
+  {kaku:5,name:'正五角形'},
+  {kaku:6,name:'正六角形'},
+  {kaku:7,name:'正七角形'},
+  {kaku:8,name:'正八角形'},
+  {kaku:9,name:'正ｎ角形',varN:true}
+];
+/* 原作メニュー：３個〜１０個／χ個（n=11 で「χ」を表す） */
+const SIDES=[3,4,5,6,7,8,9,10,11];
+const MARKCOLORS=['#EA5040','#2E9BD6','#F6B93B','#34B37A','#8B72D6','#F08A3C'];
+const SIDECOLORS=['#EA5040','#2E9BD6','#F6B93B','#34B37A','#8B72D6','#F08A3C','#1F8A70','#D33B2E','#1F7CAE'];
+
+let ST={kaku:4,n:5,marks:{},order:[],color:0,idea:null,checked:false};
+let soundOn=true, actx=null;
+function beep(type){ if(!soundOn) return;
+  try{ actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+    const now=actx.currentTime;
+    const pl=(f,s,d,v)=>{const o=actx.createOscillator(),g=actx.createGain();o.type='sine';o.frequency.value=f;
+      o.connect(g);g.connect(actx.destination);g.gain.setValueAtTime(0,now+s);g.gain.linearRampToValueAtTime(v||.16,now+s+.02);
+      g.gain.exponentialRampToValueAtTime(.0001,now+s+d);o.start(now+s);o.stop(now+s+d+.02);};
+    if(type==='tap'){pl(660,0,.06,.10);} else if(type==='off'){pl(330,0,.06,.08);}
+    else if(type==='open'){pl(523,0,.12);pl(784,.11,.18);} else if(type==='clear'){pl(240,0,.12,.14);}
+  }catch(e){}
+}
+
+/* ---------- 原作 10200〜10296 の配置計算をそのまま移植 ---------- */
+function buildStones(kaku,n){
+  const X0=320,Y0=200,NHAN=170,RAD=Math.PI/180;
+  const KAKU=360/kaku;
+  const SKAI=(kaku===4)?45:90;                 /* 10205 */
+  const YICHI=(kaku===3||kaku===5)?40:0;       /* 10206 */
+  const HAN02=(kaku>5&&n>8)?8:10;              /* 10240 */
+  const list=[];
+  for(let M=1;M<=kaku;M++){
+    const x1=X0+Math.cos(RAD*(KAKU*M-SKAI))*NHAN, x2=X0+Math.cos(RAD*(KAKU*(M+1)-SKAI))*NHAN;
+    const y1=Y0+YICHI+Math.sin(RAD*(KAKU*M-SKAI))*NHAN, y2=Y0+YICHI+Math.sin(RAD*(KAKU*(M+1)-SKAI))*NHAN;
+    const xh=(x2-x1)/(n-1), yh=(y2-y1)/(n-1);
+    for(let I=1;I<=n-1;I++){
+      let r=HAN02;
+      if(n===11&&I>2&&I<8) r=2;                          /* 10241 χ個の「…」 */
+      if(kaku===9&&M>kaku-2) r=1;                        /* 10244 正ｎ角形の「…」 */
+      if(kaku===9&&M===kaku-1&&I>n-5) r=0;               /* 10245 */
+      if(kaku===9&&M===kaku&&I<6) r=0;                   /* 10246 */
+      if(r===0) continue;
+      list.push({key:M+'-'+I,m:M,i:I,x:x1+xh*I,y:y1+yh*I,r:r,corner:(I===n-1)});
+    }
+  }
+  return list;
+}
+
+/* ---------- 式のことば ---------- */
+function shape(){ return SHAPES.find(s=>s.kaku===ST.kaku); }
+function isVarN(){ return ST.kaku===9; }
+function isVarX(){ return ST.n===11; }
+function KT(){ return isVarN()?'<i>n</i>':String(ST.kaku); }
+function XT(){ return isVarX()?'<i>χ</i>':String(ST.n); }
+function sideLabel(n){ return n===11?'<i>χ</i>個':n+'個'; }
+function totalNum(){ return (isVarN()||isVarX())?null:ST.kaku*(ST.n-1); }
+function simple1(){
+  const K=ST.kaku,S=ST.n;
+  if(!isVarN()&&!isVarX()) return String(K*(S-1));
+  if(!isVarN()&&isVarX())  return K+'<i>χ</i>－'+K;
+  if(isVarN()&&!isVarX())  return (S-1)+'<i>n</i>';
+  return '<i>nχ</i>－<i>n</i>';
+}
+
+/* ---------- 画面 ---------- */
+function shapeFig(kaku,size){
+  const c=size/2, r=size/2-3, pts=[];
+  const k=(kaku===9)?9:kaku, sk=(kaku===4)?45:90;
+  for(let m=1;m<=k;m++){ const a=(360/k*m-sk)*Math.PI/180; pts.push((c+r*Math.cos(a)).toFixed(1)+','+(c+r*Math.sin(a)).toFixed(1)); }
+  const dots=pts.map(p=>{const[x,y]=p.split(',');return '<circle cx="'+x+'" cy="'+y+'" r="2.6" fill="#1F8A70"/>';}).join('');
+  return '<svg class="fig" viewBox="0 0 '+size+' '+size+'"><polygon points="'+pts.join(' ')+'" fill="none" stroke="#CCE3DC" stroke-width="2"'+(kaku===9?' stroke-dasharray="4 4"':'')+'/>'+dots+'</svg>';
+}
+function buildMain(){
+  const l=$('mainList'); l.innerHTML='';
+  SHAPES.forEach((s,idx)=>{
+    const b=document.createElement('button');
+    b.className='mcard'+(s.varN?' var':'');
+    b.innerHTML='<span class="n">'+(idx+1)+'</span>'+shapeFig(s.kaku,34)
+      +'<span class="lbl">'+s.name+'<span class="sm">'+(s.varN?'辺の数が わからないとき':'１辺に ３個〜１０個・χ個')+'</span></span>';
+    b.addEventListener('click',function(){ beep('open'); openSim(s.kaku); });
+    l.appendChild(b);
+  });
+}
+function openSim(kaku){
+  ST={kaku:kaku,n:5,marks:{},order:[],color:0,idea:null,checked:false};
+  if(kaku===9) ST.n=7;
+  buildPills(); show('sim'); renderAll();
+}
+function buildPills(){
+  const sp=$('sidePills'); sp.innerHTML='';
+  SIDES.forEach(function(n){
+    const b=document.createElement('button'); b.className='pill'; b.dataset.n=n;
+    b.innerHTML=sideLabel(n);
+    b.addEventListener('click',function(){ ST.n=n; ST.marks={}; ST.order=[]; ST.idea=null; ST.checked=false; beep('open'); renderAll(); });
+    sp.appendChild(b);
+  });
+  const cp=$('colorPills'); cp.innerHTML='';
+  MARKCOLORS.forEach(function(c,i){
+    const b=document.createElement('button'); b.className='swatch'; b.style.background=c; b.dataset.i=i;
+    b.title='この色で 印をつける';
+    b.addEventListener('click',function(){ ST.color=i; beep('tap'); updatePills(); });
+    cp.appendChild(b);
+  });
+}
+function updatePills(){
+  $('sidePills').querySelectorAll('.pill').forEach(function(b){ b.classList.toggle('on',Number(b.dataset.n)===ST.n); });
+  $('colorPills').querySelectorAll('.swatch').forEach(function(b){ b.classList.toggle('on',Number(b.dataset.i)===ST.color); });
+}
+
+function stageSVG(){
+  const stones=buildStones(ST.kaku,ST.n);
+  let minx=1e9,maxx=-1e9,miny=1e9,maxy=-1e9;
+  stones.forEach(function(p){ const R=Math.max(p.r,10);
+    if(p.x-R<minx)minx=p.x-R; if(p.x+R>maxx)maxx=p.x+R;
+    if(p.y-R<miny)miny=p.y-R; if(p.y+R>maxy)maxy=p.y+R; });
+  const pad=14, vb=[(minx-pad).toFixed(1),(miny-pad).toFixed(1),(maxx-minx+pad*2).toFixed(1),(maxy-miny+pad*2).toFixed(1)].join(' ');
+  let body='';
+  stones.forEach(function(p){
+    let fill='var(--stone)', stroke='var(--stone-line)', ring='';
+    if(ST.idea==='sides'){ fill=SIDECOLORS[(p.m-1)%SIDECOLORS.length]; stroke='rgba(55,66,74,.25)'; }
+    else if(ST.idea==='corner'){ fill=p.corner?'#EA5040':'#2E9BD6'; stroke='rgba(55,66,74,.25)'; }
+    else if(ST.idea==='double'){ fill=p.corner?'#EA5040':'#2E9BD6'; stroke='rgba(55,66,74,.25)';
+      if(p.corner&&p.r>3) ring='<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="'+(p.r+4)+'" fill="none" stroke="#EA5040" stroke-width="2" stroke-dasharray="3 3"/>'; }
+    else if(ST.marks[p.key]!==undefined){ fill=MARKCOLORS[ST.marks[p.key]]; stroke='rgba(55,66,74,.25)'; }
+    body+='<circle class="stone" cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="'+p.r+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1.5"/>'+ring;
+  });
+  let hits='';
+  if(!ST.idea) stones.forEach(function(p){
+    hits+='<circle class="hit" data-key="'+p.key+'" cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="'+Math.max(p.r+7,11)+'"/>';
+  });
+  return {svg:'<svg viewBox="'+vb+'" aria-label="ご石のならび">'+body+hits+'</svg>', stones:stones};
+}
+function renderStage(){
+  const r=stageSVG();
+  $('stage').innerHTML=r.svg;
+  ST.stones=r.stones;
+  $('stage').querySelectorAll('.hit').forEach(function(el){
+    el.addEventListener('click',function(){ toggleMark(el.dataset.key); });
+  });
+}
+function toggleMark(key){
+  if(ST.marks[key]!==undefined){ delete ST.marks[key]; ST.order=ST.order.filter(k=>k!==key); beep('off'); }
+  else { ST.marks[key]=ST.color; ST.order.push(key); beep('tap'); }
+  renderStage(); updateCount();
+}
+function updateCount(){
+  const n=Object.keys(ST.marks).length;
+  $('countChip').textContent='印 '+n+'個';
+}
+function renderAll(){
+  const s=shape();
+  $('shapeChip').textContent=s.name;
+  $('sideChipText').innerHTML='１辺の個数＝'+sideLabel(ST.n);
+  $('cap').innerHTML = ST.idea
+    ? '色べつに 分けて 数えています。「じゆうに印をつける」で もとにもどります。'
+    : 'ご石をタップすると 印がつきます。色をかえて グループごとに 印をつけると 数えかたが 見えてきます。';
+  updatePills(); renderStage(); updateCount();
+  $('ansPanel').style.display=ST.checked?'block':'none';
+  $('ideaPanel').style.display=ST.checked?'block':'none';
+  $('tablePanel').style.display=(ST.checked&&!isVarN()&&!isVarX())?'block':'none';
+  if(ST.checked){ renderAnswer(); renderIdeas(); renderTable(); }
+}
+
+/* ---------- こたえ ---------- */
+function renderAnswer(){
+  const num=totalNum();
+  let h=KT()+'×('+XT()+'－1)　＝　<span class="v">'+simple1()+'</span>';
+  if(num!==null) h+=' <span style="font-size:.8em">個</span>';
+  $('ansBig').innerHTML=h;
+  let note='１辺に'+(isVarX()?'χ':ST.n)+'個ずつ ならべても、角のご石は 2つの辺で 共通です。'
+    +'そこで <b>１辺につき '+(isVarX()?'（χ－1）':(ST.n-1))+'個</b> と 数えると、重なりなく 数えられます。';
+  if(isVarN()) note+='　辺の数が <i>n</i> のときも 同じように 考えられます。';
+  $('ansNote').innerHTML=note;
+}
+function renderIdeas(){
+  const K=KT(), X=XT(), num=totalNum();
+  const S=ST.n, KN=ST.kaku;
+  const f1=K+'×('+X+'－1)';
+  const f2=K+'×('+X+'－2)＋'+K;
+  const f3=K+'×'+X+'－'+K;
+  const eq=v=>num!==null?'　＝　'+v+'個':'';
+  const items=[
+    {id:'sides', c:'var(--teal2)', k:'ア', t:'<b>'+f1+eq(num)+'</b>１辺ずつ、角のご石を 1つだけ 入れて 数える。'+
+      (num!==null?'（'+KN+'つの辺 × '+(S-1)+'個）':'')},
+    {id:'corner', c:'var(--blue)', k:'イ', t:'<b>'+f2+eq(num)+'</b>角のご石（赤）を べつに 数え、辺の間のご石（青）を 数える。'+
+      (num!==null?'（'+KN+'×'+(S-2)+'＋'+KN+'）':'')},
+    {id:'double', c:'var(--red)', k:'ウ', t:'<b>'+f3+eq(num)+'</b>１辺を '+X+'個として 数えると、角のご石を 2回 数えてしまうので '+K+'個 ひく。'}
+  ];
+  const l=$('ideaList'); l.innerHTML='';
+  items.forEach(function(it){
+    const b=document.createElement('button'); b.className='idea'+(ST.idea===it.id?' on':'');
+    b.innerHTML='<span class="k" style="background:'+it.c+'">'+it.k+'</span><span class="tx">'+it.t+'</span>';
+    b.addEventListener('click',function(){ ST.idea=(ST.idea===it.id)?null:it.id; beep('open'); renderAll(); });
+    l.appendChild(b);
+  });
+  if(ST.idea){
+    const b=document.createElement('button'); b.className='sbtn'; b.textContent='じゆうに印をつける';
+    b.style.alignSelf='center';
+    b.addEventListener('click',function(){ ST.idea=null; beep('open'); renderAll(); });
+    l.appendChild(b);
+  }
+}
+function renderTable(){
+  const K=ST.kaku;
+  let h='<table class="rec"><tr><th>１辺の個数</th>';
+  for(let n=3;n<=10;n++) h+='<th>'+n+'</th>';
+  h+='<th><i>χ</i></th></tr><tr><td>全部の個数</td>';
+  for(let n=3;n<=10;n++) h+='<td'+(n===ST.n?' class="hi"':'')+'>'+K*(n-1)+'</td>';
+  h+='<td>'+K+'<i>χ</i>－'+K+'</td></tr></table>';
+  h+='<div class="note-s">１辺が 1個ふえるごとに 全部の個数は <b>'+K+'個</b>ずつ ふえます。</div>';
+  $('tableBox').innerHTML=h;
+}
+
+/* ---------- 操作 ---------- */
+$('checkBtn').addEventListener('click',function(){ ST.checked=true; beep('open'); renderAll();
+  setTimeout(function(){ $('ansPanel').scrollIntoView({behavior:'smooth',block:'center'}); },60); });
+$('undoBtn').addEventListener('click',function(){ if(!ST.order.length){ beep('clear'); return; }
+  const k=ST.order.pop(); delete ST.marks[k]; beep('off'); renderStage(); updateCount(); });
+$('clearBtn').addEventListener('click',function(){ ST.marks={}; ST.order=[]; beep('clear'); renderStage(); updateCount(); });
+$('backBtn').addEventListener('click',function(){ beep('open'); show('main'); });
+$('soundBtn').addEventListener('click',function(){ soundOn=!soundOn; $('soundBtn').textContent=soundOn?'🔊':'🔇'; });
+document.addEventListener('keydown',function(e){
+  if(screens.main.classList.contains('active')&&e.key>='1'&&e.key<='7'){ openSim(SHAPES[parseInt(e.key,10)-1].kaku); return; }
+  if(screens.sim.classList.contains('active')){
+    if(e.key==='Enter'){ show('main'); return; }              /* 原作：エンターキーで初期画面へ */
+    if(e.key==='*'){ ST.color=(ST.color+1)%MARKCOLORS.length; updatePills(); return; }  /* 原作 F1：色変更 */
+    if(e.key==='Backspace'){ $('undoBtn').click(); e.preventDefault(); }
+  }
+});
+document.addEventListener('pointerdown',function(){ if(!actx){ try{ actx=new(window.AudioContext||window.webkitAudioContext)(); }catch(e){} } },{once:true});
+
+buildMain();
+</script>
+</body>
+</html>

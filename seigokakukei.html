@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>正五角形での面積の変化</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&family=M+PLUS+Rounded+1c:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#FFF8EF;--paper:#FFFDF9;--line:#E9D9C4;--ink:#37424A;--teal:#19A199;--teal-deep:#0E6F6B;--accent:#F6B93B;--red:#EA5040;--soft:#F7EFE4;--shadow:0 10px 26px rgba(55,66,74,.10)}
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,#FFF7EC,#FFFDF8 28%,#FFF8EF);color:var(--ink);font-family:"Zen Maru Gothic",system-ui,sans-serif}
+  .wrap{max-width:1220px;margin:0 auto;padding:14px}.app{background:var(--paper);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);overflow:hidden}
+  .top{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:#fff;border-bottom:1px solid var(--line)}
+  .logo{display:flex;align-items:center;gap:10px}.pin{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--teal);color:#fff;font-weight:900}.logo b{font-size:18px}
+  .tag{display:inline-block;padding:7px 12px;border-radius:999px;background:#E8F7F4;color:var(--teal-deep);font-weight:900;font-size:12px}
+  .hero{display:grid;grid-template-columns:340px 1fr;gap:16px;padding:16px}.panel{background:#fff;border:1px solid var(--line);border-radius:20px;padding:16px}
+  h1{margin:0 0 8px;font-size:clamp(24px,4vw,34px)} .sub{color:#6B7A84;line-height:1.7}
+  .grid2{display:grid;grid-template-columns:1fr;gap:10px;margin-top:14px}.fld{display:grid;gap:6px}.fld label{font-weight:700;font-size:14px;color:#586973}
+  .fld input{width:100%;padding:10px 12px;border-radius:13px;border:2px solid #D8E6E0;font:800 18px/1.2 "M PLUS Rounded 1c",sans-serif;color:var(--ink)} .fld input:focus{outline:none;border-color:var(--teal)}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.btn{border:none;background:#fff;border-radius:14px;padding:10px 14px;font-family:inherit;font-weight:900;cursor:pointer;box-shadow:0 3px 0 rgba(55,66,74,.10);color:var(--ink)} .btn.primary{background:var(--teal);color:#fff;box-shadow:0 3px 0 var(--teal-deep)} .btn.warn{background:var(--accent);color:#6A4A00;box-shadow:0 3px 0 #CF9D2E}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.stat{background:var(--soft);border:1px solid var(--line);border-radius:16px;padding:12px;text-align:center}.stat .k{font-size:12px;color:#6B7A84}.stat .v{font:900 28px/1 "M PLUS Rounded 1c",sans-serif;color:var(--teal)}
+  .note{background:var(--soft);border:1px solid var(--line);border-radius:16px;padding:12px 14px;line-height:1.7;margin-top:14px}.eq{margin-top:10px;padding:10px 12px;background:#FFF9E9;border:1px solid #F0D69A;border-radius:14px;font:800 18px/1.5 "M PLUS Rounded 1c",sans-serif}
+  .mainview{display:grid;grid-template-columns:1fr;gap:16px}.svghold{background:linear-gradient(180deg,#FFF,#FFF8F1);border:1px solid var(--line);border-radius:20px;padding:10px} svg{width:100%;height:auto;display:block}
+  .slider{margin-top:10px}.slider input{width:100%}.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:#586973;margin-top:8px}.dot{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;margin-right:6px}
+  .small{font-size:13px;color:#6B7A84}.mini{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px}.ibox{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px}.ibox b{display:block;color:var(--teal-deep);margin-bottom:4px}
+  @media (max-width:920px){.hero{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.mini{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="app">
+  <div class="top"><div class="logo"><span class="pin">⬟</span><b>正五角形での面積の変化</b></div><div class="tag">点Pの移動とグラフ</div></div>
+  <div class="hero">
+    <div class="panel">
+      <h1>△ABP の面積の変化</h1>
+      <div class="sub">正五角形 <b>ABCDE</b> の辺上を、点 <b>P</b> が <b>B → C → D → E → A</b> と一定の速さで移動します。線分 <b>AP</b> でできる <b>△ABP</b> の面積が、時間とともにどう変化するかを図とグラフで調べるWeb版です。</div>
+      <div class="grid2">
+        <div class="fld"><label>正五角形の1辺の長さ（3〜6）</label><input id="hen" type="number" min="3" max="6" step="1" value="6"></div>
+        <div class="fld"><label>点Pの速さ（1〜5 cm/秒）</label><input id="hayasa" type="number" min="1" max="5" step="1" value="1"></div>
+      </div>
+      <div class="toolbar">
+        <button class="btn primary" id="applyBtn">図を更新</button>
+        <button class="btn primary" id="playBtn">再生</button>
+        <button class="btn" id="pauseBtn">一時停止</button>
+        <button class="btn warn" id="resetBtn">最初にもどす</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="k">時刻 x（秒）</div><div class="v" id="tNow">0</div></div>
+        <div class="stat"><div class="k">△ABP の面積 y（cm²）</div><div class="v" id="aNow">0</div></div>
+        <div class="stat"><div class="k">移動区間</div><div class="v" id="segNow">BC</div></div>
+      </div>
+      <div class="slider"><input id="timeSlider" type="range" min="0" max="24" value="0" step="0.01"><div class="small">時間の範囲：0 〜 <span id="tEndTxt">24</span> 秒</div></div>
+      <div class="eq" id="eqBox">区間ごとに面積の変化を観察できます</div>
+      <div class="mini">
+        <div class="ibox"><b>ポイント</b> 点Pが各辺上を動くとき、面積は区間ごとに異なる変化をします。</div>
+        <div class="ibox"><b>見方</b> 図の赤い部分が <b>△ABP</b>、下のグラフの緑の点が現在値です。</div>
+      </div>
+      <div class="note">元のBASIC版の流れに合わせて、点Pの移動と面積の変化を1つの画面で確認できるようにしています。</div>
+    </div>
+    <div class="mainview">
+      <div class="panel svghold">
+        <svg id="geoSvg" viewBox="0 0 760 420" aria-label="正五角形と点P"></svg>
+        <div class="legend">
+          <span><span class="dot" style="background:#2E86DE"></span>正五角形 ABCDE</span>
+          <span><span class="dot" style="background:#EA5040"></span>△ABP</span>
+          <span><span class="dot" style="background:#7D3C98"></span>移動する点P</span>
+        </div>
+      </div>
+      <div class="panel svghold">
+        <svg id="graphSvg" viewBox="0 0 760 300" aria-label="面積グラフ"></svg>
+        <div class="small">グラフは、時間 x と △ABP の面積 y の関係を表しています。</div>
+      </div>
+    </div>
+  </div>
+</div></div>
+<script>
+const $=id=>document.getElementById(id);
+const DEG=Math.PI/180;
+const S={cfg:{hen:6,hayasa:1},t:0,playing:false,last:0};
+function clamp(v,min,max){return Math.min(max,Math.max(min,v));}
+function num(id,min,max){const v=parseFloat($(id).value||0);return clamp(isFinite(v)?v:min,min,max);}
+function fmt(v){const n=Math.round(v*100)/100;return String(n).replace(/\.0+$/,'').replace(/(\.\d*[1-9])0+$/,'$1');}
+function radiusFromSide(s){ return s/(2*Math.sin(36*DEG)); }
+function pentagon(cfg){
+  const s=cfg.hen, R=radiusFromSide(s), ang=[162,234,306,18,90];
+  return ang.map(a=>({x:R*Math.cos(a*DEG), y:R*Math.sin(a*DEG)})); // A,B,C,D,E
+}
+function totalTime(cfg){ return 4*cfg.hen/cfg.hayasa; }
+function segNames(){ return ['BC','CD','DE','EA']; }
+function lerp(a,b,t){ return {x:a.x+(b.x-a.x)*t, y:a.y+(b.y-a.y)*t}; }
+function pointP(cfg,t){
+  const pts=pentagon(cfg), [A,B,C,D,E]=pts;
+  const s=cfg.hen, d=clamp(cfg.hayasa*t,0,4*s);
+  if(d>=4*s) return {p:A, seg:3};
+  const k=Math.min(3,Math.floor(d/s));
+  const u=(d-k*s)/s;
+  const pairs=[[B,C],[C,D],[D,E],[E,A]];
+  return {p:lerp(pairs[k][0],pairs[k][1],u), seg:k};
+}
+function triArea(a,b,p){ return Math.abs((b.x-a.x)*(p.y-a.y)-(b.y-a.y)*(p.x-a.x))/2; }
+function maxArea(cfg){ let m=0; const T=totalTime(cfg); for(let i=0;i<=400;i++){ const t=T*i/400; m=Math.max(m, areaAt(cfg,t)); } return m; }
+function areaAt(cfg,t){ const pts=pentagon(cfg), A=pts[0], B=pts[1], P=pointP(cfg,t).p; return triArea(A,B,P); }
+function eqText(cfg){ return 'B→C→D→E→A の各区間で、△ABP の面積 y がどう変わるかを観察'; }
+function viewBounds(cfg){ const pts=pentagon(cfg); let xs=pts.map(p=>p.x), ys=pts.map(p=>p.y); return {xmin:Math.min(...xs)-2, xmax:Math.max(...xs)+2, ymin:Math.min(...ys)-2, ymax:Math.max(...ys)+2}; }
+function mapXY(x,y,b,w,h,p=28){ return {x:p+(x-b.xmin)/(b.xmax-b.xmin)*(w-2*p), y:h-p-(y-b.ymin)/(b.ymax-b.ymin)*(h-2*p)}; }
+function ptsStr(poly,b,w,h){ return poly.map(p=>{ const q=mapXY(p.x,p.y,b,w,h); return q.x.toFixed(1)+','+q.y.toFixed(1); }).join(' '); }
+function drawGeometry(){
+  const cfg=S.cfg, svg=$('geoSvg'), w=760, h=420, b=viewBounds(cfg), pts=pentagon(cfg), [A,B,C,D,E]=pts, cur=pointP(cfg,S.t), P=cur.p;
+  const pent=[A,B,C,D,E], tri=[A,B,P];
+  const pA=mapXY(A.x,A.y,b,w,h), pB=mapXY(B.x,B.y,b,w,h), pC=mapXY(C.x,C.y,b,w,h), pD=mapXY(D.x,D.y,b,w,h), pE=mapXY(E.x,E.y,b,w,h), pP=mapXY(P.x,P.y,b,w,h);
+  const label=(txt,p,dx,dy)=>'<text x="'+(p.x+dx)+'" y="'+(p.y+dy)+'" font-size="18" font-weight="900" fill="#37424A">'+txt+'</text>';
+  svg.innerHTML=''
+    +'<rect x="0" y="0" width="760" height="420" rx="18" fill="transparent"/>'
+    +'<polygon points="'+ptsStr(pent,b,w,h)+'" fill="rgba(46,134,222,.08)" stroke="#2E86DE" stroke-width="4"/>'
+    +'<polygon points="'+ptsStr(tri,b,w,h)+'" fill="rgba(234,80,64,.60)" stroke="#C0392B" stroke-width="2"/>'
+    +'<line x1="'+pA.x+'" y1="'+pA.y+'" x2="'+pP.x+'" y2="'+pP.y+'" stroke="#C0392B" stroke-width="4"/>'
+    +'<circle cx="'+pP.x+'" cy="'+pP.y+'" r="7" fill="#7D3C98" stroke="#fff" stroke-width="2"/>'
+    +label('A',pA,-22,-8)+label('B',pB,-22,22)+label('C',pC,8,22)+label('D',pD,10,0)+label('E',pE,-10,-14)+label('P',pP,10,8)
+    +'<text x="24" y="28" font-size="17" font-weight="900" fill="#0E6F6B">1辺='+cfg.hen+'cm　秒速='+cfg.hayasa+'cm　現在区間='+segNames()[cur.seg]+'</text>';
+}
+function drawGraph(){
+  const svg=$('graphSvg'), w=760, h=300, p=40, cfg=S.cfg, T=totalTime(cfg), maxY=Math.max(1,maxArea(cfg));
+  const map=(x,y)=>({x:p+x/T*(w-2*p), y:h-p-y/maxY*(h-2*p)});
+  let path=''; const N=320;
+  for(let i=0;i<=N;i++){ const t=T*i/N, y=areaAt(cfg,t), q=map(t,y); path+=(i?' L ':'M ')+q.x.toFixed(2)+' '+q.y.toFixed(2); }
+  let grids='';
+  for(let i=0;i<=8;i++){
+    const gx=p+i*(w-2*p)/8, x=i/8*T; grids+='<line x1="'+gx+'" y1="'+p+'" x2="'+gx+'" y2="'+(h-p)+'" stroke="#F0E4D4" stroke-dasharray="4 4"/>'+'<text x="'+(gx-8)+'" y="'+(h-10)+'" font-size="12" fill="#6B7A84">'+fmt(x)+'</text>';
+  }
+  for(let i=0;i<=6;i++){
+    const gy=p+i*(h-2*p)/6, y=(6-i)/6*maxY; grids+='<line x1="'+p+'" y1="'+gy+'" x2="'+(w-p)+'" y2="'+gy+'" stroke="#E9D9C4" stroke-dasharray="4 4"/>'+'<text x="8" y="'+(gy+5)+'" font-size="12" fill="#6B7A84">'+fmt(y)+'</text>';
+  }
+  const cur=map(S.t,areaAt(cfg,S.t));
+  svg.innerHTML=''
+    +'<rect x="0" y="0" width="760" height="300" rx="18" fill="transparent"/>'
+    +grids
+    +'<line x1="'+p+'" y1="'+(h-p)+'" x2="'+(w-p)+'" y2="'+(h-p)+'" stroke="#37424A" stroke-width="2"/>'
+    +'<line x1="'+p+'" y1="'+p+'" x2="'+p+'" y2="'+(h-p)+'" stroke="#37424A" stroke-width="2"/>'
+    +'<path d="'+path+'" fill="none" stroke="#EA5040" stroke-width="4" stroke-linecap="round"/>'
+    +'<circle cx="'+cur.x+'" cy="'+cur.y+'" r="6" fill="#19A199" stroke="#fff" stroke-width="2"/>'
+    +'<text x="'+(w-26)+'" y="'+(h-p+24)+'" text-anchor="end" font-size="16" font-weight="900" fill="#37424A">x（秒）</text>'
+    +'<text x="18" y="24" font-size="16" font-weight="900" fill="#37424A">y（cm²）</text>';
+}
+function updateStats(){
+  const cfg=S.cfg, cur=pointP(cfg,S.t); $('tNow').textContent=fmt(S.t); $('aNow').textContent=fmt(areaAt(cfg,S.t)); $('segNow').textContent=segNames()[cur.seg]; $('tEndTxt').textContent=fmt(totalTime(cfg)); $('timeSlider').max=String(totalTime(cfg)); $('timeSlider').value=String(S.t); $('eqBox').textContent=eqText(cfg);
+}
+function render(){ drawGeometry(); drawGraph(); updateStats(); }
+function apply(){ S.cfg={hen:num('hen',3,6), hayasa:num('hayasa',1,5)}; ['hen','hayasa'].forEach(id=>$(id).value=S.cfg[id]); S.t=0; render(); }
+function play(){ S.playing=true; S.last=performance.now(); requestAnimationFrame(tick); }
+function pause(){ S.playing=false; }
+function reset(){ S.t=0; pause(); render(); }
+function tick(ts){ if(!S.playing) return; const dt=(ts-S.last)/1000; S.last=ts; S.t=Math.min(totalTime(S.cfg), S.t+dt); render(); if(S.t>=totalTime(S.cfg)){ S.playing=false; return; } requestAnimationFrame(tick); }
+$('applyBtn').addEventListener('click',apply); $('playBtn').addEventListener('click',play); $('pauseBtn').addEventListener('click',pause); $('resetBtn').addEventListener('click',reset); $('timeSlider').addEventListener('input',e=>{ pause(); S.t=parseFloat(e.target.value||'0'); render(); }); ['hen','hayasa'].forEach(id=>$(id).addEventListener('keydown',e=>{ if(e.key==='Enter') apply(); }));
+render();
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79"}' crossorigin="anonymous"></script>
+</body>
+</html>

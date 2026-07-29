@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>２次方程式の計算練習 - Webアプリ版</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=M+PLUS+Rounded+1c:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #FCFBF4;
+    --grid: #DDE7E3;
+    --grid2: #EDF2EF;
+    --ink: #37424A;
+    --ink-soft: #6A757C;
+    --red: #EA5040;
+    --red-deep: #D33B2E;
+    --blue: #2E9BD6;
+    --blue-deep: #1F7CAE;
+    --yellow: #F6B93B;
+    --yellow-deep: #D89A2C;
+    --green: #34B37A;
+    --green-deep: #279862;
+    --teal: #2FA8A0;
+    --teal-deep: #1F827C;
+    --card: #FFFFFF;
+    --shadow: 0 6px 0 rgba(55,66,74,.10), 0 12px 28px rgba(55,66,74,.12);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: "Zen Maru Gothic", system-ui, sans-serif;
+    color: var(--ink);
+    background:
+      linear-gradient(var(--grid2) 1px, transparent 1px) 0 0/24px 24px,
+      linear-gradient(90deg, var(--grid2) 1px, transparent 1px) 0 0/24px 24px,
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/120px 120px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/120px 120px,
+      var(--paper);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 100%;
+    -webkit-font-smoothing: antialiased;
+  }
+  .app { width: 100%; max-width: 760px; padding: 18px 16px 44px; }
+  .num { font-family: "M PLUS Rounded 1c", sans-serif; }
+
+  header.bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo .pin {
+    width: 38px; height: 38px; border-radius: 50%; background: var(--teal); color: #fff; font-weight: 900;
+    display: grid; place-items: center; font-size: 18px; box-shadow: 0 3px 0 var(--teal-deep); transform: rotate(-8deg);
+  }
+  .logo b { font-size: 17px; font-weight: 900; }
+  .who { display: flex; align-items: center; gap: 6px; }
+  .who .badge {
+    background: var(--card); border-radius: 999px; padding: 6px 12px; font-weight: 900; font-size: 12px;
+    box-shadow: 0 3px 0 rgba(55,66,74,.10); color: var(--teal); cursor: pointer; border: none; font-family: inherit;
+  }
+  .who .badge:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(55,66,74,.10); }
+  .icon-btn {
+    border: none; background: var(--card); border-radius: 12px; width: 44px; height: 38px; font-size: 16px;
+    cursor: pointer; color: var(--ink); box-shadow: 0 3px 0 rgba(55,66,74,.12); font-family: inherit;
+  }
+  .icon-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(55,66,74,.12); }
+
+  .screen { display: none; animation: pop .3s ease; }
+  .screen.active { display: block; }
+  @keyframes pop { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  .title-card {
+    background: var(--card); border-radius: 26px; padding: 24px 20px 20px; box-shadow: var(--shadow);
+    text-align: center; position: relative; overflow: hidden; margin-bottom: 16px;
+  }
+  .title-card::before {
+    content: ""; position: absolute; inset: 8px; border: 3px dashed #CDE7E5; border-radius: 20px; pointer-events: none;
+  }
+  .title-card h1 {
+    margin: 2px 0; font-size: clamp(22px, 5.6vw, 32px); font-weight: 900; color: var(--teal);
+    position: relative; text-shadow: 2px 3px 0 #CFEAE7;
+  }
+  .title-card .sub { color: var(--ink-soft); font-weight: 700; font-size: 14px; position: relative; }
+  .prompt { position: relative; margin-top: 8px; color: var(--blue); font-weight: 900; font-size: 14px; }
+
+  .menu-head { display: flex; align-items: baseline; gap: 10px; margin: 2px 4px 12px; flex-wrap: wrap; }
+  .menu-head h2 { font-size: 19px; font-weight: 900; margin: 0; }
+  .menu-head p { margin: 0; color: var(--ink-soft); font-weight: 700; font-size: 12px; }
+
+  .mlist { display: grid; grid-template-columns: 1fr; gap: 11px; }
+  .mcard {
+    display: flex; align-items: center; gap: 12px; background: var(--card); border: none; border-radius: 16px;
+    padding: 15px 14px; box-shadow: var(--shadow); cursor: pointer; font-family: inherit; text-align: left;
+    color: var(--ink); transition: transform .1s; text-decoration: none; width: 100%;
+  }
+  .mcard:hover { transform: translateY(-3px); }
+  .mcard:active { transform: translateY(1px); box-shadow: 0 3px 0 rgba(55,66,74,.10); }
+  .mcard .n {
+    flex: none; width: 32px; height: 32px; border-radius: 50%; background: var(--teal); color: #fff; font-weight: 900;
+    display: grid; place-items: center; font-size: 14px; font-family: "M PLUS Rounded 1c"; box-shadow: 0 3px 0 var(--teal-deep);
+  }
+  .mcard.rand .n { background: var(--yellow); box-shadow: 0 3px 0 var(--yellow-deep); color: #6a5000; }
+  .mcard.blue .n { background: var(--blue); box-shadow: 0 3px 0 var(--blue-deep); }
+  .mcard .lbl { font-weight: 900; font-size: 15px; line-height: 1.35; flex: 1; }
+  .mcard .ex { font-family: "M PLUS Rounded 1c"; font-weight: 900; font-size: 16px; }
+  .mcard .sm { display: block; font-size: 12px; color: var(--ink-soft); font-weight: 700; margin-top: 2px; }
+
+  .foot { display: flex; justify-content: center; margin-top: 18px; }
+  .foot a, .foot button {
+    display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 900;
+    border: none; border-radius: 16px; padding: 12px 22px; font-size: 15px; color: var(--ink); background: #fff;
+    box-shadow: 0 5px 0 rgba(55,66,74,.15); font-family: inherit; cursor: pointer;
+  }
+  .foot a:active, .foot button:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(55,66,74,.15); }
+  .credit { text-align: center; margin-top: 16px; font-size: 11px; color: #9AA4A9; line-height: 1.7; }
+
+  /* ---- play ---- */
+  .play-top { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; flex-wrap: wrap; }
+  .chip { background: var(--card); border-radius: 999px; padding: 6px 13px; font-weight: 700; font-size: 12px; box-shadow: 0 3px 0 rgba(55,66,74,.10); }
+  .chip.mode { color: var(--teal); font-weight: 900; }
+  .back-btn {
+    border: none; background: var(--card); border-radius: 12px; padding: 8px 13px; font-family: inherit;
+    font-weight: 700; cursor: pointer; color: var(--ink); box-shadow: 0 3px 0 rgba(55,66,74,.12); font-size: 13px;
+  }
+  .back-btn:active { transform: translateY(2px); }
+  .dots { display: flex; gap: 5px; margin-left: auto; }
+  .dot { width: 16px; height: 16px; border-radius: 50%; background: #E4EAE8; display: grid; place-items: center; font-size: 10px; color: #fff; font-weight: 900; }
+  .dot.ok { background: var(--green); }
+  .dot.ng { background: var(--red); }
+  .dot.now { background: var(--yellow); box-shadow: 0 0 0 3px rgba(246,185,59,.35); }
+
+  .board {
+    background: var(--card); border-radius: 24px; box-shadow: var(--shadow); padding: 24px 14px 20px;
+    text-align: center; position: relative; overflow: hidden; min-height: 200px;
+  }
+  .equation {
+    font-family: "M PLUS Rounded 1c"; font-weight: 900; font-size: clamp(20px, 5.2vw, 30px);
+    display: flex; align-items: center; justify-content: center; gap: .08em; flex-wrap: wrap; color: var(--ink);
+  }
+  .equation .op { color: var(--teal); }
+  .equation .eq { color: var(--ink-soft); }
+  .equation .xv { color: var(--teal); font-style: italic; }
+  sup { font-size: .6em; vertical-align: super; }
+  .ansbox {
+    min-width: 3.5em; min-height: 1.1em; padding: 0 .2em; border-bottom: 6px solid var(--blue); color: var(--blue);
+    border-radius: 6px 6px 4px 4px; display: inline-flex; align-items: flex-end; justify-content: center; background: rgba(46,155,214,.10);
+  }
+  .ansbox.blink { animation: bl 1s steps(2) infinite; }
+  @keyframes bl { 50% { border-bottom-color: transparent; } }
+  .hint { color: var(--ink-soft); font-weight: 700; font-size: 13px; margin-top: 10px; min-height: 18px; }
+  .msg { margin-top: 8px; font-weight: 900; font-size: 17px; min-height: 24px; }
+  .msg.good { color: var(--green); }
+  .msg.bad { color: var(--red); }
+  .reveal { display: none; margin-top: 6px; font-family: "M PLUS Rounded 1c"; font-weight: 900; font-size: 21px; }
+  .reveal.show { display: block; animation: pop .3s ease; }
+  .reveal b { color: var(--red); }
+
+  .stamp { position: absolute; top: 50%; left: 50%; pointer-events: none; }
+  .stamp svg { display: block; width: 126px; height: 126px; filter: drop-shadow(0 3px 4px rgba(0,0,0,.15)); }
+  .stamp.maru { animation: si .45s cubic-bezier(.2,1.5,.4,1) both; }
+  .stamp.batsu { animation: sh .5s ease both; }
+  @keyframes si { 0% { transform: translate(-50%,-50%) scale(2.4) rotate(-25deg); opacity: 0; } 60% { opacity: 1; } 100% { transform: translate(-50%,-50%) scale(1) rotate(-8deg); opacity: 1; } }
+  @keyframes sh { 0% { transform: translate(-50%,-50%) scale(1.4); opacity: 0; } 20% { opacity: 1; } 30% { transform: translate(-53%,-50%) rotate(-6deg); } 45% { transform: translate(-47%,-50%) rotate(6deg); } 60% { transform: translate(-52%,-50%) rotate(-4deg); } 100% { transform: translate(-50%,-50%) rotate(0); opacity: 1; } }
+
+  .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; margin-top: 14px; }
+  .key {
+    border: none; background: var(--card); border-radius: 15px; padding: 13px 0; font-family: "M PLUS Rounded 1c";
+    font-weight: 900; font-size: 22px; color: var(--ink); cursor: pointer; box-shadow: 0 5px 0 rgba(55,66,74,.14);
+  }
+  .key:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(55,66,74,.14); }
+  .key.sign { color: var(--teal); background: #EDF7F6; box-shadow: 0 5px 0 #C4E3E0; }
+  .key.sign:active { box-shadow: 0 1px 0 #C4E3E0; }
+  .key.xk { color: #fff; background: var(--teal); box-shadow: 0 5px 0 var(--teal-deep); font-style: normal; }
+  .key.xk:active { box-shadow: 0 1px 0 var(--teal-deep); }
+  .key.del { background: #FDECE9; color: var(--red); box-shadow: 0 5px 0 #F3C4BC; font-size: 19px; }
+  .key.del:active { box-shadow: 0 1px 0 #F3C4BC; }
+  .key:disabled { opacity: .3; pointer-events: none; }
+  .enter-btn {
+    width: 100%; margin-top: 10px; border: none; cursor: pointer; font-family: inherit; font-weight: 900;
+    border-radius: 16px; color: #fff; padding: 14px 0; font-size: 19px; background: var(--green); box-shadow: 0 5px 0 var(--green-deep);
+  }
+  .enter-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--green-deep); }
+
+  /* ---- result ---- */
+  .result-card { background: var(--card); border-radius: 26px; box-shadow: var(--shadow); padding: 24px 18px 22px; text-align: center; }
+  .hanamaru-wrap { height: 120px; display: grid; place-items: center; }
+  .score-line { font-weight: 900; font-size: 20px; margin: 6px 0 2px; }
+  .score-line .big { font-family: "M PLUS Rounded 1c"; font-size: 52px; color: var(--red); vertical-align: -5px; margin: 0 4px; }
+  .result-msg { font-weight: 900; font-size: 22px; margin: 4px 0 6px; }
+  .time-line { color: var(--ink-soft); font-weight: 700; font-size: 13px; margin-bottom: 14px; }
+  .review { display: flex; flex-direction: column; gap: 7px; text-align: left; margin: 0 auto 20px; max-width: 520px; }
+  .review-row {
+    display: flex; align-items: center; gap: 10px; background: #F7FAF9; border-radius: 14px; padding: 9px 12px;
+    font-family: "M PLUS Rounded 1c"; font-weight: 900; font-size: 15px;
+  }
+  .review-row .rmark { width: 26px; height: 26px; flex: none; display: grid; place-items: center; border-radius: 50%; font-size: 14px; color: #fff; }
+  .review-row .rmark.ok { background: var(--green); }
+  .review-row .rmark.ng { background: var(--red); }
+  .review-row .rq { flex: 1; }
+  .review-row .ra.wrong { color: var(--red); text-decoration: line-through; margin-right: 6px; }
+  .review-row .rc { color: var(--green); }
+  .result-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .big-btn {
+    border: none; cursor: pointer; font-family: inherit; font-weight: 900; border-radius: 16px; color: #fff;
+    padding: 13px 20px; font-size: 16px; background: var(--green); box-shadow: 0 5px 0 var(--green-deep);
+  }
+  .big-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--green-deep); }
+  .big-btn.blue { background: var(--blue); box-shadow: 0 5px 0 var(--blue-deep); }
+  .big-btn.blue:active { box-shadow: 0 1px 0 var(--blue-deep); }
+  .big-btn.gray { background: #fff; color: var(--ink); box-shadow: 0 5px 0 rgba(55,66,74,.15); }
+  .big-btn.gray:active { box-shadow: 0 1px 0 rgba(55,66,74,.15); }
+
+  /* ---- 学習記録 ---- */
+  .panel { background: var(--card); border-radius: 22px; box-shadow: var(--shadow); padding: 18px 16px; margin-bottom: 14px; }
+  .panel h3 { margin: 0 0 10px; font-size: 16px; font-weight: 900; display: flex; align-items: center; gap: 8px; }
+  .panel h3 .bar2 { width: 6px; height: 18px; border-radius: 3px; background: var(--teal); }
+  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media(max-width:480px){ .stat-row { grid-template-columns: 1fr 1fr; } }
+  .stat { background: #F7FAF9; border-radius: 14px; padding: 12px 8px; text-align: center; }
+  .stat .v { font-family: "M PLUS Rounded 1c"; font-weight: 900; font-size: 26px; color: var(--teal); }
+  .stat .k { font-size: 11px; color: var(--ink-soft); font-weight: 700; margin-top: 2px; }
+  table.rec { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.rec th, table.rec td { padding: 7px 6px; border-bottom: 1px solid #EDF2EF; text-align: left; }
+  table.rec th { font-size: 11px; color: var(--ink-soft); font-weight: 900; }
+  table.rec td.n { font-family: "M PLUS Rounded 1c"; font-weight: 900; text-align: right; white-space: nowrap; }
+  table.rec tr:last-child td { border-bottom: none; }
+  .scorepill {
+    display: inline-block; min-width: 44px; text-align: center; border-radius: 999px; padding: 2px 8px;
+    font-family: "M PLUS Rounded 1c"; font-weight: 900; color: #fff; font-size: 12px;
+  }
+  .sp100 { background: var(--red); }
+  .sp80 { background: var(--yellow); color: #6a5000; }
+  .sp0 { background: var(--ink-soft); }
+  .miss-bars { display: flex; flex-direction: column; gap: 8px; }
+  .mb { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; }
+  .mb .lab { flex: 0 0 8.8em; }
+  .mb .track { flex: 1; height: 14px; background: #F0F4F2; border-radius: 999px; overflow: hidden; }
+  .mb .fill { height: 100%; border-radius: 999px; }
+  .mb .cnt { flex: 0 0 3.6em; text-align: right; font-family: "M PLUS Rounded 1c"; font-weight: 900; }
+  .spark { display: flex; align-items: flex-end; gap: 3px; height: 70px; padding-top: 4px; }
+  .spark .b { flex: 1; min-width: 5px; background: var(--teal); border-radius: 3px 3px 0 0; }
+  .spark .b.s100 { background: var(--red); }
+  .spark .b.s80 { background: var(--yellow); }
+  .empty { color: var(--ink-soft); font-weight: 700; font-size: 13px; text-align: center; padding: 14px 0; }
+  .rowbtns { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
+  .sbtn {
+    border: none; border-radius: 14px; padding: 10px 16px; font-family: inherit; font-weight: 900; font-size: 13px;
+    cursor: pointer; color: var(--ink); background: #fff; box-shadow: 0 4px 0 rgba(55,66,74,.14);
+  }
+  .sbtn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(55,66,74,.14); }
+  .sbtn.pur { background: var(--teal); color: #fff; box-shadow: 0 4px 0 var(--teal-deep); }
+  .sbtn.pur:active { box-shadow: 0 1px 0 var(--teal-deep); }
+  .sbtn.danger { background: #FDECE9; color: var(--red); box-shadow: 0 4px 0 #F3C4BC; }
+  .sbtn.danger:active { box-shadow: 0 1px 0 #F3C4BC; }
+  .form-row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; justify-content: center; }
+  .fld { display: flex; flex-direction: column; gap: 4px; }
+  .fld label { font-size: 11px; font-weight: 900; color: var(--ink-soft); }
+  .fld input {
+    font-family: "M PLUS Rounded 1c"; font-weight: 900; font-size: 18px; padding: 8px 10px; width: 74px;
+    border: 2px solid #E1E8E5; border-radius: 12px; text-align: center; color: var(--ink); background: #fff;
+  }
+  .fld input.wide { width: 150px; font-size: 15px; text-align: left; font-family: "Zen Maru Gothic"; }
+  .fld input:focus { outline: none; border-color: var(--teal); }
+  .who-list { display: flex; flex-direction: column; gap: 8px; }
+  .who-item { display: flex; align-items: center; gap: 10px; background: #F7FAF9; border-radius: 14px; padding: 10px 12px; }
+  .who-item.on { background: #EDF7F6; box-shadow: 0 0 0 2px var(--teal) inset; }
+  .who-item .nm { flex: 1; font-weight: 900; font-size: 14px; }
+  .who-item .sm2 { font-size: 11px; color: var(--ink-soft); font-weight: 700; }
+  .mini {
+    border: none; background: #fff; border-radius: 10px; padding: 6px 10px; font-family: inherit; font-weight: 900;
+    font-size: 12px; cursor: pointer; color: var(--ink); box-shadow: 0 3px 0 rgba(55,66,74,.12);
+  }
+  .mini:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(55,66,74,.12); }
+  .mini.red { color: var(--red); }
+  .notice { background: #FDF0CF; color: #6a5000; border-radius: 12px; padding: 9px 12px; font-size: 12px; font-weight: 700; margin-bottom: 12px; }
+  .detail { display: none; background: #F7FAF9; border-radius: 12px; padding: 10px 12px; margin-top: 6px; font-size: 12px; }
+  .detail.show { display: block; }
+  .detail div { padding: 3px 0; font-family: "M PLUS Rounded 1c"; font-weight: 900; }
+  .detail .ng { color: var(--red); }
+
+  @media (prefers-reduced-motion: reduce){ *{ animation-duration: .001ms !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bar">
+    <div class="logo"><span class="pin">√</span><b>２次方程式</b></div>
+    <div class="who">
+      <button class="badge" id="whoBadge" title="学習者の切りかえ">学習者なし</button>
+      <button class="icon-btn" id="soundBtn" title="おと">🔊</button>
+    </div>
+  </header>
+
+  <!-- ===== メインメニュー ===== -->
+  <section class="screen active" id="mainScreen">
+    <div class="title-card">
+      <h1>２次方程式の計算練習</h1>
+      <div class="sub">計算ドリル - 2JIMENU</div>
+      <div class="prompt">勉強することを 選んで クリック（数字キー）しましょう</div>
+    </div>
+    <div class="menu-head"><h2>メインメニュー</h2><p>数字キーでも選べます</p></div>
+    <div class="mlist" id="mainList"></div>
+    <div class="foot"><a href="doriru.html">← 単元メニューへもどる</a></div>
+    <div class="credit">
+      岐阜女子大学（安藤忠展） Ver 5.01／ Web版
+    </div>
+  </section>
+
+  <!-- ===== サブメニュー ===== -->
+  <section class="screen" id="subScreen">
+    <div class="title-card">
+      <h1 id="subTitle"></h1>
+      <div class="sub">の 計算練習</div>
+      <div class="prompt">勉強することを 選んで クリック（数字キー）しましょう</div>
+    </div>
+    <div class="menu-head"><h2>コースメニュー</h2><p>数字キーでも選べます</p></div>
+    <div class="mlist" id="subList"></div>
+    <div class="foot"><button id="toMainBtn">← メインメニューへ</button></div>
+  </section>
+
+  <!-- ===== ドリル実行画面 ===== -->
+  <section class="screen" id="playScreen">
+    <div class="play-top">
+      <button class="back-btn" id="playBackBtn">← メニュー</button>
+      <span class="chip mode" id="modeChip"></span>
+      <span class="chip" id="timerText">0秒</span>
+      <div class="dots" id="dots"></div>
+    </div>
+    <div class="board">
+      <div class="equation" id="equation"></div>
+      <div class="hint" id="hint">√は「√」ボタンまたはキーボード[R]、±は「±」で入力</div>
+      <div class="msg" id="msg"></div>
+      <div class="reveal" id="reveal"></div>
+      <div class="stamp" id="stamp"></div>
+    </div>
+    <div class="keypad" id="keypad">
+      <button class="key" data-k="1">1</button><button class="key" data-k="2">2</button>
+      <button class="key" data-k="3">3</button><button class="key sign" data-k="+">＋</button>
+      <button class="key" data-k="4">4</button><button class="key" data-k="5">5</button>
+      <button class="key" data-k="6">6</button><button class="key sign" data-k="-">－</button>
+      <button class="key" data-k="7">7</button><button class="key" data-k="8">8</button>
+      <button class="key" data-k="9">9</button><button class="key sign" data-k="pm">±</button>
+      <button class="key" data-k="0">0</button><button class="key xk" data-k="r" id="kr">√</button>
+      <button class="key del" data-k="del" style="grid-column: span 2">⌫ けす</button>
+    </div>
+    <button class="enter-btn" id="enterBtn">こたえあわせ (Enter)</button>
+  </section>
+
+  <!-- ===== 採点・結果画面 ===== -->
+  <section class="screen" id="resultScreen">
+    <div class="result-card">
+      <div class="hanamaru-wrap" id="hanamaruWrap"></div>
+      <div class="score-line"><span class="big num" id="scoreNum">0</span> 点 です。</div>
+      <div class="result-msg" id="resultMsg"></div>
+      <div class="time-line" id="resultTime"></div>
+      <div class="review" id="review"></div>
+      <div class="result-actions">
+        <button class="big-btn" id="againBtn">もっと練習する</button>
+        <button class="big-btn blue" id="otherBtn">別の問題を練習する</button>
+        <button class="big-btn gray" id="homeBtn">メインメニューへ</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 学習者反応データ処理システム ===== -->
+  <section class="screen" id="dataScreen">
+    <div class="title-card">
+      <h1>学習者反応データ処理システム</h1>
+      <div class="sub">学習の記録を見る・管理する</div>
+    </div>
+    <div id="storeNotice"></div>
+    <div class="panel">
+      <h3><span class="bar2"></span>学習者情報設定</h3>
+      <div class="who-list" id="whoList"></div>
+      <div style="margin-top:12px" class="form-row">
+        <div class="fld"><label>学年</label><input id="fNen" inputmode="numeric" maxlength="1" placeholder="3"></div>
+        <div class="fld"><label>組</label><input id="fKumi" inputmode="numeric" maxlength="2" placeholder="01"></div>
+        <div class="fld"><label>番号</label><input id="fBan" inputmode="numeric" maxlength="2" placeholder="01"></div>
+        <div class="fld"><label>氏名（任意）</label><input id="fName" class="wide" maxlength="12" placeholder="生徒氏名"></div>
+        <button class="sbtn pur" id="addWhoBtn">＋ 登録・追加</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h3><span class="bar2"></span>成績・評価のまとめ</h3>
+      <div class="stat-row">
+        <div class="stat"><div class="v" id="stCount">0</div><div class="k">総練習回数</div></div>
+        <div class="stat"><div class="v" id="stAvg">—</div><div class="k">正答率 (平均)</div></div>
+        <div class="stat"><div class="v" id="stEval">—</div><div class="k">総合評価</div></div>
+      </div>
+      <div style="margin-top:14px">
+        <div style="font-size:12px;font-weight:900;color:var(--ink-soft);margin-bottom:4px">点数の推移（古い→新しい）</div>
+        <div class="spark" id="spark"></div>
+      </div>
+    </div>
+    <div class="panel"><h3><span class="bar2"></span>誤答傾向（KR分析）</h3><div class="miss-bars" id="missBars"></div></div>
+    <div class="panel"><h3><span class="bar2"></span>コース別記録</h3><div id="byKind"></div></div>
+    <div class="panel"><h3><span class="bar2"></span>練習履歴ログ</h3><div id="history"></div></div>
+    <div class="rowbtns">
+      <button class="sbtn" id="csvBtn">データ出力 (CSV)</button>
+      <button class="sbtn danger" id="clearBtn">この学習者の記録を消す</button>
+    </div>
+    <div class="foot"><button id="dataBackBtn">← メインメニューへ</button></div>
+  </section>
+</div>
+
+<script>
+/* =========================================================
+   ２次方程式の計算練習 (2JIMENU) - Web JavaScript
+   BASIC Program Translation
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const screens = { main: $("mainScreen"), sub: $("subScreen"), play: $("playScreen"), result: $("resultScreen"), data: $("dataScreen") };
+function show(n) {
+  for (const k in screens) screens[k].classList.toggle("active", k === n);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+const rnd = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+function par(s) { return '（' + s + '）'; }
+
+/* BASIC 誤答メッセージ (KR情報) */
+const MISSMSG = [
+  "正解です！",
+  "間違っていますよ！",
+  "符号が違います！",
+  "絶対値が違います！",
+  "１が余分です！",
+  "χがない / 根号が必要です！"
+];
+
+/* メニュー構造 (2JIMENU BASICソースに基づく) */
+const MENU_STRUCTURE = [
+  {
+    id: 1,
+    title: "２次方程式（x^2 ＝ a の型）",
+    sub: [
+      { id: 1, name: "χ^2＝２５　のような問題", type: "1.1" },
+      { id: 2, name: "χ^2＝５　　のような問題", type: "1.2" },
+      { id: 3, name: "χ^2＝８　　のような問題", type: "1.3" },
+      { id: 4, name: "４χ^2＝８　のような問題", type: "1.4" },
+      { id: 5, name: "３χ^2－１２＝０　のような問題", type: "1.5" },
+      { id: 6, name: "１５－３χ^2＝０　のような問題", type: "1.6" },
+      { id: 7, name: "ランダムコース", type: "1.7" }
+    ]
+  }
+];
+
+/* PRIME FACTORIZATION & ROOT SIMPLIFICATION HELPER */
+function simplifyRoot(n) {
+  let outer = 1;
+  let inner = n;
+  for (let i = 2; i * i <= inner; i++) {
+    while (inner % (i * i) === 0) {
+      outer *= i;
+      inner /= (i * i);
+    }
+  }
+  return { outer: outer, inner: inner };
+}
+
+/* BASIC 問題生成ルーチン群 (D.SET.X.Y logic) */
+function generateProblem(type) {
+  let curType = type;
+  if (curType === "1.7") curType = "1." + rnd(1, 6);
+  if (curType === "2.3") curType = "2." + rnd(1, 2);
+  if (curType === "3.3") curType = "3." + rnd(1, 2);
+  if (curType === "4.4") curType = "4." + rnd(1, 3);
+  if (curType === "5.3") curType = "5." + rnd(1, 2);
+  if (curType === "6.1") {
+    const cats = ["1.1", "1.2", "1.3", "2.1", "3.1", "4.1", "5.1"];
+    curType = cats[rnd(0, cats.length - 1)];
+  }
+
+  let q = "", ans = "", isEquation = false;
+
+  if (curType === "1.1") {
+    // x^2 = a^2 => x = ±a
+    const a = rnd(1, 9);
+    q = "<i>χ</i><sup>2</sup> ＝ " + (a * a);
+    ans = "±" + a;
+    isEquation = true;
+  }
+  else if (curType === "1.2") {
+    // x^2 = a (non-square) => x = ±√a
+    let a = rnd(2, 19);
+    while ([4, 8, 9, 12, 16, 18].includes(a)) a = rnd(2, 19);
+    q = "<i>χ</i><sup>2</sup> ＝ " + a;
+    ans = "±√" + a;
+    isEquation = true;
+  }
+  else if (curType === "1.3") {
+    // x^2 = a (simplifiable root) e.g., 8 => ±2√2
+    const choices = [8, 12, 18, 20, 24, 27, 32, 45, 50, 72];
+    const a = choices[rnd(0, choices.length - 1)];
+    const simp = simplifyRoot(a);
+    q = "<i>χ</i><sup>2</sup> ＝ " + a;
+    ans = "±" + simp.outer + "√" + simp.inner;
+    isEquation = true;
+  }
+  else if (curType === "1.4" || curType === "1.5" || curType === "1.6") {
+    // 4x^2 = 8, 3x^2 - 12 = 0, 15 - 3x^2 = 0 style
+    const pbai = rnd(2, 4);
+    const base = rnd(2, 9);
+    const val = base * pbai;
+    const simp = simplifyRoot(base);
+    const rootStr = (simp.inner === 1) ? String(simp.outer) : (simp.outer === 1 ? "" : simp.outer) + "√" + simp.inner;
+    ans = "±" + rootStr;
+    isEquation = true;
+
+    if (curType === "1.4") q = pbai + "<i>χ</i><sup>2</sup> ＝ " + val;
+    else if (curType === "1.5") q = pbai + "<i>χ</i><sup>2</sup> － " + val + " ＝ ０";
+    else q = val + " － " + pbai + "<i>χ</i><sup>2</sup> ＝ ０";
+  }
+  else if (curType === "2.1") {
+    // a√c + b√c = (a+b)√c
+    const a = rnd(1, 9), b = rnd(1, 9);
+    let c = rnd(2, 9);
+    while ([4, 8, 9].includes(c)) c = rnd(2, 9);
+    const astr = a === 1 ? "" : String(a);
+    const bstr = b === 1 ? "" : String(b);
+    q = astr + "√" + c + " ＋ " + bstr + "√" + c + " ＝";
+    ans = (a + b) + "√" + c;
+  }
+  else if (curType === "2.2") {
+    // √a + √b simplified addition
+    const c = rnd(2, 5);
+    const k1 = rnd(1, 3), k2 = rnd(1, 3);
+    const n1 = k1 * k1 * c, n2 = k2 * k2 * c;
+    q = "√" + n1 + " ＋ √" + n2 + " ＝";
+    const sumK = k1 + k2;
+    ans = (sumK === 1 ? "" : sumK) + "√" + c;
+  }
+  else if (curType === "3.1") {
+    // a√c - b√c
+    const a = rnd(2, 9), b = rnd(1, a - 1);
+    let c = rnd(2, 9);
+    while ([4, 8, 9].includes(c)) c = rnd(2, 9);
+    const astr = a === 1 ? "" : String(a);
+    const bstr = b === 1 ? "" : String(b);
+    q = astr + "√" + c + " － " + bstr + "√" + c + " ＝";
+    const diff = a - b;
+    ans = (diff === 1 ? "" : diff) + "√" + c;
+  }
+  else if (curType === "3.2") {
+    // -ax - bx = -(a+b)x
+    const a = rnd(1, 9), b = rnd(1, 9);
+    const astr = a === 1 ? "" : String(a);
+    const bstr = b === 1 ? "" : String(b);
+    q = "－" + astr + "<i>χ</i> － " + bstr + "<i>χ</i> ＝";
+    ans = "－" + (a + b) + "χ";
+  }
+  else if (curType.startsWith("4.")) {
+    // Root Multiplication
+    if (curType === "4.1") {
+      const rdata = [2, 3, 5, 7];
+      const i1 = rnd(0, 3), i2 = rnd(0, 3);
+      const a = rdata[i1], b = rdata[i2];
+      q = "√" + a + " × √" + b + " ＝";
+      if (a === b) ans = String(a);
+      else {
+        const simp = simplifyRoot(a * b);
+        ans = (simp.outer === 1 ? "" : simp.outer) + "√" + simp.inner;
+      }
+    } else {
+      const a = rnd(1, 3), b = rnd(2, 5), c = rnd(1, 3), d = rnd(2, 5);
+      const astr = a === 1 ? "" : String(a);
+      const cstr = c === 1 ? "" : String(c);
+      q = astr + "√" + b + " × " + cstr + "√" + d + " ＝";
+      const outerProd = a * c;
+      const innerProd = b * d;
+      const simp = simplifyRoot(innerProd);
+      const totalOuter = outerProd * simp.outer;
+      ans = (simp.inner === 1) ? String(totalOuter) : (totalOuter === 1 ? "" : totalOuter) + "√" + simp.inner;
+    }
+  }
+  else if (curType.startsWith("5.")) {
+    // Root Division: a√b ÷ √c
+    const b = rnd(2, 5), c = rnd(2, 5);
+    const prod = b * c;
+    q = "√" + prod + " ÷ √" + c + " ＝";
+    ans = "√" + b;
+  }
+
+  return { q: q, ans: ans, isEquation: isEquation };
+}
+
+/* =========================================================
+   入力文字列の判定・正規化・KR分析
+   ========================================================= */
+function normalizeInput(s) {
+  if (!s) return "";
+  let res = String(s).replace(/\s/g, "")
+                     .replace(/x/gi, "χ")
+                     .replace(/r/gi, "√")
+                     .replace(/v/gi, "√")
+                     .replace(/\+-/g, "±")
+                     .replace(/-\+/g, "±");
+  return res;
+}
+
+function checkAnswer(userStr, correctStr) {
+  const normUser = normalizeInput(userStr);
+  const normCorrect = normalizeInput(correctStr);
+  if (normUser === normCorrect) return 0; // 正解
+
+  // 誤答分析 (MISSTYPE)
+  if (normUser.replace(/[±＋－]/g, "") === normCorrect.replace(/[±＋－]/g, "")) return 2; // 符号違い
+  if (normCorrect.includes("√") && !normUser.includes("√")) return 5; // √なし
+  if (normUser.includes("1√")) return 4; // 1が余分
+  return 3; // 絶対値違い・その他
+}
+
+function formatAnsDisplay(s) {
+  if (!s) return "";
+  return String(s).replace(/χ/g, "<i>χ</i>");
+}
+
+/* LocalStorage Manager */
+const KEY = "2jimenu.records.v2";
+const Store = (function() {
+  let mem = null, usable = false;
+  try {
+    const k = "__t" + Date.now(); localStorage.setItem(k, "1"); localStorage.removeItem(k); usable = true;
+  } catch(e) { usable = false; }
+  return {
+    usable: usable,
+    load: function() {
+      if (!usable) return mem || { people: [], cur: null, logs: [] };
+      try { const s = localStorage.getItem(KEY); return s ? JSON.parse(s) : { people: [], cur: null, logs: [] }; }
+      catch(e) { return { people: [], cur: null, logs: [] }; }
+    },
+    save: function(d) {
+      if (!usable) { mem = d; return; }
+      try { localStorage.setItem(KEY, JSON.stringify(d)); } catch(e) { mem = d; }
+    }
+  };
+})();
+
+let DB = Store.load();
+function dbSave() { Store.save(DB); }
+function curPerson() {
+  if (!DB.cur) return null;
+  for (let i = 0; i < DB.people.length; i++) if (DB.people[i].id === DB.cur) return DB.people[i];
+  return null;
+}
+function personLabel(p) {
+  if (!p) return "学習者なし";
+  const s = p.nen + "年" + p.kumi + "組" + p.ban + "番";
+  return p.name ? s + " " + p.name : s;
+}
+function updateWhoBadge() { $("whoBadge").textContent = personLabel(curPerson()); }
+
+function saveLog(ten, sec) {
+  const p = curPerson();
+  if (!p) return;
+  const items = S.list.map(it => ({
+    q: it.p.q,
+    ans: it.p.ans,
+    user: it.user || "",
+    ok: it.correct,
+    tries: it.tries,
+    miss: it.lastMiss === undefined ? -1 : it.lastMiss
+  }));
+  DB.logs.push({
+    pid: p.id,
+    at: Date.now(),
+    menu1: S.menu1,
+    menu2: S.menu2,
+    type: S.type,
+    kind: S.kindName,
+    ten: ten,
+    sec: sec,
+    items: items
+  });
+  dbSave();
+}
+
+/* サウンド機能 */
+let soundOn = true, actx = null;
+function beep(type) {
+  if (!soundOn) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const now = actx.currentTime;
+    const pl = (f, s, d, v) => {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = "sine"; o.frequency.value = f;
+      o.connect(g); g.connect(actx.destination);
+      g.gain.setValueAtTime(0, now + s);
+      g.gain.linearRampToValueAtTime(v || .16, now + s + .02);
+      g.gain.exponentialRampToValueAtTime(.0001, now + s + d);
+      o.start(now + s); o.stop(now + s + d + .02);
+    };
+    if (type === "correct") { pl(660, 0, .14); pl(880, .12, .2); }
+    else if (type === "wrong") { pl(200, 0, .18, .2); }
+    else if (type === "type") { pl(680, 0, .03, .06); }
+    else if (type === "tap") { pl(520, 0, .05, .08); }
+    else if (type === "fanfare") { pl(523, 0, .13); pl(659, .13, .13); pl(784, .26, .13); pl(1046, .39, .3); }
+  } catch(e) {}
+}
+
+/* メインメニュー生成 */
+function buildMain() {
+  const l = $("mainList"); l.innerHTML = "";
+  MENU_STRUCTURE.forEach((m, i) => {
+    const el = document.createElement("button");
+    el.className = "mcard";
+    el.innerHTML = '<span class="n">' + m.id + '</span><span class="lbl">' + m.title + '<span class="sm">の 計算練習</span></span>';
+    el.addEventListener("click", () => { beep("tap"); openSub(i); });
+    l.appendChild(el);
+  });
+
+  // 学習データメニュー
+  const dataEl = document.createElement("button");
+  dataEl.className = "mcard blue";
+  dataEl.innerHTML = '<span class="n">7</span><span class="lbl">学習者反応データ処理<span class="sm">学習の記録を見る・設定</span></span>';
+  dataEl.addEventListener("click", () => { beep("tap"); openData(); });
+  l.appendChild(dataEl);
+}
+
+/* サブメニュー生成 */
+let curMenu1 = 0;
+function openSub(idx) {
+  curMenu1 = idx;
+  const m = MENU_STRUCTURE[idx];
+  $("subTitle").textContent = m.title;
+  const l = $("subList"); l.innerHTML = "";
+  
+  m.sub.forEach((s, si) => {
+    const b = document.createElement("button");
+    b.className = "mcard" + (s.name.includes("ランダム") ? " rand" : "");
+    b.innerHTML = '<span class="n">' + (si + 1) + '</span><span class="lbl"><span class="ex">' + s.name + '</span></span>';
+    b.addEventListener("click", () => { beep("tap"); startRound(m.id, si + 1, s.type, s.name); });
+    l.appendChild(b);
+  });
+  show("sub");
+}
+
+/* ドリル実行の状態管理 */
+const PRMSU = 5, MISSN = 3;
+let S = { menu1: 0, menu2: 0, type: "", kindName: "", list: [], cur: 0, input: "", locked: false, t0: 0 };
+let timerId = null;
+
+function startRound(m1, m2, type, kindName) {
+  S = { menu1: m1, menu2: m2, type: type, kindName: kindName, list: [], cur: 0, input: "", locked: false, t0: Date.now() };
+  const seen = {};
+  for (let i = 0; i < PRMSU; i++) {
+    let p, guard = 0;
+    do {
+      p = generateProblem(type);
+      guard++;
+    } while (seen[p.q] && guard < 60);
+    seen[p.q] = 1;
+    S.list.push({ p: p, tries: 0, correct: false, user: "" });
+  }
+  $("modeChip").textContent = kindName;
+  buildDots(); show("play"); startTimer(); render();
+}
+
+function buildDots() {
+  const d = $("dots"); d.innerHTML = "";
+  for (let i = 0; i < PRMSU; i++) {
+    const s = document.createElement("span"); s.className = "dot"; d.appendChild(s);
+  }
+}
+function updateDots() {
+  const ch = $("dots").children;
+  for (let i = 0; i < ch.length; i++) {
+    const el = ch[i], it = S.list[i]; el.className = "dot";
+    if (i < S.cur) { el.classList.add(it.correct ? "ok" : "ng"); el.textContent = it.correct ? "○" : "✕"; }
+    else if (i === S.cur) { el.classList.add("now"); el.textContent = ""; }
+    else el.textContent = "";
+  }
+}
+
+function render() {
+  const it = S.list[S.cur];
+  S.input = ""; S.locked = false;
+  $("msg").textContent = ""; $("msg").className = "msg";
+  $("reveal").classList.remove("show"); $("reveal").innerHTML = "";
+  $("stamp").innerHTML = "";
+
+  const prefix = it.p.isEquation ? "<i>χ</i> ＝ " : "";
+  $("equation").innerHTML = it.p.q + (it.p.isEquation ? '<br><span style="margin-top:6px;display:inline-block;"><i>χ</i> ＝ </span>' : '') + '<span class="ansbox blink" id="ans"></span>';
+  updateDots(); updateBox();
+}
+
+function updateBox() {
+  const b = $("ans"); if (!b) return;
+  b.innerHTML = S.input.replace(/\+/g, '＋')
+                       .replace(/-/g, '－')
+                       .replace(/r/gi, '√')
+                       .replace(/±/g, '±')
+                       .replace(/χ/g, '<i>χ</i>');
+  b.classList.toggle("blink", S.input === "" && !S.locked);
+}
+
+/* キー入力処理 */
+function pressKey(k) {
+  if (S.locked) { if (k === "enter") next(); return; }
+  if (k === "del") {
+    S.input = S.input.slice(0, -1);
+    beep("type"); updateBox(); return;
+  }
+  if (k === "enter") { submit(); return; }
+  if (k === "pm") {
+    if (S.input === "" || S.input === "+" || S.input === "-") S.input = "±";
+    else if (!S.input.includes("±")) S.input = "±" + S.input;
+    beep("type"); updateBox(); return;
+  }
+  if (k === "+" || k === "-") {
+    if (S.input === "＋" && k === "-") { S.input = "±"; beep("type"); updateBox(); return; }
+    if (S.input === "－" && k === "+") { S.input = "±"; beep("type"); updateBox(); return; }
+    const last = S.input.slice(-1);
+    if (last === '+' || last === '-' || last === '±') return;
+    S.input += k === "+" ? "＋" : "－"; beep("type"); updateBox(); return;
+  }
+  if (k === "r") {
+    S.input += "√"; beep("type"); updateBox(); return;
+  }
+  if (S.input.length >= 12) return;
+  S.input += k; beep("type"); updateBox();
+}
+
+$("keypad").addEventListener("click", e => {
+  const b = e.target.closest(".key"); if (b && !b.disabled) pressKey(b.dataset.k);
+});
+$("enterBtn").addEventListener("click", () => pressKey("enter"));
+
+document.addEventListener("keydown", e => {
+  if (screens.play.classList.contains("active")) {
+    if (e.key >= "0" && e.key <= "9") { pressKey(e.key); e.preventDefault(); }
+    else if (e.key === "+") { pressKey("+"); e.preventDefault(); }
+    else if (e.key === "-") { pressKey("-"); e.preventDefault(); }
+    else if (e.key === "r" || e.key === "R" || e.key === "v" || e.key === "V") { pressKey("r"); e.preventDefault(); }
+    else if (e.key === "Backspace") { pressKey("del"); e.preventDefault(); }
+    else if (e.key === "Enter") { pressKey("enter"); e.preventDefault(); }
+  } else if (screens.main.classList.contains("active") && e.key >= "1" && e.key <= "7") {
+    const idx = parseInt(e.key, 10) - 1;
+    if (idx === 6) openData();
+    else if (idx >= 0 && idx < MENU_STRUCTURE.length) openSub(idx);
+  } else if (screens.sub.classList.contains("active") && e.key >= "1" && e.key <= "9") {
+    const idx = parseInt(e.key, 10) - 1;
+    const m = MENU_STRUCTURE[curMenu1];
+    if (m && idx >= 0 && idx < m.sub.length) {
+      const s = m.sub[idx];
+      startRound(m.id, idx + 1, s.type, s.name);
+    }
+  }
+});
+
+/* 解答判定 (SEIGO.DSP) */
+function submit() {
+  if (S.locked) return;
+  const it = S.list[S.cur], c = it.p.ans;
+  if (S.input === "" || S.input === "＋" || S.input === "－") { beep("wrong"); return; }
+  
+  it.tries++;
+  const resCode = checkAnswer(S.input, c);
+  
+  if (resCode === 0) {
+    S.locked = true; it.correct = true; it.user = S.input;
+    stamp("maru"); beep("correct");
+    $("msg").textContent = "正解！"; $("msg").className = "msg good";
+    setTimeout(next, 1100);
+  } else {
+    stamp("batsu"); beep("wrong");
+    const last = it.tries >= MISSN;
+    it.lastMiss = resCode;
+    $("msg").textContent = MISSMSG[resCode]; $("msg").className = "msg bad";
+    if (last) {
+      S.locked = true; it.correct = false; it.user = S.input;
+      $("reveal").innerHTML = '正解＝<b>' + formatAnsDisplay(c) + '</b>';
+      $("reveal").classList.add("show");
+      setTimeout(next, 2400);
+    } else {
+      setTimeout(() => { $("stamp").innerHTML = ""; $("msg").textContent = ""; S.input = ""; updateBox(); }, 1200);
+    }
+  }
+}
+
+function next() {
+  S.cur++; if (S.cur >= PRMSU) finish(); else render();
+}
+
+function stamp(t) {
+  const el = $("stamp");
+  if (t === "maru") {
+    el.className = "stamp maru";
+    el.innerHTML = '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="#EA5040" stroke-width="9"/><circle cx="50" cy="50" r="27" fill="none" stroke="#EA5040" stroke-width="7"/></svg>';
+  } else {
+    el.className = "stamp batsu";
+    el.innerHTML = '<svg viewBox="0 0 100 100"><line x1="22" y1="22" x2="78" y2="78" stroke="#EA5040" stroke-width="11" stroke-linecap="round"/><line x1="78" y1="22" x2="22" y2="78" stroke="#EA5040" stroke-width="11" stroke-linecap="round"/></svg>';
+  }
+}
+
+function startTimer() {
+  clearInterval(timerId);
+  timerId = setInterval(() => {
+    $("timerText").textContent = fmtTime(Math.floor((Date.now() - S.t0) / 1000));
+  }, 500);
+}
+function fmtTime(s) {
+  const m = Math.floor(s / 60); return m === 0 ? s + "秒" : m + "分" + (s % 60) + "秒";
+}
+
+/* 成績終了・分析画面 */
+function finish() {
+  clearInterval(timerId);
+  let ok = 0; for (let i = 0; i < S.list.length; i++) if (S.list[i].correct) ok++;
+  const ten = Math.floor(ok / PRMSU * 100);
+  const sec = Math.floor((Date.now() - S.t0) / 1000);
+  saveLog(ten, sec);
+  
+  $("scoreNum").textContent = ten;
+  const w = $("hanamaruWrap"), m = $("resultMsg");
+  if (ten === 100) { m.textContent = "よくできました！"; m.style.color = "var(--red)"; w.innerHTML = hanamaru(); beep("fanfare"); }
+  else if (ten >= 80) { m.textContent = "あともうすこし！"; m.style.color = "var(--yellow-deep)"; w.innerHTML = star(); beep("correct"); }
+  else { m.textContent = "もっとがんばろう！"; m.style.color = "var(--green)"; w.innerHTML = face(); }
+
+  const p0 = curPerson();
+  $("resultTime").textContent = "所要時間： " + fmtTime(sec) + (p0 ? (" （学習者: " + personLabel(p0) + "）") : "");
+  
+  const rv = $("review"); rv.innerHTML = "";
+  S.list.forEach(it => {
+    const row = document.createElement("div"); row.className = "review-row";
+    const cs = formatAnsDisplay(it.p.ans);
+    const us = formatAnsDisplay(it.user || "―");
+    const prefix = it.p.isEquation ? "<i>χ</i>＝" : "";
+    row.innerHTML = '<span class="rmark ' + (it.correct ? "ok" : "ng") + '">' + (it.correct ? "○" : "✕") + '</span>'
+      + '<span class="rq">' + it.p.q + '</span>'
+      + '<span>' + (it.correct ? '<span class="rc">' + prefix + cs + '</span>'
+        : '<span class="ra wrong">' + prefix + us + '</span><span class="rc">' + prefix + cs + '</span>') + '</span>';
+    rv.appendChild(row);
+  });
+  show("result");
+}
+
+function hanamaru() {
+  let p = "";
+  for (let i = 0; i < 8; i++) {
+    const a = i / 8 * Math.PI * 2;
+    p += '<circle cx="' + (60 + 30 * Math.cos(a)).toFixed(1) + '" cy="' + (60 + 30 * Math.sin(a)).toFixed(1) + '" r="17" fill="#F6B93B"/>';
+  }
+  return '<svg width="115" height="115" viewBox="0 0 120 120">' + p + '<circle cx="60" cy="60" r="30" fill="#FDE9BE"/><circle cx="60" cy="60" r="24" fill="none" stroke="#EA5040" stroke-width="6"/><circle cx="60" cy="60" r="15" fill="none" stroke="#EA5040" stroke-width="5"/></svg>';
+}
+function star() {
+  let pts = "";
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 === 0 ? 42 : 18, a = (-90 + i * 36) * Math.PI / 180;
+    pts += (60 + r * Math.cos(a)).toFixed(1) + "," + (60 + r * Math.sin(a)).toFixed(1) + " ";
+  }
+  return '<svg width="115" height="115" viewBox="0 0 120 120"><polygon points="' + pts + '" fill="#F6B93B" stroke="#D89A2C" stroke-width="4" stroke-linejoin="round"/></svg>';
+}
+function face() {
+  return '<svg width="115" height="115" viewBox="0 0 120 120"><circle cx="60" cy="60" r="42" fill="#EAF6F0" stroke="#34B37A" stroke-width="5"/><circle cx="46" cy="52" r="5" fill="#34B37A"/><circle cx="74" cy="52" r="5" fill="#34B37A"/><path d="M42 74 Q60 90 78 74" fill="none" stroke="#34B37A" stroke-width="5" stroke-linecap="round"/></svg>';
+}
+
+/* =========================================================
+   学習記録画面
+   ========================================================= */
+function openData() { renderData(); show("data"); }
+function renderData() {
+  $("storeNotice").innerHTML = Store.usable ? "" :
+    '<div class="notice">※ この環境ではブラウザストレージへのデータ保存が無効になっています。'
+    +'現在の記録は画面を閉じると削除されます。保存する場合は「データ出力(CSV)」を利用してください。</div>';
+  renderWhoList();
+  
+  const p = curPerson();
+  const logs = DB.logs.filter(g => p && g.pid === p.id);
+  $("stCount").textContent = logs.length;
+  
+  if (logs.length) {
+    let sumTen = 0;
+    logs.forEach(g => sumTen += g.ten);
+    const avg = Math.round(sumTen / logs.length);
+    $("stAvg").textContent = avg + "%";
+    
+    let evalStr = "［１］";
+    if (avg >= 30 && logs[logs.length-1].ten >= 60) evalStr = "［２］";
+    if (avg >= 50 && logs[logs.length-1].ten >= 80) evalStr = "［３］";
+    if (avg >= 70 && logs[logs.length-1].ten === 100) evalStr = "［４］";
+    if (avg === 100 && logs[logs.length-1].ten === 100) evalStr = "［５］";
+    $("stEval").textContent = evalStr;
+  } else {
+    $("stAvg").textContent = "—"; $("stEval").textContent = "—";
+  }
+
+  // スパークライン
+  const sp = $("spark"); sp.innerHTML = "";
+  if (!logs.length) sp.innerHTML = '<div class="empty" style="width:100%">記録がまだありません</div>';
+  else logs.slice(-24).forEach(g => {
+    const b = document.createElement("div");
+    b.className = "b" + (g.ten === 100 ? " s100" : (g.ten >= 80 ? " s80" : ""));
+    b.style.height = Math.max(6, g.ten * 0.6) + "px";
+    b.title = fmtDate(g.at) + " " + g.kind + " " + g.ten + "点";
+    sp.appendChild(b);
+  });
+
+  // KR情報・誤答傾向
+  const mc = [0, 0, 0, 0, 0, 0]; let totalAnswers = 0;
+  logs.forEach(g => {
+    g.items.forEach(it => {
+      totalAnswers++;
+      if (it.miss >= 0 && it.miss <= 5) mc[it.miss]++;
+    });
+  });
+  
+  const labels = ["正解", "間違い(その他)", "符号が違う", "絶対値が違う", "１が余分", "√がない"];
+  const colors = ["var(--green)", "#B9C3C0", "var(--teal)", "var(--blue)", "var(--yellow)", "var(--red)"];
+  const mb = $("missBars"); mb.innerHTML = "";
+  if (!totalAnswers) mb.innerHTML = '<div class="empty">誤答分析データがありません</div>';
+  else [0, 2, 3, 4, 5, 1].forEach(idx => {
+    const n = mc[idx], pc = totalAnswers ? Math.round(n / totalAnswers * 100) : 0;
+    const d = document.createElement("div"); d.className = "mb";
+    d.innerHTML = '<span class="lab">' + labels[idx] + '</span>'
+      + '<span class="track"><span class="fill" style="width:' + pc + '%;background:' + colors[idx] + '"></span></span>'
+      + '<span class="cnt">' + n + '回 (' + pc + '%)</span>';
+    mb.appendChild(d);
+  });
+
+  // コース別記録
+  const bk = {}; logs.forEach(g => {
+    if (!bk[g.kind]) bk[g.kind] = { n: 0, sum: 0, best: 0 };
+    bk[g.kind].n++; bk[g.kind].sum += g.ten; if (g.ten > bk[g.kind].best) bk[g.kind].best = g.ten;
+  });
+  const keys = Object.keys(bk), byk = $("byKind");
+  if (!keys.length) byk.innerHTML = '<div class="empty">記録がまだありません</div>';
+  else {
+    let h = '<table class="rec"><tr><th>コース名</th><th style="text-align:right">回数</th><th style="text-align:right">平均点</th><th style="text-align:right">最高点</th></tr>';
+    keys.forEach(k => {
+      const v = bk[k];
+      h += '<tr><td>' + k + '</td><td class="n">' + v.n + '</td><td class="n">' + Math.round(v.sum / v.n) + '</td><td class="n">' + v.best + '</td></tr>';
+    });
+    byk.innerHTML = h + '</table>';
+  }
+
+  // 履歴テーブル
+  const hs = $("history");
+  if (!logs.length) hs.innerHTML = '<div class="empty">記録がまだありません</div>';
+  else {
+    let h = '<table class="rec"><tr><th>日時</th><th>コース</th><th style="text-align:right">点数</th><th style="text-align:right">時間</th></tr>';
+    logs.slice().reverse().slice(0, 30).forEach((g, i) => {
+      const cls = g.ten === 100 ? "sp100" : (g.ten >= 80 ? "sp80" : "sp0");
+      h += '<tr class="hrow" data-i="' + i + '" style="cursor:pointer"><td>' + fmtDate(g.at) + '</td><td>' + g.kind + '</td>'
+        + '<td class="n"><span class="scorepill ' + cls + '">' + g.ten + '点</span></td><td class="n">' + fmtTime(g.sec) + '</td></tr>'
+        + '<tr><td colspan="4" style="padding:0"><div class="detail" id="dt' + i + '">' + detailHTML(g) + '</div></td></tr>';
+    });
+    hs.innerHTML = h + '</table>';
+    hs.querySelectorAll('.hrow').forEach(tr => {
+      tr.addEventListener('click', () => { $("dt" + tr.dataset.i).classList.toggle('show'); });
+    });
+  }
+}
+
+function detailHTML(g) {
+  let h = '';
+  g.items.forEach(it => {
+    h += '<div class="' + (it.ok ? '' : 'ng') + '">' + (it.ok ? '○' : '✕') + ' '
+      + it.q + ' ＝ ' + (it.user || '―')
+      + (it.ok ? '' : '　（正解＝' + it.ans + '）') + '</div>';
+  });
+  return h;
+}
+
+function fmtDate(t) {
+  const d = new Date(t);
+  return (d.getMonth() + 1) + "/" + d.getDate() + " " + d.getHours() + ":" + ("0" + d.getMinutes()).slice(-2);
+}
+
+function renderWhoList() {
+  const l = $("whoList"); l.innerHTML = "";
+  if (!DB.people.length) { l.innerHTML = '<div class="empty">学習者を登録すると成績データを個人別に保持できます</div>'; return; }
+  DB.people.forEach(p => {
+    const d = document.createElement("div");
+    d.className = "who-item" + (p.id === DB.cur ? " on" : "");
+    const n = DB.logs.filter(g => g.pid === p.id).length;
+    d.innerHTML = '<span class="nm">' + personLabel(p) + '<span class="sm2">　' + n + '回練習</span></span>';
+    const b1 = document.createElement("button"); b1.className = "mini";
+    b1.textContent = (p.id === DB.cur ? "選択中" : "選択");
+    b1.addEventListener("click", () => { DB.cur = p.id; dbSave(); updateWhoBadge(); renderData(); });
+    const b2 = document.createElement("button"); b2.className = "mini red"; b2.textContent = "削除";
+    b2.addEventListener("click", () => {
+      if (!confirm(personLabel(p) + " の記録を削除しますか？")) return;
+      DB.people = DB.people.filter(x => x.id !== p.id);
+      DB.logs = DB.logs.filter(g => g.pid !== p.id);
+      if (DB.cur === p.id) DB.cur = DB.people.length ? DB.people[0].id : null;
+      dbSave(); updateWhoBadge(); renderData();
+    });
+    d.appendChild(b1); d.appendChild(b2); l.appendChild(d);
+  });
+}
+
+function pad2(s) { s = String(s).replace(/[^0-9]/g, ""); return s.length ? ("0" + s).slice(-2) : "00"; }
+$("addWhoBtn").addEventListener("click", () => {
+  const nen = (String($("fNen").value).replace(/[^0-9]/g, "") || "3").slice(0, 1);
+  const kumi = pad2($("fKumi").value), ban = pad2($("fBan").value), name = $("fName").value.trim();
+  const id = nen + kumi + ban + "-" + Date.now().toString(36);
+  DB.people.push({ id: id, nen: nen, kumi: kumi, ban: ban, name: name });
+  DB.cur = id; dbSave();
+  $("fNen").value = ""; $("fKumi").value = ""; $("fBan").value = ""; $("fName").value = "";
+  updateWhoBadge(); renderData(); beep("tap");
+});
+
+$("csvBtn").addEventListener("click", () => {
+  const p = curPerson();
+  const logs = DB.logs.filter(g => p && g.pid === p.id);
+  if (!p || !logs.length) { alert("出力できる記録がありません。"); return; }
+  const rows = [["学年", "組", "番号", "氏名", "日時", "コース", "点数", "時間(秒)", "問題", "解答入力", "正解", "判定", "試行回数"]];
+  logs.forEach(g => {
+    g.items.forEach(it => {
+      rows.push([p.nen, p.kumi, p.ban, p.name, new Date(g.at).toLocaleString("ja-JP"), g.kind, g.ten, g.sec,
+        it.q, it.user, it.ans, it.ok ? "○" : "×", it.tries]);
+    });
+  });
+  const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(",")).join("\r\n");
+  const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: "text/csv" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+  a.download = "2次方程式_学習記録_" + p.nen + p.kumi + p.ban + ".csv";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+});
+
+$("clearBtn").addEventListener("click", () => {
+  const p = curPerson(); if (!p) { alert("学習者が選択されていません。"); return; }
+  if (!confirm(personLabel(p) + " の記録をすべて消去しますか？")) return;
+  DB.logs = DB.logs.filter(g => g.pid !== p.id); dbSave(); renderData();
+});
+
+$("dataBackBtn").addEventListener("click", () => { beep("tap"); show("main"); });
+$("whoBadge").addEventListener("click", () => { beep("tap"); openData(); });
+$("playBackBtn").addEventListener("click", () => { clearInterval(timerId); openSub(curMenu1); });
+$("toMainBtn").addEventListener("click", () => { beep("tap"); show("main"); });
+$("againBtn").addEventListener("click", () => { beep("tap"); startRound(S.menu1, S.menu2, S.type, S.kindName); });
+$("otherBtn").addEventListener("click", () => { beep("tap"); openSub(curMenu1); });
+$("homeBtn").addEventListener("click", () => { beep("tap"); show("main"); });
+$("soundBtn").addEventListener("click", () => { soundOn = !soundOn; $("soundBtn").textContent = soundOn ? "🔊" : "🔇"; });
+
+buildMain(); updateWhoBadge();
+</script>
+</body>
+</html>
