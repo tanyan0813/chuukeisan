@@ -108,12 +108,12 @@
   .mcard .sm { display: block; font-size: 12px; color: var(--ink-soft); font-weight: 700; margin-top: 2px; }
 
   .foot { display: flex; justify-content: center; margin-top: 18px; }
-  .foot button {
+  .foot a, .foot button {
     display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 900;
     border: none; border-radius: 16px; padding: 12px 22px; font-size: 15px; color: var(--ink); background: #fff;
     box-shadow: 0 5px 0 rgba(55,66,74,.15); font-family: inherit; cursor: pointer;
   }
-  .foot button:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(55,66,74,.15); }
+  .foot a:active, .foot button:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(55,66,74,.15); }
   .credit { text-align: center; margin-top: 16px; font-size: 11px; color: #9AA4A9; line-height: 1.7; }
 
   /* ---- play screen (Graph + Inputs) ---- */
@@ -302,15 +302,13 @@
   <section class="screen active" id="mainScreen">
     <div class="title-card">
       <h1>比例のグラフの問題</h1>
-      <div class="sub">計算ドリル - Hirei4</div>
       <div class="prompt">勉強することを 選んで クリック（数字キー）しましょう</div>
     </div>
     <div class="menu-head"><h2>メインメニュー</h2><p>数字キーでも選べます</p></div>
     <div class="mlist" id="mainList"></div>
+    <div class="foot"><a href="hireimenu.html">← 比例と反比例のメニューへもどる</a></div>
     <div class="credit">
-      岐阜県羽島郡川島中学校（安藤忠展）<br>
-      中数研コンピューター委員会 学習システム研究会<br>
-      原作 BASIC「Hirei4」 Ver7.04／ Webアプリ移植版
+      岐阜女子大学（安藤忠展） Ver.5.01／ Web版
     </div>
   </section>
 
@@ -1038,8 +1036,7 @@ $("csvBtn").addEventListener("click", () => {
         it.user, it.ansText, it.ok ? "○" : "×"]);
     });
   });
-  const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(",")).join("
-");
+  const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(",")).join("\r\n");
   const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: "text/csv" });
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
   a.download = "比例グラフ_学習記録_" + p.nen + p.kumi + p.ban + ".csv";
