@@ -25,12 +25,26 @@
   .mainview{display:grid;grid-template-columns:1fr;gap:16px}.svghold{background:linear-gradient(180deg,#FFF,#FFF8F1);border:1px solid var(--line);border-radius:20px;padding:10px} svg{width:100%;height:auto;display:block}
   .slider{margin-top:10px}.slider input{width:100%}.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:#586973;margin-top:8px}.dot{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;margin-right:6px}
   .small{font-size:13px;color:#6B7A84}.mini{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px}.ibox{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px}.ibox b{display:block;color:var(--teal-deep);margin-bottom:4px}
+  .topright{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .topright .btn{text-decoration:none;white-space:nowrap}
+  .switches{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .sw{display:flex;align-items:center;gap:7px;background:var(--soft);border:1px solid var(--line);
+    border-radius:14px;padding:9px 13px;font-weight:900;font-size:14px;cursor:pointer;user-select:none}
+  .sw input{width:18px;height:18px;accent-color:var(--teal);cursor:pointer}
+  .hero>*{min-width:0}.mainview{min-width:0}.mainview>.panel{min-width:0}
+  .tblhold{overflow-x:auto;overflow-y:hidden;padding-bottom:4px}
+  table.hyou{border-collapse:collapse;font-family:"M PLUS Rounded 1c",sans-serif;margin:0 0 14px}
+  table.hyou caption{text-align:left;font-size:12px;font-weight:900;color:var(--teal-deep);padding-bottom:5px;white-space:nowrap}
+  table.hyou th,table.hyou td{border:1px solid var(--line);padding:7px 10px;text-align:center;font-size:15px;font-weight:800;white-space:nowrap}
+  table.hyou th{background:var(--soft);font-size:12px;color:#586973}
+  table.hyou td.yet{color:#C8D2CE}
+  table.hyou td.cur{background:#FFF3E2;color:var(--red)}
   @media (max-width:920px){.hero{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.mini{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="wrap"><div class="app">
-  <div class="top"><div class="logo"><span class="pin">⬢</span><b>正六角形での面積の変化</b></div><div class="tag">点Pの移動とグラフ</div></div>
+  <div class="top"><div class="logo"><span class="pin">⬢</span><b>正六角形での面積の変化</b></div><div class="topright"><span class="tag">点Pの移動とグラフ</span><a class="btn" href="tenidoumenu.html">← はじめのメニューへ</a></div></div>
   <div class="hero">
     <div class="panel">
       <h1>△ABP の面積の変化</h1>
@@ -38,6 +52,10 @@
       <div class="grid2">
         <div class="fld"><label>正六角形の1辺の長さ（3〜6）</label><input id="hen" type="number" min="3" max="6" step="1" value="6"></div>
         <div class="fld"><label>点Pの速さ（1〜5 cm/秒）</label><input id="hayasa" type="number" min="1" max="5" step="1" value="1"></div>
+      </div>
+      <div class="switches">
+        <label class="sw"><input type="checkbox" id="swGraph">グラフを表示</label>
+        <label class="sw"><input type="checkbox" id="swTable">表を表示</label>
       </div>
       <div class="toolbar">
         <button class="btn primary" id="applyBtn">図を更新</button>
@@ -56,7 +74,6 @@
         <div class="ibox"><b>前半</b> B→C→D では面積が増えていきます。</div>
         <div class="ibox"><b>後半</b> E→F→A では面積が減って最後に 0 になります。</div>
       </div>
-      <div class="note">元のBASIC版の流れに合わせて、図形表示・点Pの移動・面積グラフを1画面で確認できるようにしています。</div>
     </div>
     <div class="mainview">
       <div class="panel svghold">
@@ -67,9 +84,14 @@
           <span><span class="dot" style="background:#7D3C98"></span>移動する点P</span>
         </div>
       </div>
-      <div class="panel svghold">
+      <div class="panel svghold" id="graphPanel" style="display:none">
         <svg id="graphSvg" viewBox="0 0 760 300" aria-label="面積グラフ"></svg>
-        <div class="small">グラフは、時間 x と △ABP の面積 y の関係を表しています。</div>
+        <div class="small">「再生」やスライダーで点Pを動かすと、通ったところまでグラフがのびます。</div>
+      </div>
+      <div class="panel" id="tablePanel" style="display:none">
+        <div class="tag">表</div>
+        <div class="tblhold" id="hyouBox"></div>
+        <div class="small">上が x（秒）、下が y（cm²）です。点Pが通ったところまで 数が入ります。</div>
       </div>
     </div>
   </div>
@@ -77,7 +99,7 @@
 <script>
 const $=id=>document.getElementById(id);
 const DEG=Math.PI/180;
-const S={cfg:{hen:6,hayasa:1},t:0,playing:false,last:0};
+const S={cfg:{hen:6,hayasa:1},t:0,playing:false,last:0,showGraph:false,showTable:false};
 function clamp(v,min,max){return Math.min(max,Math.max(min,v));}
 function num(id,min,max){const v=parseFloat($(id).value||0);return clamp(isFinite(v)?v:min,min,max);}
 function fmt(v){const n=Math.round(v*100)/100;return String(n).replace(/\.0+$/,'').replace(/(\.\d*[1-9])0+$/,'$1');}
@@ -104,7 +126,11 @@ function areaAt(cfg,t){ const {A,B}=hexPts(cfg); return triArea(A,B,pointP(cfg,t
 function maxArea(cfg){ let m=0, T=totalTime(cfg); for(let i=0;i<=500;i++){ m=Math.max(m, areaAt(cfg,T*i/500)); } return m; }
 function eqText(cfg){ return 'B→C→D→E→F→A の各区間で、△ABP の面積 y がどう変わるかを観察'; }
 function bounds(cfg){ const pts=hexPts(cfg).arr; return {xmin:Math.min(...pts.map(p=>p.x))-2,xmax:Math.max(...pts.map(p=>p.x))+2,ymin:Math.min(...pts.map(p=>p.y))-2,ymax:Math.max(...pts.map(p=>p.y))+2}; }
-function mapXY(x,y,b,w,h,p=28){ return {x:p+(x-b.xmin)/(b.xmax-b.xmin)*(w-2*p), y:h-p-(y-b.ymin)/(b.ymax-b.ymin)*(h-2*p)}; }
+function mapXY(x,y,b,w,h,p=28){ /* たて・よこ 同じ 倍率（正六角形が ゆがまないように） */
+  const bw=b.xmax-b.xmin, bh=b.ymax-b.ymin;
+  const sc=Math.min((w-2*p)/bw,(h-2*p)/bh);
+  const ox=p+((w-2*p)-sc*bw)/2, oy=h-p-((h-2*p)-sc*bh)/2;
+  return {x:ox+(x-b.xmin)*sc, y:oy-(y-b.ymin)*sc}; }
 function polyStr(poly,b,w,h){ return poly.map(p=>{const q=mapXY(p.x,p.y,b,w,h); return q.x.toFixed(1)+','+q.y.toFixed(1);}).join(' '); }
 function drawGeometry(){
   const cfg=S.cfg, svg=$('geoSvg'), w=760, h=420; const H=hexPts(cfg); const {A,B,C,D,E,F,arr}=H; const cur=pointP(cfg,S.t), P=cur.p, b=bounds(cfg);
@@ -122,8 +148,9 @@ function drawGeometry(){
 function drawGraph(){
   const svg=$('graphSvg'), w=760, h=300, p=40, cfg=S.cfg, T=totalTime(cfg), maxY=Math.max(1,maxArea(cfg));
   const map=(x,y)=>({x:p+x/T*(w-2*p), y:h-p-y/maxY*(h-2*p)});
-  let path=''; const N=360;
-  for(let i=0;i<=N;i++){ const t=T*i/N, y=areaAt(cfg,t), q=map(t,y); path+=(i?' L ':'M ')+q.x.toFixed(2)+' '+q.y.toFixed(2); }
+  /* 点Pが 通った ところまで だけ 線を のばす */
+  let path=''; const N=360, tNow=Math.min(S.t,T);
+  for(let i=0;i<=N;i++){ const t=tNow*i/N, y=areaAt(cfg,t), q=map(t,y); path+=(i?' L ':'M ')+q.x.toFixed(2)+' '+q.y.toFixed(2); }
   let grids='';
   for(let i=0;i<=10;i++){
     const gx=p+i*(w-2*p)/10, x=i/10*T; grids+='<line x1="'+gx+'" y1="'+p+'" x2="'+gx+'" y2="'+(h-p)+'" stroke="#F0E4D4" stroke-dasharray="4 4"/>'+'<text x="'+(gx-8)+'" y="'+(h-10)+'" font-size="12" fill="#6B7A84">'+fmt(x)+'</text>';
@@ -137,19 +164,51 @@ function drawGraph(){
     +grids
     +'<line x1="'+p+'" y1="'+(h-p)+'" x2="'+(w-p)+'" y2="'+(h-p)+'" stroke="#37424A" stroke-width="2"/>'
     +'<line x1="'+p+'" y1="'+p+'" x2="'+p+'" y2="'+(h-p)+'" stroke="#37424A" stroke-width="2"/>'
-    +'<path d="'+path+'" fill="none" stroke="#EA5040" stroke-width="4" stroke-linecap="round"/>'
+    +(tNow>0?'<path d="'+path+'" fill="none" stroke="#EA5040" stroke-width="4" stroke-linecap="round"/>':'')
     +'<circle cx="'+cur.x+'" cy="'+cur.y+'" r="6" fill="#19A199" stroke="#fff" stroke-width="2"/>'
-    +'<text x="'+(w-26)+'" y="'+(h-p+24)+'" text-anchor="end" font-size="16" font-weight="900" fill="#37424A">x（秒）</text>'
-    +'<text x="18" y="24" font-size="16" font-weight="900" fill="#37424A">y（cm²）</text>';
+    +'<text x="'+(w-26)+'" y="'+(h-p-12)+'" text-anchor="end" font-size="16" font-weight="900" fill="#37424A">x（秒）</text>'
+    +'<text x="18" y="24" font-size="16" font-weight="900" fill="#37424A">y（cm²）</text>'
+    +(tNow<=0?'<text x="'+(w/2)+'" y="'+(h/2)+'" text-anchor="middle" font-size="16" font-weight="900" fill="#B9C3C0">「再生」すると 点の 跡が のこります</text>':'');
+}
+
+/* ---------- 表：横向き2行（上が x、下が y） ---------- */
+function timesOf(from,to){
+  const list=[];
+  for(let n=Math.ceil(from-1e-9);n<=to+1e-9;n++) list.push(Math.round(n*1000)/1000);
+  if(Math.abs(from-Math.round(from))>1e-9) list.unshift(Math.round(from*1000)/1000);
+  if(Math.abs(to-Math.round(to))>1e-9) list.push(Math.round(to*1000)/1000);
+  return list.filter((v,i,a)=>a.indexOf(v)===i).sort((p,q)=>p-q);
+}
+function drawTable(){
+  const cfg=S.cfg, ts=cfg.hen/cfg.hayasa;
+  const names=['Ｂ→Ｃ','Ｃ→Ｄ','Ｄ→Ｅ','Ｅ→Ｆ','Ｆ→Ａ'], mark=['⑴','⑵','⑶','⑷','⑸'];
+  const secs=names.map((nm,k)=>({cap:mark[k]+' '+nm+'（'+fmt(k*ts)+'〜'+fmt((k+1)*ts)+'秒）',
+                                 ts:timesOf(k*ts,(k+1)*ts)}));
+  let near=null, best=Infinity;
+  secs.forEach(sec=>sec.ts.forEach(t=>{ const d=Math.abs(t-S.t); if(d<best){best=d;near=t;} }));
+  let h='';
+  secs.forEach(sec=>{
+    h+='<table class="hyou"><caption>'+sec.cap+'</caption><tr><th><i>x</i>（秒）</th>';
+    sec.ts.forEach(t=>{ const on=(t<=S.t+1e-9), cur=(t===near&&on);
+      h+='<td class="'+(on?(cur?'cur':''):'yet')+'">'+(on?fmt(t):'・')+'</td>'; });
+    h+='</tr><tr><th><i>y</i>（cm²）</th>';
+    sec.ts.forEach(t=>{ const on=(t<=S.t+1e-9), cur=(t===near&&on);
+      h+='<td class="'+(on?(cur?'cur':''):'yet')+'">'+(on?fmt(areaAt(cfg,t)):'・')+'</td>'; });
+    h+='</tr></table>';
+  });
+  $('hyouBox').innerHTML=h;
 }
 function updateStats(){ const cfg=S.cfg, cur=pointP(cfg,S.t); $('tNow').textContent=fmt(S.t); $('aNow').textContent=fmt(areaAt(cfg,S.t)); $('segNow').textContent=segNames()[cur.seg]; $('tEndTxt').textContent=fmt(totalTime(cfg)); $('timeSlider').max=String(totalTime(cfg)); $('timeSlider').value=String(S.t); $('eqBox').textContent=eqText(cfg); }
-function render(){ drawGeometry(); drawGraph(); updateStats(); }
+function render(){ drawGeometry(); if(S.showGraph) drawGraph(); if(S.showTable) drawTable(); updateStats(); }
 function apply(){ S.cfg={hen:num('hen',3,6), hayasa:num('hayasa',1,5)}; ['hen','hayasa'].forEach(id=>$(id).value=S.cfg[id]); S.t=0; render(); }
 function play(){ S.playing=true; S.last=performance.now(); requestAnimationFrame(tick); }
 function pause(){ S.playing=false; }
 function reset(){ S.t=0; pause(); render(); }
 function tick(ts){ if(!S.playing) return; const dt=(ts-S.last)/1000; S.last=ts; S.t=Math.min(totalTime(S.cfg), S.t+dt); render(); if(S.t>=totalTime(S.cfg)){ S.playing=false; return; } requestAnimationFrame(tick); }
 $('applyBtn').addEventListener('click',apply); $('playBtn').addEventListener('click',play); $('pauseBtn').addEventListener('click',pause); $('resetBtn').addEventListener('click',reset); $('timeSlider').addEventListener('input',e=>{ pause(); S.t=parseFloat(e.target.value||'0'); render(); }); ['hen','hayasa'].forEach(id=>$(id).addEventListener('keydown',e=>{ if(e.key==='Enter') apply(); }));
+['hen','hayasa'].forEach(id=>$(id).addEventListener('change',apply));
+$('swGraph').addEventListener('change',e=>{ S.showGraph=e.target.checked; $('graphPanel').style.display=S.showGraph?'block':'none'; render(); });
+$('swTable').addEventListener('change',e=>{ S.showTable=e.target.checked; $('tablePanel').style.display=S.showTable?'block':'none'; render(); });
 render();
 </script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79"}' crossorigin="anonymous"></script>

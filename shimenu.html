@@ -144,10 +144,11 @@
   .equation .op { color: var(--purple); }
   .equation .eq { color: var(--ink-soft); }
   .equation .xv { color: var(--purple); font-style: italic; }
-  sup { font-size: .6em; vertical-align: super; }
+  .equation .qq { white-space: nowrap; }
+  sup { font-size: .5em; vertical-align: baseline; position: relative; top: -.62em; line-height: 0; margin-left: .02em; }
   .ansbox {
     min-width: 3.5em; min-height: 1.1em; padding: 0 .2em; border-bottom: 6px solid var(--blue); color: var(--blue);
-    border-radius: 6px 6px 4px 4px; display: inline-flex; align-items: flex-end; justify-content: center; background: rgba(46,155,214,.10);
+    border-radius: 6px 6px 4px 4px; display: inline-block; line-height: 1.1; text-align: center; white-space: nowrap; background: rgba(46,155,214,.10);
   }
   .ansbox.blink { animation: bl 1s steps(2) infinite; }
   @keyframes bl { 50% { border-bottom-color: transparent; } }
@@ -306,7 +307,7 @@
     <div class="mlist" id="mainList"></div>
     <div class="foot"><a href="doriru.html">← 単元メニューへもどる</a></div>
     <div class="credit">
-      岐阜女子大学（安藤忠展）　Ver 5.01／ Web版
+      岐阜女子大学（安藤忠展）　Ver 5.02／ Web版
     </div>
   </section>
 
@@ -643,9 +644,11 @@ function checkAnswer(userStr, correctStr) {
 
 function formatAnsDisplay(s) {
   if (!s) return "";
-  return s.replace(/2/g, "²")
-          .replace(/χ/g, "χ")
-          .replace(/ｙ/g, "ｙ");
+  return String(s)
+    .replace(/\+/g, "＋").replace(/-/g, "－")
+    .replace(/χ\^?2/g, "@X2@").replace(/ｙ\^?2/g, "@Y2@")   /* 指数の 2 だけ 先に よけておく */
+    .replace(/χ/g, "<i>χ</i>").replace(/ｙ/g, "<i>ｙ</i>")
+    .replace(/@X2@/g, "<i>χ</i><sup>2</sup>").replace(/@Y2@/g, "<i>ｙ</i><sup>2</sup>");
 }
 
 /* =========================================================
@@ -735,12 +738,15 @@ function beep(type) {
 }
 
 /* メインメニュー生成 */
+/* メニュー名の「^2」を 右上の 2 で 表示する */
+function expHTML(s) { return String(s == null ? "" : s).replace(/\^2/g, "<sup>2</sup>"); }
+
 function buildMain() {
   const l = $("mainList"); l.innerHTML = "";
   MENU_STRUCTURE.forEach((m, i) => {
     const el = document.createElement("button");
     el.className = "mcard";
-    el.innerHTML = '<span class="n">' + m.id + '</span><span class="lbl">' + m.title + '<span class="sm">の 計算練習</span></span>';
+    el.innerHTML = '<span class="n">' + m.id + '</span><span class="lbl">' + expHTML(m.title) + '<span class="sm">の 計算練習</span></span>';
     el.addEventListener("click", () => { beep("tap"); openSub(i); });
     l.appendChild(el);
   });
@@ -758,13 +764,13 @@ let curMenu1 = 0;
 function openSub(idx) {
   curMenu1 = idx;
   const m = MENU_STRUCTURE[idx];
-  $("subTitle").textContent = m.title;
+  $("subTitle").innerHTML = expHTML(m.title);
   const l = $("subList"); l.innerHTML = "";
   
   m.sub.forEach((s, si) => {
     const b = document.createElement("button");
     b.className = "mcard" + (s.name.includes("ランダム") ? " rand" : "");
-    b.innerHTML = '<span class="n">' + (si + 1) + '</span><span class="lbl"><span class="ex">' + s.name + '</span></span>';
+    b.innerHTML = '<span class="n">' + (si + 1) + '</span><span class="lbl"><span class="ex">' + expHTML(s.name) + '</span></span>';
     b.addEventListener("click", () => { beep("tap"); startRound(m.id, si + 1, s.type, s.name); });
     l.appendChild(b);
   });
@@ -788,7 +794,7 @@ function startRound(m1, m2, type, kindName) {
     seen[p.q] = 1;
     S.list.push({ p: p, tries: 0, correct: false, user: "" });
   }
-  $("modeChip").textContent = kindName;
+  $("modeChip").innerHTML = expHTML(kindName);
   buildDots(); show("play"); startTimer(); render();
 }
 
@@ -814,7 +820,7 @@ function render() {
   $("msg").textContent = ""; $("msg").className = "msg";
   $("reveal").classList.remove("show"); $("reveal").innerHTML = "";
   $("stamp").innerHTML = "";
-  $("equation").innerHTML = it.p.q + '<span class="ansbox blink" id="ans"></span>';
+  $("equation").innerHTML = '<span class="qq">' + it.p.q + '</span><span class="ansbox blink" id="ans"></span>';
   updateDots(); updateBox();
 }
 
@@ -1062,7 +1068,7 @@ function renderData() {
     let h = '<table class="rec"><tr><th>コース名</th><th style="text-align:right">回数</th><th style="text-align:right">平均点</th><th style="text-align:right">最高点</th></tr>';
     keys.forEach(k => {
       const v = bk[k];
-      h += '<tr><td>' + k + '</td><td class="n">' + v.n + '</td><td class="n">' + Math.round(v.sum / v.n) + '</td><td class="n">' + v.best + '</td></tr>';
+      h += '<tr><td>' + expHTML(k) + '</td><td class="n">' + v.n + '</td><td class="n">' + Math.round(v.sum / v.n) + '</td><td class="n">' + v.best + '</td></tr>';
     });
     byk.innerHTML = h + '</table>';
   }
@@ -1074,7 +1080,7 @@ function renderData() {
     let h = '<table class="rec"><tr><th>日時</th><th>コース</th><th style="text-align:right">点数</th><th style="text-align:right">時間</th></tr>';
     logs.slice().reverse().slice(0, 30).forEach((g, i) => {
       const cls = g.ten === 100 ? "sp100" : (g.ten >= 80 ? "sp80" : "sp0");
-      h += '<tr class="hrow" data-i="' + i + '" style="cursor:pointer"><td>' + fmtDate(g.at) + '</td><td>' + g.kind + '</td>'
+      h += '<tr class="hrow" data-i="' + i + '" style="cursor:pointer"><td>' + fmtDate(g.at) + '</td><td>' + expHTML(g.kind) + '</td>'
         + '<td class="n"><span class="scorepill ' + cls + '">' + g.ten + '点</span></td><td class="n">' + fmtTime(g.sec) + '</td></tr>'
         + '<tr><td colspan="4" style="padding:0"><div class="detail" id="dt' + i + '">' + detailHTML(g) + '</div></td></tr>';
     });

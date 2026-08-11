@@ -101,9 +101,8 @@
     text-align:center;position:relative;overflow:hidden;min-height:250px;}
   .note{color:var(--blue);font-weight:900;font-size:13px;margin-bottom:12px;}
   /* 連立の 中かっこ */
-  .system{display:inline-flex;align-items:stretch;gap:8px;margin:0 auto;}
-  .system .brace{width:16px;border-left:4px solid var(--ocean);border-top:4px solid var(--ocean);
-    border-bottom:4px solid var(--ocean);border-radius:10px 0 0 10px;}
+  .system{display:inline-flex;align-items:stretch;gap:10px;margin:0 auto;}
+  .system .brace{width:18px;flex:none;align-self:stretch;height:auto;overflow:visible;}
   .system .eqs{display:flex;flex-direction:column;gap:6px;justify-content:center;
     font-family:"M PLUS Rounded 1c";font-weight:900;font-size:clamp(19px,5vw,29px);text-align:left;}
   .answer-line{margin-top:16px;display:flex;flex-direction:column;gap:8px;align-items:center;
@@ -303,7 +302,11 @@
     <div class="board">
       <div class="note">ノートで 計算して、χ と y の値を 答えましょう！</div>
       <div class="system">
-        <div class="brace"></div>
+        <svg class="brace" viewBox="0 0 18 100" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M16 2 C10 2 10 6 10 12 L10 40 C10 47 8 50 2 50 C8 50 10 53 10 60 L10 88 C10 94 10 98 16 98"
+            fill="none" stroke="var(--ocean)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"
+            vector-effect="non-scaling-stroke"/>
+        </svg>
         <div class="eqs"><div id="eq1"></div><div id="eq2"></div></div>
       </div>
       <div class="answer-line">

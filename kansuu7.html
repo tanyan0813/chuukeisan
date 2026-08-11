@@ -265,7 +265,7 @@
     <div class="mlist" id="mainList"></div>
     <div class="foot"><a href="kansuumenu.html">← １次関数のメニューへもどる</a></div>
     <div class="credit">
-      岐阜女子大学（安藤忠展） Ver.5.01 ／ Web版
+      岐阜女子大学（安藤忠展） Ver.5.02 ／ Web版
     </div>
   </section>
 
@@ -519,7 +519,7 @@ function render(){
   S.locked=false;
   $('msg').textContent=''; $('msg').className='msg';
   $('reveal').classList.remove('show'); $('reveal').innerHTML='';
-  $('stamp').innerHTML=''; $('hintBox').classList.remove('show');
+  $('stamp').className='stamp'; $('stamp').innerHTML=''; $('hintBox').classList.remove('show');
   $('hintBox').innerHTML=m.hint;
   $('alabel').textContent='えらんだ点';
   $('note').textContent='式を見て、グラフ上の 2点 を決めましょう！';
@@ -539,7 +539,7 @@ function bindGraph(){
       const same=it.picks.find(p=>p.x===x&&p.y===y);
       if(same){ beep('wrong'); return; }
       if(it.picks.length>=2){ beep('wrong'); return; }
-      it.picks.push({x:x,y:y}); beep('tap');
+      it.picks.push({x:x,y:y}); beep('tap'); clearStamp();
       $('qline').innerHTML=graphHTML(it,false); bindGraph(); updateSelectionView();
     });
   });
@@ -550,8 +550,11 @@ function updateSelectionView(){
   $('ans').classList.toggle('blink',it.picks.length===0&&!S.locked);
   $('pickNote').textContent = it.picks.length===0 ? '1つめの点を えらびましょう。' : (it.picks.length===1 ? '2つめの点を えらびましょう。' : '2点そろいました。こたえあわせできます。');
 }
-function clearPicks(){ const it=S.list[S.cur]; if(S.locked) return; it.picks=[]; $('qline').innerHTML=graphHTML(it,false); bindGraph(); updateSelectionView(); beep('tap'); }
-function undoPick(){ const it=S.list[S.cur]; if(S.locked||!it.picks.length) return; it.picks.pop(); $('qline').innerHTML=graphHTML(it,false); bindGraph(); updateSelectionView(); beep('tap'); }
+/* ✕（○）の スタンプと メッセージを 消す */
+function clearStamp(){ const el=$('stamp'); el.className='stamp'; el.innerHTML='';
+  const m=$('msg'); m.textContent=''; m.className='msg'; }
+function clearPicks(){ const it=S.list[S.cur]; if(S.locked) return; it.picks=[]; clearStamp(); $('qline').innerHTML=graphHTML(it,false); bindGraph(); updateSelectionView(); beep('tap'); }
+function undoPick(){ const it=S.list[S.cur]; if(S.locked||!it.picks.length) return; it.picks.pop(); clearStamp(); $('qline').innerHTML=graphHTML(it,false); bindGraph(); updateSelectionView(); beep('tap'); }
 $('undoPtBtn').addEventListener('click',undoPick);
 $('clearPtBtn').addEventListener('click',clearPicks);
 $('enterBtn').addEventListener('click',submit);

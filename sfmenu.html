@@ -99,7 +99,8 @@
   .equation{font-family:"M PLUS Rounded 1c";font-weight:900;font-size:clamp(24px,6.4vw,38px);
     display:flex;align-items:center;justify-content:center;gap:.1em;flex-wrap:wrap;color:var(--ink);}
   .equation .op{color:var(--purple);} .equation .eq{color:var(--ink-soft);}
-  .equation sup{font-size:.55em;vertical-align:super;}
+  .equation .qq{white-space:nowrap;}
+  .equation sup{font-size:.5em;vertical-align:baseline;position:relative;top:-.62em;line-height:0;margin-left:.02em;}
   .ansbox{min-width:2.4em;min-height:1.05em;padding:0 .16em;border-bottom:6px solid var(--blue);color:var(--blue);
     border-radius:6px 6px 4px 4px;display:inline-flex;align-items:flex-end;justify-content:center;background:rgba(46,155,214,.10);}
   .ansbox.blink{animation:bl 1s steps(2) infinite;}
@@ -143,7 +144,7 @@
   .review-row .rmark{width:26px;height:26px;flex:none;display:grid;place-items:center;border-radius:50%;font-size:14px;color:#fff;}
   .review-row .rmark.ok{background:var(--green);} .review-row .rmark.ng{background:var(--red);}
   .review-row .rq{flex:1;}
-  .review-row .rq sup{font-size:.6em;vertical-align:super;}
+  .review-row .rq sup{font-size:.55em;vertical-align:baseline;position:relative;top:-.6em;line-height:0;margin-left:.02em;}
   .review-row .ra.wrong{color:var(--red);text-decoration:line-through;margin-right:6px;}
   .review-row .rc{color:var(--green);}
   .result-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
@@ -249,7 +250,7 @@
     <div class="mlist" id="mainList"></div>
     <div class="foot"><a href="doriru.html">← 単元メニューへもどる</a></div>
     <div class="credit">
-      岐阜女子大学（安藤忠展） Ver. 5.01<br>
+      岐阜女子大学（安藤忠展） Ver. 5.02<br>
     </div>
   </section>
 
@@ -743,7 +744,7 @@ function render(){
   $("reveal").classList.remove("show"); $("reveal").innerHTML="";
   $("stamp").innerHTML="";
   $("hint").textContent="＋ や － も つけて 答えましょう";
-  $("equation").innerHTML=it.p.q+'<span class="eq">＝</span><span class="ansbox blink" id="ans"></span>';
+  $("equation").innerHTML='<span class="qq">'+it.p.q+'</span><span class="eq">＝</span><span class="ansbox blink" id="ans"></span>';
   updateDots(); updateBox();
 }
 function updateBox(){const b=$("ans");if(!b)return;

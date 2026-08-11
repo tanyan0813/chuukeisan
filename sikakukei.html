@@ -43,6 +43,11 @@
   .icon-btn{border:none;background:var(--card);border-radius:12px;width:44px;height:38px;font-size:16px;
     cursor:pointer;color:var(--ink);box-shadow:0 3px 0 rgba(55,66,74,.12);font-family:inherit;}
   .icon-btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(55,66,74,.12);}
+  .bar-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+  .menu-link{display:inline-flex;align-items:center;text-decoration:none;background:var(--card);
+    border-radius:12px;padding:10px 13px;font-weight:900;font-size:13px;color:var(--ink);
+    box-shadow:0 3px 0 rgba(55,66,74,.12);white-space:nowrap;font-family:inherit;}
+  .menu-link:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(55,66,74,.12);}
 
   .screen{display:none;animation:pop .3s ease;}
   .screen.active{display:block;}
@@ -151,7 +156,10 @@
 <div class="app">
   <header class="bar">
     <div class="logo"><span class="pin">面積</span><b>四角形での面積の変化</b></div>
-    <button class="icon-btn" id="soundBtn" title="おと">🔊</button>
+    <div class="bar-right">
+      <a class="menu-link" href="tenidoumenu.html" title="はじめのメニューへ もどる">← はじめのメニューへ</a>
+      <button class="icon-btn" id="soundBtn" title="おと">🔊</button>
+    </div>
   </header>
 
   <!-- ===== 設定 ===== -->
@@ -180,8 +188,7 @@
 
     <button class="enter-btn" id="startBtn">はじめる</button>
     <div class="credit">
-      原案 S.USHIMARU（1990年8月）／ Arranged by T.Ando（2002.8.6.）<br>
-      toWin 関市学習情報センター　遠藤和弘 ／ 原作 N88-BASIC「四角形」・Web版
+      岐阜女子大学（安藤忠展）　Ver.5.01 ／ Web版
     </div>
   </section>
 

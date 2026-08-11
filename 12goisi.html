@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ご石のシミュレーション</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=M+PLUS+Rounded+1c:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FCFBF4; --grid:#DDE7E3; --grid2:#EDF2EF;
+    --ink:#37424A; --ink-soft:#6A757C;
+    --red:#EA5040; --red-deep:#D33B2E;
+    --blue:#2E9BD6; --blue-deep:#1F7CAE;
+    --yellow:#F6B93B; --yellow-deep:#D89A2C;
+    --green:#34B37A; --green-deep:#279862;
+    --teal:#2FA8A0; --teal-deep:#1F827C;
+    --card:#FFFFFF;
+    --shadow:0 6px 0 rgba(55,66,74,.10), 0 12px 28px rgba(55,66,74,.12);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;font-family:"Zen Maru Gothic",system-ui,sans-serif;color:var(--ink);
+    background:
+      linear-gradient(var(--grid2) 1px,transparent 1px) 0 0/24px 24px,
+      linear-gradient(90deg,var(--grid2) 1px,transparent 1px) 0 0/24px 24px,
+      linear-gradient(var(--grid) 1px,transparent 1px) 0 0/120px 120px,
+      linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/120px 120px,
+      var(--paper);
+    display:flex;align-items:flex-start;justify-content:center;min-height:100%;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{width:100%;max-width:760px;padding:18px 16px 44px;}
+
+  header.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;}
+  .logo{display:flex;align-items:center;gap:10px;}
+  .logo .pin{width:34px;height:34px;border-radius:50%;background:var(--teal);color:#fff;font-weight:900;
+    display:grid;place-items:center;font-size:16px;box-shadow:0 3px 0 var(--teal-deep);transform:rotate(-8deg);}
+  .logo b{font-size:17px;font-weight:900;}
+  .icon-btn{border:none;background:var(--card);border-radius:12px;width:44px;height:38px;font-size:16px;
+    cursor:pointer;color:var(--ink);box-shadow:0 3px 0 rgba(55,66,74,.12);font-family:inherit;}
+  .icon-btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(55,66,74,.12);}
+
+  .title-card{background:var(--card);border-radius:26px;padding:26px 22px 20px;box-shadow:var(--shadow);
+    text-align:center;position:relative;overflow:hidden;margin-bottom:16px;}
+  .title-card::before{content:"";position:absolute;inset:8px;border:3px dashed #CDE7E5;border-radius:20px;pointer-events:none;}
+  .title-card h1{margin:2px 0;font-size:clamp(22px,5.6vw,34px);font-weight:900;color:var(--teal);
+    position:relative;text-shadow:2px 3px 0 #CFEAE7;}
+  .title-card .sub{color:var(--ink-soft);font-weight:700;font-size:14px;position:relative;}
+  .prompt{position:relative;margin-top:10px;color:var(--blue);font-weight:900;font-size:14px;}
+
+  .menu-head{display:flex;align-items:baseline;gap:10px;margin:2px 4px 12px;flex-wrap:wrap;}
+  .menu-head h2{font-size:19px;font-weight:900;margin:0;}
+  .menu-head p{margin:0;color:var(--ink-soft);font-weight:700;font-size:12px;}
+
+  .mlist{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+  @media(max-width:640px){.mlist{grid-template-columns:1fr;}}
+  .mcard{display:flex;align-items:center;gap:11px;background:var(--card);border:none;border-radius:16px;
+    padding:14px 13px;box-shadow:var(--shadow);cursor:pointer;font-family:inherit;text-align:left;
+    color:var(--ink);transition:transform .1s;text-decoration:none;}
+  .mcard:hover{transform:translateY(-3px);}
+  .mcard:active{transform:translateY(1px);box-shadow:0 3px 0 rgba(55,66,74,.10);}
+  .mcard:focus-visible{outline:3px solid var(--blue);outline-offset:3px;}
+  .mcard .n{flex:none;width:30px;height:30px;border-radius:50%;background:var(--teal);color:#fff;font-weight:900;
+    display:grid;place-items:center;font-size:14px;font-family:"M PLUS Rounded 1c";box-shadow:0 3px 0 var(--teal-deep);}
+  .mcard.v .n{background:var(--blue);box-shadow:0 3px 0 var(--blue-deep);}
+  .mcard.nn .n{background:var(--yellow);box-shadow:0 3px 0 var(--yellow-deep);color:#6a5000;}
+  .mcard.end .n{background:var(--red);box-shadow:0 3px 0 var(--red-deep);}
+  .mcard .thumb{flex:none;width:42px;height:42px;display:block;}
+  .mcard .lbl{font-weight:900;font-size:15px;line-height:1.35;}
+  .mcard .sm{display:block;font-size:11px;color:var(--ink-soft);font-weight:700;margin-top:2px;}
+
+  .foot{display:flex;justify-content:center;margin-top:18px;}
+  .foot a{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-weight:900;
+    border:none;border-radius:16px;padding:12px 22px;font-size:15px;color:var(--ink);background:#fff;
+    box-shadow:0 5px 0 rgba(55,66,74,.15);font-family:inherit;cursor:pointer;}
+  .foot a:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(55,66,74,.15);}
+  .credit{text-align:center;margin-top:14px;font-size:11px;color:#9AA4A9;line-height:1.7;}
+
+  .screen{animation:pop .3s ease;}
+  @keyframes pop{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bar">
+    <div class="logo"><span class="pin">石</span><b>ご石のシミュレーション</b></div>
+    <button class="icon-btn" id="soundBtn" title="おと">🔊</button>
+  </header>
+
+  <section class="screen">
+    <div class="title-card">
+      <h1>ご石のシミュレーション</h1>
+      <div class="sub">図形と規則性</div>
+      <div class="prompt">つぎのなかから、勉強することを えらびましょう。</div>
+    </div>
+
+    <div class="menu-head"><h2>ご石を どのように 並べますか？</h2><p>番号キーでも えらべます</p></div>
+    <div class="mlist" id="mainList"></div>
+
+    <div class="foot"><a href="doriru.html">← 単元メニューへもどる</a></div>
+    <div class="credit">
+      岐阜女子大学（安藤忠展） Ver.5.02 ／ Web版
+    </div>
+  </section>
+</div>
+
+<script>
+var $=function(id){return document.getElementById(id);};
+
+/* ---- おと ---- */
+var soundOn=true, actx=null;
+function beep(type){ if(!soundOn) return;
+  try{ actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+    var now=actx.currentTime;
+    var pl=function(f,s,d,v){var o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+      o.connect(g);g.connect(actx.destination);g.gain.setValueAtTime(0,now+s);g.gain.linearRampToValueAtTime(v||.16,now+s+.02);
+      g.gain.exponentialRampToValueAtTime(.0001,now+s+d);o.start(now+s);o.stop(now+s+d+.02);};
+    if(type==="tap"){pl(520,0,.05,.08);}
+  }catch(e){}
+}
+$("soundBtn").addEventListener("click",function(){ soundOn=!soundOn;
+  $("soundBtn").textContent=soundOn?"🔊":"🔈"; if(soundOn) beep("tap"); });
+
+/* ---- ご石の 見本（正多角形は 頂点を 濃い色に） ---- */
+function dot(x,y,c){ return '<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="2.6" fill="'+c+'"/>'; }
+function polyThumb(sides,perSide){
+  var cx=21, cy=21, r=15, s='', i, j, t;
+  var vx=[], vy=[];
+  for(i=0;i<sides;i++){ var a=-Math.PI/2+i*2*Math.PI/sides;
+    vx.push(cx+r*Math.cos(a)); vy.push(cy+r*Math.sin(a)); }
+  for(i=0;i<sides;i++){
+    var k=(i+1)%sides;
+    for(j=1;j<perSide-1;j++){ t=j/(perSide-1);
+      s+=dot(vx[i]+(vx[k]-vx[i])*t, vy[i]+(vy[k]-vy[i])*t, "#A9B4B9"); }
+  }
+  for(i=0;i<sides;i++) s+=dot(vx[i],vy[i],"#37424A");
+  return '<svg class="thumb" viewBox="0 0 42 42" aria-hidden="true">'+s+'</svg>';
+}
+function vThumb(){
+  var s='', i, ax=21, ay=34;
+  for(i=1;i<=3;i++){
+    s+=dot(ax-i*5.8, ay-i*7.6, "#A9B4B9");
+    s+=dot(ax+i*5.8, ay-i*7.6, "#A9B4B9");
+  }
+  s+=dot(ax,ay,"#2E9BD6");
+  return '<svg class="thumb" viewBox="0 0 42 42" aria-hidden="true">'+s+'</svg>';
+}
+function nThumb(){
+  var s=polyThumb(8,3).replace('<svg class="thumb" viewBox="0 0 42 42" aria-hidden="true">','').replace('</svg>','');
+  s+='<text x="21" y="26" text-anchor="middle" font-family="M PLUS Rounded 1c,sans-serif" font-size="15" font-weight="900" font-style="italic" fill="#D89A2C">n</text>';
+  return '<svg class="thumb" viewBox="0 0 42 42" aria-hidden="true">'+s+'</svg>';
+}
+
+/* ---- メニュー ---- */
+var MENU=[
+  {label:"V字形",   sm:"V の形に 並べます",        link:"12goisiv.html",       cls:"v",  thumb:vThumb()},
+  {label:"正方形",   sm:"4つの 辺に 並べます",       link:"12goisinn.html?n=4",  cls:"",   thumb:polyThumb(4,4)},
+  {label:"正三角形", sm:"3つの 辺に 並べます",       link:"12goisinn.html?n=3",  cls:"",   thumb:polyThumb(3,4)},
+  {label:"正五角形", sm:"5つの 辺に 並べます",       link:"12goisinn.html?n=5",  cls:"",   thumb:polyThumb(5,4)},
+  {label:"正六角形", sm:"6つの 辺に 並べます",       link:"12goisinn.html?n=6",  cls:"",   thumb:polyThumb(6,3)},
+  {label:"正七角形", sm:"7つの 辺に 並べます",       link:"12goisinn.html?n=7",  cls:"",   thumb:polyThumb(7,3)},
+  {label:"正八角形", sm:"8つの 辺に 並べます",       link:"12goisinn.html?n=8",  cls:"",   thumb:polyThumb(8,3)},
+  {label:"正 n 角形", sm:"角の数を 自分で 決めます", link:"12goisinn.html",      cls:"nn", thumb:nThumb()},
+  {label:"おわり",   sm:"単元メニューへ もどります", link:"mfmenu.html",         cls:"end",thumb:""}
+];
+
+(function build(){
+  var l=$("mainList");
+  MENU.forEach(function(m,i){
+    var a=document.createElement("a");
+    a.className="mcard "+m.cls;
+    a.href=m.link;
+    a.innerHTML='<span class="n">'+(i+1)+'</span>'+m.thumb
+      +'<span class="lbl">'+m.label+'<span class="sm">'+m.sm+'</span></span>';
+    a.addEventListener("click",function(){ beep("tap"); });
+    l.appendChild(a);
+  });
+})();
+
+document.addEventListener("keydown",function(e){
+  if(e.key>="1"&&e.key<="9"){
+    var m=MENU[parseInt(e.key,10)-1];
+    if(m){ beep("tap"); location.href=m.link; }
+  }
+});
+</script>
+</body>
+</html>

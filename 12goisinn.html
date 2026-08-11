@@ -45,6 +45,11 @@
   .icon-btn{border:none;background:var(--card);border-radius:12px;width:44px;height:38px;font-size:16px;
     cursor:pointer;color:var(--ink);box-shadow:0 3px 0 rgba(55,66,74,.12);font-family:inherit;}
   .icon-btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(55,66,74,.12);}
+  .topact{display:flex;align-items:center;gap:8px;}
+  .menu-btn{display:inline-flex;align-items:center;gap:5px;text-decoration:none;background:var(--card);
+    border-radius:12px;padding:10px 14px;font-weight:900;font-size:13px;color:var(--ink);
+    box-shadow:0 3px 0 rgba(55,66,74,.12);font-family:inherit;white-space:nowrap;}
+  .menu-btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(55,66,74,.12);}
 
   .screen{display:none;animation:pop .3s ease;}
   .screen.active{display:block;}
@@ -73,6 +78,8 @@
   .mcard .n{flex:none;width:30px;height:30px;border-radius:50%;background:var(--teal2);color:#fff;font-weight:900;
     display:grid;place-items:center;font-size:14px;font-family:"M PLUS Rounded 1c";box-shadow:0 3px 0 var(--teal2-deep);}
   .mcard.var .n{background:var(--yellow);box-shadow:0 3px 0 var(--yellow-deep);color:#6a5000;}
+  a.mcard{text-decoration:none;color:var(--ink);}
+  .mcard.end .n{background:var(--red);box-shadow:0 3px 0 var(--red-deep);}
   .mcard .lbl{font-weight:900;font-size:15px;line-height:1.35;}
   .mcard .lbl i{font-style:italic;color:var(--teal2);}
   .mcard .sm{display:block;font-size:11px;color:var(--ink-soft);font-weight:700;margin-top:3px;}
@@ -157,7 +164,10 @@
 <div class="app">
   <header class="bar">
     <div class="logo"><span class="pin">ご石</span><b>ご石の個数</b></div>
-    <button class="icon-btn" id="soundBtn" title="おと">🔊</button>
+    <div class="topact">
+      <a class="menu-btn" href="mfmenu.html" title="文字と式のメニューへ もどる">← メニューへ</a>
+      <button class="icon-btn" id="soundBtn" title="おと">🔊</button>
+    </div>
   </header>
 
   <!-- ===== メニュー ===== -->
@@ -170,8 +180,7 @@
     <div class="menu-head"><h2>ならべかた</h2><p>番号キーでも えらべます</p></div>
     <div class="mlist" id="mainList"></div>
     <div class="credit">
-      中学校数学教育研究会コンピュータ委員会（安藤忠展）Ver 2.11<br>
-      原作 N88-BASIC「12goisinn」（1993年7月）／ Web版
+      岐阜女子大学（安藤忠展）Ver 5.01 ／ Web版
     </div>
   </section>
 
@@ -312,6 +321,13 @@ function shapeFig(kaku,size){
   const dots=pts.map(p=>{const[x,y]=p.split(',');return '<circle cx="'+x+'" cy="'+y+'" r="2.6" fill="#1F8A70"/>';}).join('');
   return '<svg class="fig" viewBox="0 0 '+size+' '+size+'"><polygon points="'+pts.join(' ')+'" fill="none" stroke="#CCE3DC" stroke-width="2"'+(kaku===9?' stroke-dasharray="4 4"':'')+'/>'+dots+'</svg>';
 }
+function endFig(size){
+  return '<svg class="fig" viewBox="0 0 34 34" aria-hidden="true">'
+    +'<circle cx="17" cy="17" r="13" fill="none" stroke="#F3C4BC" stroke-width="2" stroke-dasharray="4 4"/>'
+    +'<path d="M20 11 L13.5 17 L20 23" fill="none" stroke="#EA5040" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>'
+    +'</svg>';
+}
+const END_LINK='12goisi.html';
 function buildMain(){
   const l=$('mainList'); l.innerHTML='';
   SHAPES.forEach((s,idx)=>{
@@ -322,6 +338,13 @@ function buildMain(){
     b.addEventListener('click',function(){ beep('open'); openSim(s.kaku); });
     l.appendChild(b);
   });
+  const e=document.createElement('a');
+  e.className='mcard end';
+  e.href=END_LINK;
+  e.innerHTML='<span class="n">'+(SHAPES.length+1)+'</span>'+endFig(34)
+    +'<span class="lbl">おわり<span class="sm">ご石のメニューへ もどります</span></span>';
+  e.addEventListener('click',function(){ beep('open'); });
+  l.appendChild(e);
 }
 function openSim(kaku){
   ST={kaku:kaku,n:5,marks:{},order:[],color:0,idea:null,checked:false};
@@ -463,6 +486,7 @@ $('backBtn').addEventListener('click',function(){ beep('open'); show('main'); })
 $('soundBtn').addEventListener('click',function(){ soundOn=!soundOn; $('soundBtn').textContent=soundOn?'🔊':'🔇'; });
 document.addEventListener('keydown',function(e){
   if(screens.main.classList.contains('active')&&e.key>='1'&&e.key<='7'){ openSim(SHAPES[parseInt(e.key,10)-1].kaku); return; }
+  if(screens.main.classList.contains('active')&&e.key==='8'){ beep('open'); location.href=END_LINK; return; }
   if(screens.sim.classList.contains('active')){
     if(e.key==='Enter'){ show('main'); return; }              /* 原作：エンターキーで初期画面へ */
     if(e.key==='*'){ ST.color=(ST.color+1)%MARKCOLORS.length; updatePills(); return; }  /* 原作 F1：色変更 */

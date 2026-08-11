@@ -242,9 +242,8 @@
   #mainList{min-height:60px}
   .mcard{min-height:56px}
 
-  section#mainScreen{display:block !important;visibility:visible !important;opacity:1 !important;}
-  section#mainScreen .mlist{display:grid !important;grid-template-columns:1fr;gap:11px;}
-  section#mainScreen .mcard{display:flex !important;width:100%;text-align:left;cursor:pointer;
+  section#mainScreen .mlist{display:grid;grid-template-columns:1fr;gap:11px;}
+  section#mainScreen .mcard{display:flex;width:100%;text-align:left;cursor:pointer;
     align-items:center;gap:12px;background:#fff;border:none;border-radius:16px;
     padding:14px 16px;font-family:inherit;color:var(--ink);
     box-shadow:0 5px 0 rgba(55,66,74,.10),0 8px 20px rgba(55,66,74,.06);}
@@ -279,7 +278,7 @@
     <div class="mlist" id="mainList"></div>
     <div class="foot"><a href="kansuumenu.html">← １次関数のメニューへもどる</a></div>
     <div class="credit">
-       岐阜女子大学（安藤忠展） Ver.5.01 ／ Web版
+       岐阜女子大学（安藤忠展） Ver.5.02 ／ Web版
     </div>
   </section>
 
@@ -384,7 +383,7 @@ const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 const d9=()=>rnd(1,9), d5=()=>rnd(1,5), sg=()=>rnd(1,2)===1?1:-1;
 
 const PRMSU=5, MISSN=3;
-const MISSMSG=["間違っていますよ！","もう一度　考えよう！","符号が違います！","絶対値が違います！","１が余分です！","x がありません！"];
+const MISSMSG=["間違っていますよ！","もう一度　考えよう！","符号が違います！","絶対値が違います！","１が余分です！","x がありません！","切片（あとの数）が ありません！"];
 
 function eqHTML(a,b){
   return '<i>y</i>＝'+(a<0?'－':'')+(Math.abs(a)===1?'':Math.abs(a))+'<i>χ</i>'+(b<0?'－':'＋')+Math.abs(b);
@@ -464,6 +463,7 @@ function missTypeExpr(us,cs,isLast){
     return isLast?0:1;
   }
   if(/^1x/.test(su)) return 4;
+  if(/^-?\d*x$/.test(su) && c.b!==0) return 6;   /* 5x のように 切片を 書いていない */
   if(Math.abs(u.a)===Math.abs(c.a) && Math.abs(u.b)===Math.abs(c.b) && (u.a!==c.a || u.b!==c.b)) return 2;
   if(Math.abs(u.a)!==Math.abs(c.a) || Math.abs(u.b)!==Math.abs(c.b)) return 3;
   return isLast?0:1;
@@ -614,7 +614,8 @@ document.addEventListener('keydown',function(e){
 function submit(){
   if(S.locked) return;
   const it=S.list[S.cur];
-  if(S.input===''||S.input==='-'||S.input==='+'||/x$/i.test(S.input)) { beep('wrong'); return; }
+  if(S.input===''){ beep('wrong'); $('msg').textContent='答えを 入れましょう。'; $('msg').className='msg bad'; return; }
+  if(/[+\-＋－]$/.test(S.input)){ beep('wrong'); $('msg').textContent='式の つづきを 入れましょう。'; $('msg').className='msg bad'; return; }
   it.tries++;
   const ok = normExprInput(S.input)===normExprInput(it.ans);
   if(ok){
@@ -681,9 +682,10 @@ function renderData(){
   const sp=$('spark'); sp.innerHTML='';
   if(!logs.length) sp.innerHTML='<div class="empty" style="width:100%">まだ 記録が ありません</div>';
   else logs.slice(-24).forEach(function(g){ const b=document.createElement('div'); b.className='b'+(g.ten===100?' s100':(g.ten>=80?' s80':'')); b.style.height=Math.max(6,g.ten*0.6)+'px'; b.title=fmtDate(g.at)+' '+g.kind+' '+g.ten+'点'; sp.appendChild(b); });
-  const mc=[0,0,0,0,0,0], miss=logs.reduce((t,g)=>t+g.items.reduce((s,it)=>s+((it.misses&&it.misses.length)||0),0),0);
-  logs.forEach(g=>g.items.forEach(it=>(it.misses||[]).forEach(m=>{ if(m>=0&&m<=5) mc[m]++; })));
-  const order=[2,3,4,5,1], labels=['符号が違う','絶対値が違う','1が余分','xがない','そのほか'], colors=['var(--teal2)','var(--blue)','var(--yellow-deep)','var(--red)','#B9C3C0'];
+  const mc=[0,0,0,0,0,0,0], miss=logs.reduce((t,g)=>t+g.items.reduce((s,it)=>s+((it.misses&&it.misses.length)||0),0),0);
+  logs.forEach(g=>g.items.forEach(it=>(it.misses||[]).forEach(m=>{ if(m>=0&&m<=6) mc[m]++; })));
+  const order=[2,3,4,5,6,1], labels=['符号が違う','絶対値が違う','1が余分','xがない','切片がない','そのほか'],
+        colors=['var(--teal2)','var(--blue)','var(--yellow-deep)','var(--red)','var(--green)','#B9C3C0'];
   const mb=$('missBars'); mb.innerHTML='';
   if(!miss) mb.innerHTML='<div class="empty">まちがいの 記録が ありません</div>';
   else order.forEach(function(idx,i){ const n=mc[idx], pc=Math.round(n/miss*100); const d=document.createElement('div'); d.className='mb'; d.innerHTML='<span class="lab">'+labels[i]+'</span><span class="track"><span class="fill" style="width:'+pc+'%;background:'+colors[i]+'"></span></span><span class="cnt">'+n+'回</span>'; mb.appendChild(d); });

@@ -141,9 +141,16 @@
     font-family: "M PLUS Rounded 1c"; font-weight: 900; font-size: clamp(20px, 5.2vw, 30px);
     display: flex; align-items: center; justify-content: center; gap: .08em; flex-wrap: wrap; color: var(--ink);
   }
+  .equation .qq { white-space: nowrap; }
+  /* 指数（右上の 2） */
+  sup { font-size: .5em; vertical-align: baseline; position: relative; top: -.62em; line-height: 0; margin-left: .02em; }
+  /* 根号：SVG の 記号と 上線を つなげて 表示（フォントに よらず そろう） */
+  .rt { display: inline-flex; align-items: flex-start; white-space: nowrap; vertical-align: -.15em; line-height: 1; }
+  .rt > .rh { flex: none; width: .5em; height: 1.05em; display: block; overflow: visible; }
+  .rt > .rd { border-top: .08em solid currentColor; padding: .1em .16em 0 0; line-height: 1; }
   .ansbox {
     min-width: 3.5em; min-height: 1.1em; padding: 0 .2em; border-bottom: 6px solid var(--blue); color: var(--blue);
-    border-radius: 6px 6px 4px 4px; display: inline-flex; align-items: flex-end; justify-content: center; background: rgba(46,155,214,.10);
+    border-radius: 6px 6px 4px 4px; display: inline-block; line-height: 1.15; text-align: center; white-space: nowrap; background: rgba(46,155,214,.10);
   }
   .ansbox.blink { animation: bl 1s steps(2) infinite; }
   @keyframes bl { 50% { border-bottom-color: transparent; } }
@@ -549,14 +556,14 @@ function generateProblem(type) {
     // √(±a)^2 = a
     const a = rnd(1, 9);
     const fugo = rnd(1, 2) === 1 ? "＋" : "－";
-    q = "√（" + fugo + a + "）<sup>2</sup> ＝";
+    q = "√（" + fugo + a + "）^2 ＝";
     ans = String(a);
   }
   else if (curType === "1.6") {
     // (±√a)^2 = a
     const a = rnd(1, 9);
     const fugo = rnd(1, 2) === 1 ? "＋" : "－";
-    q = "（" + fugo + "√" + a + "）<sup>2</sup> ＝";
+    q = "（" + fugo + "√" + a + "）^2 ＝";
     ans = String(a);
   }
   else if (curType === "1.7") {
@@ -656,6 +663,9 @@ function generateProblem(type) {
 function normalizeInput(s) {
   if (!s) return "";
   let res = String(s).replace(/\s/g, "")
+                     .replace(/[＋]/g, "+")
+                     .replace(/[－ー―‐−]/g, "-")
+                     .replace(/[０-９]/g, function(d){ return String.fromCharCode(d.charCodeAt(0) - 0xFEE0); })
                      .replace(/x/gi, "χ")
                      .replace(/r/gi, "√")
                      .replace(/v/gi, "√")
@@ -670,15 +680,55 @@ function checkAnswer(userStr, correctStr) {
   if (normUser === normCorrect) return 0; // 正解
 
   // 誤答分析 (MISSTYPE)
-  if (normUser.replace(/[±＋－]/g, "") === normCorrect.replace(/[±＋－]/g, "")) return 2; // 符号違い
+  if (normUser.replace(/[±+\-]/g, "") === normCorrect.replace(/[±+\-]/g, "")) return 2; // 符号違い
   if (normCorrect.includes("√") && !normUser.includes("√")) return 5; // √なし
   if (normUser.includes("1√")) return 4; // 1が余分
   return 3; // 絶対値違い・その他
 }
 
+/* =========================================================
+   式の 表示（根号の 線 と 指数）
+   「^2」→ 右上の 2、「√12」→ 12 の上に 線
+   ========================================================= */
+function radEnd(s, i) {          /* √ のあと、根号の 中に 入る 範囲を さがす */
+  let j = i;
+  if (s[j] === "（" || s[j] === "(") {
+    let depth = 0;
+    while (j < s.length) {
+      const c = s[j];
+      if (c === "（" || c === "(") depth++;
+      else if (c === "）" || c === ")") { depth--; if (depth === 0) { j++; break; } }
+      j++;
+    }
+  } else {
+    while (j < s.length && /[0-9０-９a-zA-Zａ-ｚＡ-Ｚχ]/.test(s[j])) j++;
+  }
+  if (s.slice(j, j + 2) === "^2") j += 2;
+  return j;
+}
+const RSIGN = '<svg class="rh" viewBox="0 0 10 21" aria-hidden="true">'
+  + '<path d="M0.9 12 L3.2 10.9 L5.5 20.1 L10 0.8" fill="none" stroke="currentColor" stroke-width="1.6"'
+  + ' stroke-linejoin="round" stroke-linecap="round"/></svg>';
+function supHTML(t) { return String(t).replace(/\^2/g, "<sup>2</sup>"); }
+function mathHTML(str) {
+  const s = String(str == null ? "" : str);
+  let out = "", i = 0;
+  while (i < s.length) {
+    if (s[i] === "√") {
+      const j = radEnd(s, i + 1);
+      const inner = s.slice(i + 1, j);
+      out += inner === "" ? "√" : '<span class="rt">' + RSIGN + '<span class="rd">' + supHTML(inner) + '</span></span>';
+      i = j; continue;
+    }
+    if (s.slice(i, i + 2) === "^2") { out += "<sup>2</sup>"; i += 2; continue; }
+    out += s[i]; i++;
+  }
+  return out;
+}
+
 function formatAnsDisplay(s) {
   if (!s) return "";
-  return String(s);
+  return mathHTML(s);
 }
 
 /* LocalStorage Manager */
@@ -771,7 +821,7 @@ function buildMain() {
   MENU_STRUCTURE.forEach((m, i) => {
     const el = document.createElement("button");
     el.className = "mcard";
-    el.innerHTML = '<span class="n">' + m.id + '</span><span class="lbl">' + m.title + '<span class="sm">の 計算練習</span></span>';
+    el.innerHTML = '<span class="n">' + m.id + '</span><span class="lbl">' + mathHTML(m.title) + '<span class="sm">の 計算練習</span></span>';
     el.addEventListener("click", () => { beep("tap"); openSub(i); });
     l.appendChild(el);
   });
@@ -795,7 +845,7 @@ function openSub(idx) {
   m.sub.forEach((s, si) => {
     const b = document.createElement("button");
     b.className = "mcard" + (s.name.includes("ランダム") ? " rand" : "");
-    b.innerHTML = '<span class="n">' + (si + 1) + '</span><span class="lbl"><span class="ex">' + s.name + '</span></span>';
+    b.innerHTML = '<span class="n">' + (si + 1) + '</span><span class="lbl"><span class="ex">' + mathHTML(s.name) + '</span></span>';
     b.addEventListener("click", () => { beep("tap"); startRound(m.id, si + 1, s.type, s.name); });
     l.appendChild(b);
   });
@@ -819,7 +869,7 @@ function startRound(m1, m2, type, kindName) {
     seen[p.q] = 1;
     S.list.push({ p: p, tries: 0, correct: false, user: "" });
   }
-  $("modeChip").textContent = kindName;
+  $("modeChip").innerHTML = mathHTML(kindName);
   buildDots(); show("play"); startTimer(); render();
 }
 
@@ -846,16 +896,16 @@ function render() {
   $("reveal").classList.remove("show"); $("reveal").innerHTML = "";
   $("stamp").innerHTML = "";
 
-  $("equation").innerHTML = it.p.q + '<span class="ansbox blink" id="ans"></span>';
+  $("equation").innerHTML = '<span class="qq">' + mathHTML(it.p.q) + '</span><span class="ansbox blink" id="ans"></span>';
   updateDots(); updateBox();
 }
 
 function updateBox() {
   const b = $("ans"); if (!b) return;
-  b.innerHTML = S.input.replace(/\+/g, '＋')
+  b.innerHTML = mathHTML(S.input.replace(/\+/g, '＋')
                        .replace(/-/g, '－')
                        .replace(/r/gi, '√')
-                       .replace(/±/g, '±');
+                       .replace(/±/g, '±'));
   b.classList.toggle("blink", S.input === "" && !S.locked);
 }
 
@@ -868,7 +918,7 @@ function pressKey(k) {
   }
   if (k === "enter") { submit(); return; }
   if (k === "pm") {
-    if (S.input === "" || S.input === "+" || S.input === "-") S.input = "±";
+    if (S.input === "" || S.input === "＋" || S.input === "－") S.input = "±";
     else if (!S.input.includes("±")) S.input = "±" + S.input;
     beep("type"); updateBox(); return;
   }
@@ -876,7 +926,7 @@ function pressKey(k) {
     if (S.input === "＋" && k === "-") { S.input = "±"; beep("type"); updateBox(); return; }
     if (S.input === "－" && k === "+") { S.input = "±"; beep("type"); updateBox(); return; }
     const last = S.input.slice(-1);
-    if (last === '+' || last === '-' || last === '±') return;
+    if (last === '＋' || last === '－' || last === '±') return;
     S.input += k === "+" ? "＋" : "－"; beep("type"); updateBox(); return;
   }
   if (k === "r") {
@@ -991,7 +1041,7 @@ function finish() {
     const cs = formatAnsDisplay(it.p.ans);
     const us = formatAnsDisplay(it.user || "―");
     row.innerHTML = '<span class="rmark ' + (it.correct ? "ok" : "ng") + '">' + (it.correct ? "○" : "✕") + '</span>'
-      + '<span class="rq">' + it.p.q + '</span>'
+      + '<span class="rq">' + mathHTML(it.p.q) + '</span>'
       + '<span>' + (it.correct ? '<span class="rc">' + cs + '</span>'
         : '<span class="ra wrong">' + us + '</span><span class="rc">' + cs + '</span>') + '</span>';
     rv.appendChild(row);
@@ -1093,7 +1143,7 @@ function renderData() {
     let h = '<table class="rec"><tr><th>コース名</th><th style="text-align:right">回数</th><th style="text-align:right">平均点</th><th style="text-align:right">最高点</th></tr>';
     keys.forEach(k => {
       const v = bk[k];
-      h += '<tr><td>' + k + '</td><td class="n">' + v.n + '</td><td class="n">' + Math.round(v.sum / v.n) + '</td><td class="n">' + v.best + '</td></tr>';
+      h += '<tr><td>' + mathHTML(k) + '</td><td class="n">' + v.n + '</td><td class="n">' + Math.round(v.sum / v.n) + '</td><td class="n">' + v.best + '</td></tr>';
     });
     byk.innerHTML = h + '</table>';
   }
@@ -1105,7 +1155,7 @@ function renderData() {
     let h = '<table class="rec"><tr><th>日時</th><th>コース</th><th style="text-align:right">点数</th><th style="text-align:right">時間</th></tr>';
     logs.slice().reverse().slice(0, 30).forEach((g, i) => {
       const cls = g.ten === 100 ? "sp100" : (g.ten >= 80 ? "sp80" : "sp0");
-      h += '<tr class="hrow" data-i="' + i + '" style="cursor:pointer"><td>' + fmtDate(g.at) + '</td><td>' + g.kind + '</td>'
+      h += '<tr class="hrow" data-i="' + i + '" style="cursor:pointer"><td>' + fmtDate(g.at) + '</td><td>' + mathHTML(g.kind) + '</td>'
         + '<td class="n"><span class="scorepill ' + cls + '">' + g.ten + '点</span></td><td class="n">' + fmtTime(g.sec) + '</td></tr>'
         + '<tr><td colspan="4" style="padding:0"><div class="detail" id="dt' + i + '">' + detailHTML(g) + '</div></td></tr>';
     });
@@ -1120,8 +1170,8 @@ function detailHTML(g) {
   let h = '';
   g.items.forEach(it => {
     h += '<div class="' + (it.ok ? '' : 'ng') + '">' + (it.ok ? '○' : '✕') + ' '
-      + it.q + ' ＝ ' + (it.user || '―')
-      + (it.ok ? '' : '　（正解＝' + it.ans + '）') + '</div>';
+      + mathHTML(it.q) + ' ＝ ' + mathHTML(it.user || '―')
+      + (it.ok ? '' : '　（正解＝' + mathHTML(it.ans) + '）') + '</div>';
   });
   return h;
 }

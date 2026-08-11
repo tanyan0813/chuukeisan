@@ -52,6 +52,7 @@
   .sw{width:28px;height:28px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.08);cursor:pointer}
   .small{font-size:13px;color:#6B7A84}
   .back{margin-bottom:10px}
+  .credit{text-align:center;margin:14px 4px 6px;font-size:11px;color:#9AA4A9;line-height:1.7}
   @media (max-width:860px){.hero{grid-template-columns:1fr}.svgbox{height:360px}}
 </style>
 </head>
@@ -61,7 +62,7 @@
     <div class="top">
       <div class="logo"><span class="pin">●</span><b>ご石の個数</b></div>
       <div class="actions">
-        <button class="btn" id="toMenuTop">メニュー</button>
+        <button class="btn" id="toMenuTop" title="文字と式のメニューへ もどる">メニュー</button>
       </div>
     </div>
 
@@ -129,6 +130,7 @@
       </div>
     </section>
   </div>
+  <div class="credit">岐阜女子大学（安藤忠展） Ver.5.02 ／ Web版</div>
 </div>
 
 <script>
@@ -149,14 +151,14 @@ function buildMenu(){
   MODES.forEach((m,i)=>{
     const b=document.createElement('button');
     b.className='mcard';
-    b.innerHTML='<span class="num">'+(i+1)+'</span><b>'+m.label+'</b><div class="sm">'+(m.end?'アプリを終了してメニューに戻ります':(m.n==='x'?'1辺を文字 x として式で考える':'1辺のご石の個数を選ぶ'))+'</div>';
+    b.innerHTML='<span class="num">'+(i+1)+'</span><b>'+m.label+'</b><div class="sm">'+(m.end?'ご石のメニューへ もどります':(m.n==='x'?'1辺を文字 x として式で考える':'1辺のご石の個数を選ぶ'))+'</div>';
     b.addEventListener('click',()=>selectMode(m));
     list.appendChild(b);
   });
 }
 
 function selectMode(m){
-  if(m.end){ show('main'); alert('このWeb版では「おわり」を選ぶとメニュー画面にとどまります。'); return; }
+  if(m.end){ location.href='12goisi.html'; return; }
   S.n=m.n;
   S.drawN=(m.n==='x'?12:m.n);
   S.points=[];
@@ -251,7 +253,7 @@ $('checkBtn').addEventListener('click',check);
 $('hintBtn').addEventListener('click',showHint);
 $('ans').addEventListener('keydown',e=>{ if(e.key==='Enter') check(); });
 $('backBtn').addEventListener('click',()=>show('main'));
-$('toMenuTop').addEventListener('click',()=>show('main'));
+$('toMenuTop').addEventListener('click',()=>{ location.href='mfmenu.html'; });
 $('sizeUp').addEventListener('click',()=>{ S.markR=Math.min(24,S.markR+2); });
 $('sizeDown').addEventListener('click',()=>{ S.markR=Math.max(2,S.markR-2); });
 $('clearMarks').addEventListener('click',()=>{ S.points=[]; renderMarks(); });
