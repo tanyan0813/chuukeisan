@@ -325,7 +325,7 @@
     <div class="mlist" id="mainList"></div>
     <div class="foot"><a href="doriru.html">← 単元メニューへもどる</a></div>
     <div class="credit">
-      岐阜女子大学（安藤忠展） Ver 5.02／ Web版
+      岐阜女子大学（安藤忠展） Ver 5.03／ Web版
     </div>
   </section>
 
@@ -824,11 +824,11 @@ function openSub(idx) {
 
 /* ドリル実行の状態管理 */
 const PRMSU = 5, MISSN = 3;
-let S = { menu1: 0, menu2: 0, type: "", kindName: "", list: [], cur: 0, slots: [""], kinds: ["val"], slot: 0, locked: false, t0: 0 };
+let S = { menu1: 0, menu2: 0, type: "", kindName: "", list: [], cur: 0, slots: [""], kinds: ["val"], slot: 0, locked: false, waiting: false, t0: 0 };
 let timerId = null;
 
 function startRound(m1, m2, type, kindName) {
-  S = { menu1: m1, menu2: m2, type: type, kindName: kindName, list: [], cur: 0, slots: [""], kinds: ["val"], slot: 0, locked: false, t0: Date.now() };
+  S = { menu1: m1, menu2: m2, type: type, kindName: kindName, list: [], cur: 0, slots: [""], kinds: ["val"], slot: 0, locked: false, waiting: false, t0: Date.now() };
   const seen = {};
   for (let i = 0; i < PRMSU; i++) {
     let p, guard = 0;
@@ -896,7 +896,7 @@ function render() {
   const it = S.list[S.cur];
   const kinds = slotKinds(it.p);
   S.kinds = kinds; S.slots = kinds.map(() => ""); S.slot = 0;
-  S.locked = false;
+  S.locked = false; S.waiting = false;
   $("msg").textContent = ""; $("msg").className = "msg";
   $("reveal").classList.remove("show"); $("reveal").innerHTML = "";
   $("stamp").innerHTML = "";
@@ -910,7 +910,7 @@ function render() {
 
   $("equation").querySelectorAll(".ansbox").forEach(el => {
     el.addEventListener("click", () => {
-      if (S.locked) return;
+      if (S.locked || S.waiting) return;
       S.slot = parseInt(el.dataset.slot, 10); beep("tap"); updateBox();
     });
   });
@@ -931,7 +931,7 @@ function slotName(p, i) {
 function updateNextBtn() {
   const btn = $("nextBtn"); if (!btn) return;
   const it = S.list[S.cur], p = it && it.p;
-  if (!p || S.slots.length < 2 || S.locked) { btn.style.display = "none"; return; }
+  if (!p || S.slots.length < 2 || S.locked || S.waiting) { btn.style.display = "none"; return; }
   const nx = (S.slot + 1) % S.slots.length;
   btn.style.display = "block";
   btn.textContent = "次へ ▶ " + slotName(p, nx);
@@ -941,8 +941,8 @@ function updateBox() {
   boxes.forEach(el => {
     const i = parseInt(el.dataset.slot, 10), v = S.slots[i] || "";
     el.innerHTML = slotDisp(v);
-    el.classList.toggle("act", i === S.slot && !S.locked && boxes.length > 1);
-    el.classList.toggle("blink", i === S.slot && v === "" && !S.locked);
+    el.classList.toggle("act", i === S.slot && !S.locked && !S.waiting && boxes.length > 1);
+    el.classList.toggle("blink", i === S.slot && v === "" && !S.locked && !S.waiting);
   });
   updateNextBtn();
 }
@@ -957,6 +957,7 @@ function nextEmptySlot() {
   return -1;
 }
 function pressKey(k) {
+  if (S.waiting) return;                      /* ✕を 出している あいだは キーを うけつけない */
   if (S.locked) { if (k === "enter") next(); return; }
   const kind = S.kinds[S.slot], cur = S.slots[S.slot] || "";
   const set = v => { S.slots[S.slot] = v; };
@@ -1064,7 +1065,7 @@ function ansHTML(p) {
 }
 
 function submit() {
-  if (S.locked) return;
+  if (S.locked || S.waiting) return;   /* ○✕を 出している あいだは 判定しない */
   const it = S.list[S.cur], p = it.p;
 
   /* 入力チェック */
@@ -1103,7 +1104,7 @@ function submit() {
     stamp("maru"); beep("correct");
     $("msg").textContent = "正解！"; $("msg").className = "msg good";
     updateBox();
-    setTimeout(next, 1100);
+    scheduleNext(1100);
   } else {
     stamp("batsu"); beep("wrong");
     const last = it.tries >= MISSN;
@@ -1114,17 +1115,24 @@ function submit() {
       $("reveal").innerHTML = '正解＝<b>' + ansHTML(p) + '</b>';
       $("reveal").classList.add("show");
       updateBox();
-      setTimeout(next, 2600);
+      scheduleNext(2600);
     } else {
+      S.waiting = true;                         /* ✕の あいだは 待つ */
+      updateBox();
       setTimeout(() => {
         $("stamp").innerHTML = ""; $("msg").textContent = "";
-        S.slots = S.slots.map(() => ""); S.slot = 0; updateBox();
+        S.waiting = false; S.slots = S.slots.map(() => ""); S.slot = 0; updateBox();
       }, 1200);
     }
   }
 }
 
+let nextTimer = null;
+/* ○✕を 見せたあと 次へ（クリックと タイマーが かさなっても 1回だけ） */
+function scheduleNext(ms) { clearTimeout(nextTimer); nextTimer = setTimeout(next, ms); }
 function next() {
+  clearTimeout(nextTimer); nextTimer = null;
+  S.locked = true;                            /* すすむ あいだの 二重うけつけを 止める */
   S.cur++; if (S.cur >= PRMSU) finish(); else render();
 }
 

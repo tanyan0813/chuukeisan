@@ -138,7 +138,7 @@
   @media (max-width: 620px) { .board-split { grid-template-columns: 1fr; } }
 
   .graph-box { display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  canvas { border-radius: 16px; background: #FFF; border: 2px solid #E1E8E5; box-shadow: 0 4px 8px rgba(0,0,0,0.05); cursor: crosshair; }
+  canvas { border-radius: 16px; background: #FFF; border: 2px solid #E1E8E5; box-shadow: 0 4px 8px rgba(0,0,0,0.05); cursor: crosshair; max-width: 100%; height: auto; }
 
   .question-area { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
   .question-instruction { font-size: 15px; font-weight: 700; color: var(--ink-soft); margin-bottom: 4px; }
@@ -300,7 +300,7 @@
     <div class="mlist" id="mainList"></div>
     <div class="foot"><a href="hireimenu.html">← 比例と反比例のメニューへもどる</a></div>
     <div class="credit">
-      岐阜女子大学（安藤忠展） Ver. 5.01／ Web版
+      岐阜女子大学（安藤忠展） Ver. 5.02／ Web版
     </div>
   </section>
 
@@ -314,7 +314,7 @@
     </div>
     <div class="board-split">
       <div class="graph-box">
-        <canvas id="graphCanvas" width="250" height="250"></canvas>
+        <canvas id="graphCanvas" width="300" height="300"></canvas>
       </div>
       <div class="question-area">
         <div class="question-instruction">次の点の位置を座標平面上に示せ。</div>
@@ -431,8 +431,8 @@ const MENU_STRUCTURE = [
 
 /* 問題生成 */
 function generateProblem() {
-  const targetX = rnd(-9, 9);
-  const targetY = rnd(-9, 9);
+  const targetX = rnd(-10, 10);      /* －10 〜 ＋10 から ランダム */
+  const targetY = rnd(-10, 10);
   return { x: targetX, y: targetY };
 }
 
@@ -447,47 +447,58 @@ function drawGraph(targetX, targetY, userX, userY, showAnswer) {
   ctx.clearRect(0, 0, w, h);
 
   const cx = w / 2, cy = h / 2;
-  const step = 11; // 10刻み（-10〜+10）
+  const RANGE = 10;                                   /* －10 〜 ＋10 */
+  const pad = 26;                                     /* 目もりの 数字を 書く ぶん */
+  const step = Math.floor((Math.min(w, h) / 2 - pad) / RANGE);
+  const gx = i => cx + i * step, gy = i => cy - i * step;
+  const L = RANGE * step;
 
-  // グリッド線
-  ctx.strokeStyle = "#EDF2EF";
+  // グリッド線（5ごとは こく）
   ctx.lineWidth = 1;
-  for (let i = -10; i <= 10; i++) {
-    ctx.beginPath();
-    ctx.moveTo(cx + i * step, 0); ctx.lineTo(cx + i * step, h);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(0, cy + i * step); ctx.lineTo(w, cy + i * step);
-    ctx.stroke();
+  for (let i = -RANGE; i <= RANGE; i++) {
+    ctx.strokeStyle = (i % 5 === 0) ? "#DDE7E3" : "#EDF2EF";
+    ctx.beginPath(); ctx.moveTo(gx(i), cy - L); ctx.lineTo(gx(i), cy + L); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - L, gy(i)); ctx.lineTo(cx + L, gy(i)); ctx.stroke();
   }
 
   // 軸線 (x, y)
   ctx.strokeStyle = "#37424A";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(0, cy); ctx.lineTo(w, cy);
-  ctx.moveTo(cx, 0); ctx.lineTo(cx, h);
+  ctx.moveTo(cx - L, cy); ctx.lineTo(cx + L, cy);
+  ctx.moveTo(cx, cy - L); ctx.lineTo(cx, cy + L);
   ctx.stroke();
+
+  // 目もり（1ごとの 短い線）
+  ctx.lineWidth = 1.5;
+  for (let i = -RANGE; i <= RANGE; i++) {
+    if (i === 0) continue;
+    const t = (i % 5 === 0) ? 5 : 3;
+    ctx.beginPath(); ctx.moveTo(gx(i), cy - t); ctx.lineTo(gx(i), cy + t); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - t, gy(i)); ctx.lineTo(cx + t, gy(i)); ctx.stroke();
+  }
 
   // 軸文字
   ctx.fillStyle = "#37424A";
   ctx.font = "bold 11px 'M PLUS Rounded 1c', sans-serif";
-  ctx.fillText("x", w - 12, cy - 6);
-  ctx.fillText("y", cx + 6, 12);
-  ctx.fillText("0", cx - 10, cy + 12);
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText("x", cx + L + 4, cy - 6);
+  ctx.textAlign = "right";
+  ctx.fillText("y", cx - 6, cy - L - 4);
+  ctx.fillText("0", cx - 4, cy + 13);
 
-  // 5, -5 目盛り
+  // 目もりの 数字（5・10 と －5・－10）
   ctx.fillStyle = "#6A757C";
   ctx.font = "9px sans-serif";
-  ctx.fillText("5", cx + 5 * step - 3, cy + 12);
-  ctx.fillText("-5", cx - 5 * step - 8, cy + 12);
-  ctx.fillText("5", cx - 12, cy - 5 * step + 3);
-  ctx.fillText("-5", cx - 15, cy + 5 * step + 3);
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  [5, 10, -5, -10].forEach(function(v){ ctx.fillText(String(v), gx(v), cy + 6); });
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  [5, 10, -5, -10].forEach(function(v){ ctx.fillText(String(v), cx - 6, gy(v)); });
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
 
   // 正解表示
   if (showAnswer) {
-    const ax = cx + targetX * step;
-    const ay = cy - targetY * step;
+    const ax = gx(targetX), ay = gy(targetY);
 
     ctx.strokeStyle = "#34B37A";
     ctx.lineWidth = 2;
@@ -503,12 +514,14 @@ function drawGraph(targetX, targetY, userX, userY, showAnswer) {
     ctx.arc(ax, ay, 7, 0, Math.PI * 2);
     ctx.fill();
     ctx.font = "bold 13px 'M PLUS Rounded 1c', sans-serif";
-    ctx.fillText("正解", ax + 9, ay - 4);
+    ctx.textAlign = (ax > w - 44) ? "right" : "left";
+    ctx.textBaseline = (ay < 18) ? "top" : "alphabetic";
+    ctx.fillText("正解", (ax > w - 44) ? ax - 10 : ax + 10, (ay < 18) ? ay + 9 : ay - 4);
+    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
   }
 
   // 赤点
-  const ux = cx + userX * step;
-  const uy = cy - userY * step;
+  const ux = gx(userX), uy = gy(userY);
 
   ctx.strokeStyle = "rgba(234, 80, 64, 0.4)";
   ctx.lineWidth = 1.5;
@@ -531,14 +544,15 @@ function drawGraph(targetX, targetY, userX, userY, showAnswer) {
 }
 
 $("graphCanvas").addEventListener("click", e => {
-  if (S.locked) return;
+  if (S.locked || S.waiting) return;
   const rect = e.target.getBoundingClientRect();
-  const clickX = e.clientX - rect.left;
-  const clickY = e.clientY - rect.top;
+  const sx = e.target.width / rect.width, sy = e.target.height / rect.height;
+  const clickX = (e.clientX - rect.left) * sx;
+  const clickY = (e.clientY - rect.top) * sy;
 
   const w = e.target.width, h = e.target.height;
   const cx = w / 2, cy = h / 2;
-  const step = 11;
+  const step = Math.floor((Math.min(w, h) / 2 - 26) / 10);   /* drawGraph と 同じ */
 
   let gridX = Math.round((clickX - cx) / step);
   let gridY = Math.round((cy - clickY) / step);
@@ -655,11 +669,11 @@ function buildMain() {
 
 /* ドリル実行の状態管理 */
 const PRMSU = 5, MISSN = 3;
-let S = { kindName: "", list: [], cur: 0, locked: false, t0: 0 };
+let S = { kindName: "", list: [], cur: 0, locked: false, waiting: false, t0: 0 };
 let timerId = null;
 
 function startRound(kindName) {
-  S = { kindName: kindName, list: [], cur: 0, locked: false, t0: Date.now() };
+  S = { kindName: kindName, list: [], cur: 0, locked: false, waiting: false, t0: Date.now() };
   const seen = {};
   for (let i = 0; i < PRMSU; i++) {
     let p, guard = 0;
@@ -691,7 +705,7 @@ function updateDots() {
 
 function render() {
   const it = S.list[S.cur];
-  curUserX = 0; curUserY = 0; S.locked = false;
+  curUserX = 0; curUserY = 0; S.locked = false; S.waiting = false;
   $("msg").textContent = ""; $("msg").className = "msg";
   $("reveal").classList.remove("show"); $("reveal").innerHTML = "";
   $("stamp").innerHTML = "";
@@ -703,7 +717,7 @@ function render() {
 
 /* 十字キー操作 */
 function moveDot(dx, dy) {
-  if (S.locked) return;
+  if (S.locked || S.waiting) return;
   curUserX = Math.max(-10, Math.min(10, curUserX + dx));
   curUserY = Math.max(-10, Math.min(10, curUserY + dy));
   beep("type");
@@ -716,7 +730,7 @@ $("btnDown").addEventListener("click", () => moveDot(0, -1));
 $("btnLeft").addEventListener("click", () => moveDot(-1, 0));
 $("btnRight").addEventListener("click", () => moveDot(1, 0));
 $("btnReset").addEventListener("click", () => {
-  if (S.locked) return;
+  if (S.locked || S.waiting) return;
   curUserX = 0; curUserY = 0; beep("type");
   const it = S.list[S.cur];
   drawGraph(it.p.x, it.p.y, curUserX, curUserY, false);
@@ -728,7 +742,7 @@ document.addEventListener("keydown", e => {
     else if (e.key === "ArrowDown") { moveDot(0, -1); e.preventDefault(); }
     else if (e.key === "ArrowLeft") { moveDot(-1, 0); e.preventDefault(); }
     else if (e.key === "ArrowRight") { moveDot(1, 0); e.preventDefault(); }
-    else if (e.key === "Enter") { submit(); e.preventDefault(); }
+    else if (e.key === "Enter") { if (S.locked) next(); else submit(); e.preventDefault(); }
   } else if (screens.main.classList.contains("active") && e.key >= "1" && e.key <= "2") {
     const idx = parseInt(e.key, 10) - 1;
     if (idx === 1) openData();
@@ -740,7 +754,7 @@ $("enterBtn").addEventListener("click", () => submit());
 
 /* 解答判定 (SEIGO.DSP / MISS.TYPE) */
 function submit() {
-  if (S.locked) return;
+  if (S.locked || S.waiting) return;   /* ○✕を 出している あいだは 判定しない */
   const it = S.list[S.cur];
 
   it.tries++;
@@ -751,7 +765,7 @@ function submit() {
     S.locked = true; it.correct = true; it.userX = curUserX; it.userY = curUserY;
     stamp("maru"); beep("correct");
     $("msg").textContent = "正解！"; $("msg").className = "msg good";
-    setTimeout(next, 1100);
+    scheduleNext(1100);
   } else {
     stamp("batsu"); beep("wrong");
     const last = it.tries >= MISSN;
@@ -768,14 +782,21 @@ function submit() {
       drawGraph(it.p.x, it.p.y, curUserX, curUserY, true);
       $("reveal").innerHTML = `正解の位置 ＝ <b>(${it.p.x}, ${it.p.y})</b>`;
       $("reveal").classList.add("show");
-      setTimeout(next, 2600);
+      scheduleNext(2600);
     } else {
-      setTimeout(() => { $("stamp").innerHTML = ""; $("msg").textContent = ""; }, 1200);
+      S.waiting = true;                         /* ✕の あいだは 待つ */
+      setTimeout(() => { $("stamp").innerHTML = ""; $("msg").textContent = "";
+        S.waiting = false; }, 1200);
     }
   }
 }
 
+let nextTimer = null;
+/* ○✕を 見せたあと 次へ（クリックと タイマーが かさなっても 1回だけ） */
+function scheduleNext(ms) { clearTimeout(nextTimer); nextTimer = setTimeout(next, ms); }
 function next() {
+  clearTimeout(nextTimer); nextTimer = null;
+  S.locked = true;                            /* すすむ あいだの 二重うけつけを 止める */
   S.cur++; if (S.cur >= PRMSU) finish(); else render();
 }
 

@@ -245,7 +245,7 @@
     <div class="mlist" id="mainList"></div>
     <div class="foot"><a href="doriru.html">← 単元メニューへもどる</a></div>
     <div class="credit">
-      岐阜女子大学（安藤忠展） Ver.5.02 ／ Web版
+      岐阜女子大学（安藤忠展） Ver.5.03 ／ Web版
     </div>
   </section>
 
@@ -601,11 +601,11 @@ function openSub(ci){
 }
 
 /* ---- じょうたい ---- */
-let S={cat:0,sub:0,list:[],cur:0,input:"",locked:false,t0:0};
+let S={cat:0,sub:0,list:[],cur:0,input:"",locked:false,waiting:false,t0:0};
 let timerId=null;
 
 function startRound(cat,sub){
-  S={cat:cat,sub:sub,list:[],cur:0,input:"",locked:false,t0:Date.now()};
+  S={cat:cat,sub:sub,list:[],cur:0,input:"",locked:false,waiting:false,t0:Date.now()};
   const seen={};
   for(let i=0;i<PRMSU;i++){
     let p,guard=0;
@@ -630,7 +630,7 @@ function updateDots(){const ch=$("dots").children;
 
 function render(){
   const it=S.list[S.cur];
-  S.input=""; S.locked=false;
+  S.input=""; S.locked=false; S.waiting=false;
   $("msg").textContent=""; $("msg").className="msg";
   $("reveal").classList.remove("show"); $("reveal").innerHTML="";
   $("stamp").innerHTML="";
@@ -643,10 +643,11 @@ function render(){
 }
 function updateBox(){const b=$("ans");if(!b)return;
   b.innerHTML=S.input.replace(/\+/g,'＋').replace(/-/g,'－').replace(/χ²/g,'<i>χ</i><sup>2</sup>').replace(/χ/g,'<i>χ</i>');
-  b.classList.toggle("blink",S.input===""&&!S.locked);}
+  b.classList.toggle("blink",S.input===""&&!S.locked&&!S.waiting);}
 
 /* ---- キー ---- */
 function pressKey(k){
+  if(S.waiting) return;                       /* ✕を 出している あいだは キーを うけつけない */
   if(S.locked){ if(k==="enter") next(); return; }
   if(k==="del"){ S.input=S.input.slice(0, S.input.endsWith('χ²')?-2:-1); beep("type"); updateBox(); return; }
   if(k==="enter"){ submit(); return; }
@@ -683,7 +684,7 @@ document.addEventListener("keydown",function(e){
 
 /* ---- こたえあわせ ---- */
 function submit(){
-  if(S.locked) return;
+  if(S.locked||S.waiting) return;   /* ○✕を 出している あいだは 判定しない */
   const it=S.list[S.cur], c=it.p.ans;
   if(S.input===""||S.input==="+"||S.input==="-"){ beep("wrong"); return; }
   it.tries++;
@@ -692,7 +693,7 @@ function submit(){
     S.locked=true; it.correct=true; it.user=S.input;
     stamp("maru"); beep("correct");
     $("msg").textContent="正解！"; $("msg").className="msg good";
-    setTimeout(next,1050);
+    scheduleNext(1050);
   } else {
     stamp("batsu"); beep("wrong");
     const last=it.tries>=MISSN;
@@ -702,13 +703,20 @@ function submit(){
     if(last){
       S.locked=true; it.correct=false; it.user=S.input;
       $("reveal").innerHTML='正解＝<b>'+ansDisp(c)+'</b>'; $("reveal").classList.add("show");
-      setTimeout(next,2300);
+      scheduleNext(2300);
     } else {
-      setTimeout(function(){$("stamp").innerHTML="";$("msg").textContent="";S.input="";updateBox();},1000);
+      S.waiting=true;                          /* ✕の あいだは 待つ */
+      setTimeout(function(){$("stamp").innerHTML="";$("msg").textContent="";
+        S.waiting=false; S.input=""; updateBox();},1000);
     }
   }
 }
-function next(){ S.cur++; if(S.cur>=PRMSU) finish(); else render(); }
+let nextTimer=null;
+/* ○✕を 見せたあと 次へ（クリックと タイマーが かさなっても 1回だけ） */
+function scheduleNext(ms){ clearTimeout(nextTimer); nextTimer=setTimeout(next,ms); }
+function next(){ clearTimeout(nextTimer); nextTimer=null;
+  S.locked=true;                            /* すすむ あいだの 二重うけつけを 止める */
+  S.cur++; if(S.cur>=PRMSU) finish(); else render(); }
 function stamp(t){const el=$("stamp");
   if(t==="maru"){el.className="stamp maru";
     el.innerHTML='<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="#EA5040" stroke-width="9"/><circle cx="50" cy="50" r="27" fill="none" stroke="#EA5040" stroke-width="7"/></svg>';

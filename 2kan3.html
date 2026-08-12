@@ -266,7 +266,7 @@
     <div class="mlist" id="mainList"></div>
     <div class="foot"><a href="2kanmenu.html">← ２次関数のメニューへもどる</a></div>
     <div class="credit">
-       岐阜女子大学（安藤忠展） Ver.5.01 ／ Web版
+       岐阜女子大学（安藤忠展） Ver.5.02 ／ Web版
     </div>
   </section>
 
@@ -369,7 +369,7 @@ const screens={main:$("mainScreen"),data:$("dataScreen"),play:$("playScreen"),re
 function show(n){for(const k in screens)screens[k].classList.toggle("active",k===n);window.scrollTo({top:0,behavior:"smooth"});}
 const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 const PRMSU=5, MISSN=2;
-const MISSMSG=["間違っていますよ！","もう一度　考えよう！","符号が違います！"];
+const MISSMSG=["間違っていますよ！","もう一度 考えよう！","符号が違います！"];
 
 function signed(n){ return n<0?'－'+Math.abs(n):String(n); }
 function dispNum(s){ return String(s).replace(/\+/g,'＋').replace(/-/g,'－'); }
@@ -579,12 +579,15 @@ document.addEventListener('keydown',function(e){
 
 function submit(){
   if(S.locked) return;
-  const it=S.list[S.cur];
   if(S.input===''||S.input==='-'||S.input==='+' ) { beep('wrong'); return; }
+  
+  S.locked = true; // 連打による二重・三重判定をガード
+
+  const it=S.list[S.cur];
   it.tries++;
   const ok = normNumInput(S.input)===normNumInput(it.ans);
   if(ok){
-    S.locked=true; it.correct=true; it.user=S.input;
+    it.correct=true; it.user=S.input;
     stamp('maru'); beep('correct');
     $('msg').textContent='正解！'; $('msg').className='msg good';
     setTimeout(next,1100);
@@ -594,13 +597,19 @@ function submit(){
     it.misses.push(mt);
     $('msg').textContent=MISSMSG[mt]||MISSMSG[1]; $('msg').className='msg bad';
     if(it.tries>=MISSN){
-      S.locked=true; it.correct=false; it.user=S.input;
+      it.correct=false; it.user=S.input;
       $('reveal').innerHTML='正解は <b>'+dispNum(it.ans)+'</b><div class="info-row"><div class="ibox"><span class="cap">A の y</span>'+signed(it.y1)+'</div><div class="ibox"><span class="cap">B の y</span>'+signed(it.y2)+'</div></div><div class="eq-note">増加量＝'+signed(it.y2)+' − ('+signed(it.y1)+') ＝ <b>'+signed(it.delta)+'</b></div>';
       $('reveal').classList.add('show');
       setTimeout(next,2600);
     } else {
       $('hintBox').innerHTML='x：'+signed(it.x1)+' … '+signed(it.x2)+'<br>y：'+signed(it.y1)+' … '+signed(it.y2);
-      setTimeout(function(){ $('stamp').innerHTML=''; $('msg').textContent=''; S.input=''; updateBox(); },1100);
+      setTimeout(function(){ 
+        $('stamp').innerHTML=''; 
+        $('msg').textContent=''; 
+        S.input=''; 
+        S.locked=false; // 再入力用にロック解除
+        updateBox(); 
+      },1100);
     }
   }
 }
@@ -620,7 +629,7 @@ function finish(){
   else if(ten>=80){ m.textContent='あともうすこし！'; m.style.color='var(--yellow-deep)'; w.innerHTML=star(); beep('correct'); }
   else { m.textContent='もっとがんばろう！'; m.style.color='var(--green)'; w.innerHTML=face(); }
   const p0=curPerson();
-  $('resultTime').textContent='じかん： '+fmtTime(sec)+(p0?('　／　この種類は '+kaisuu(S.mode)+'回目'):'');
+  $('resultTime').textContent='じかん： '+fmtTime(sec)+(p0?(' ／ この種類は '+kaisuu(S.mode)+'回目'):'');
   const rv=$('review'); rv.innerHTML='';
   S.list.forEach(function(it){
     const row=document.createElement('div'); row.className='review-row';
@@ -661,9 +670,9 @@ function renderData(){
   if(!logs.length) hs.innerHTML='<div class="empty">まだ 記録が ありません</div>';
   else { let h='<table class="rec"><tr><th>日時</th><th>種類</th><th style="text-align:right">点数</th><th style="text-align:right">時間</th></tr>'; logs.slice().reverse().slice(0,30).forEach(function(g,i){ const cls=g.ten===100?'sp100':(g.ten>=80?'sp80':'sp0'); h+='<tr class="hrow" data-i="'+i+'" style="cursor:pointer"><td>'+fmtDate(g.at)+'</td><td>'+g.kind+'</td><td class="n"><span class="scorepill '+cls+'">'+g.ten+'点</span></td><td class="n">'+fmtTime(g.sec)+'</td></tr><tr><td colspan="4" style="padding:0"><div class="detail" id="dt'+i+'">'+detailHTML(g)+'</div></td></tr>'; }); hs.innerHTML=h+'</table>'; hs.querySelectorAll('.hrow').forEach(function(tr){ tr.addEventListener('click',function(){ $('dt'+tr.dataset.i).classList.toggle('show'); }); }); }
 }
-function detailHTML(g){ let h=''; g.items.forEach(function(it){ h+='<div class="'+(it.ok?'':'ng')+'">'+(it.ok?'○':'✕')+' '+it.q+' → '+plainNum(it.user||'—')+(it.ok?'':'　（正解＝'+plainNum(it.ans)+'）')+'</div>'; }); return h; }
+function detailHTML(g){ let h=''; g.items.forEach(function(it){ h+='<div class="'+(it.ok?'':'ng')+'">'+(it.ok?'○':'✕')+' '+it.q+' → '+plainNum(it.user||'—')+(it.ok?'':' （正解＝'+plainNum(it.ans)+'）')+'</div>'; }); return h; }
 function fmtDate(t){ const d=new Date(t); return (d.getMonth()+1)+'/'+d.getDate()+' '+d.getHours()+':'+('0'+d.getMinutes()).slice(-2); }
-function renderWhoList(){ const l=$('whoList'); l.innerHTML=''; if(!DB.people.length){ l.innerHTML='<div class="empty">学習者を 登録すると 記録が のこせます</div>'; return; } DB.people.forEach(function(p){ const d=document.createElement('div'); d.className='who-item'+(p.id===DB.cur?' on':''); const n=DB.logs.filter(g=>g.pid===p.id).length; d.innerHTML='<span class="nm">'+personLabel(p)+'<span class="sm2">　'+n+'回</span></span>'; const b1=document.createElement('button'); b1.className='mini'; b1.textContent=(p.id===DB.cur?'えらび中':'えらぶ'); b1.addEventListener('click',function(){ DB.cur=p.id; dbSave(); updateWhoBadge(); renderData(); }); const b2=document.createElement('button'); b2.className='mini red'; b2.textContent='けす'; b2.addEventListener('click',function(){ if(!confirm(personLabel(p)+' を 記録ごと 消しますか？')) return; DB.people=DB.people.filter(x=>x.id!==p.id); DB.logs=DB.logs.filter(g=>g.pid!==p.id); if(DB.cur===p.id) DB.cur=DB.people.length?DB.people[0].id:null; dbSave(); updateWhoBadge(); renderData(); }); d.appendChild(b1); d.appendChild(b2); l.appendChild(d); }); }
+function renderWhoList(){ const l=$('whoList'); l.innerHTML=''; if(!DB.people.length){ l.innerHTML='<div class="empty">学習者を 登録すると 記録が のこせます</div>'; return; } DB.people.forEach(function(p){ const d=document.createElement('div'); d.className='who-item'+(p.id===DB.cur?' on':''); const n=DB.logs.filter(g=>g.pid===p.id).length; d.innerHTML='<span class="nm">'+personLabel(p)+'<span class="sm2"> '+n+'回</span></span>'; const b1=document.createElement('button'); b1.className='mini'; b1.textContent=(p.id===DB.cur?'えらび中':'えらぶ'); b1.addEventListener('click',function(){ DB.cur=p.id; dbSave(); updateWhoBadge(); renderData(); }); const b2=document.createElement('button'); b2.className='mini red'; b2.textContent='けす'; b2.addEventListener('click',function(){ if(!confirm(personLabel(p)+' を 記録ごと 消しますか？')) return; DB.people=DB.people.filter(x=>x.id!==p.id); DB.logs=DB.logs.filter(g=>g.pid!==p.id); if(DB.cur===p.id) DB.cur=DB.people.length?DB.people[0].id:null; dbSave(); updateWhoBadge(); renderData(); }); d.appendChild(b1); d.appendChild(b2); l.appendChild(d); }); }
 function pad2(s){ s=String(s).replace(/[^0-9]/g,''); return s.length?('0'+s).slice(-2):'00'; }
 $('addWhoBtn').addEventListener('click',function(){ const nen=(String($('fNen').value).replace(/[^0-9]/g,'')||'2').slice(0,1); const kumi=pad2($('fKumi').value), ban=pad2($('fBan').value), name=$('fName').value.trim(); const id=nen+kumi+ban+'-'+Date.now().toString(36); DB.people.push({id:id,nen:nen,kumi:kumi,ban:ban,name:name}); DB.cur=id; dbSave(); $('fNen').value=''; $('fKumi').value=''; $('fBan').value=''; $('fName').value=''; updateWhoBadge(); renderData(); beep('tap'); });
 $('csvBtn').addEventListener('click',function(){ const p=curPerson(); const logs=DB.logs.filter(g=>p&&g.pid===p.id); if(!p||!logs.length){ alert('書き出す記録が ありません。'); return; } const rows=[["学年","組","番号","名前","日時","種類","点数","時間(秒)","問題","解答","正解","正誤","回数"]]; logs.forEach(function(g){ g.items.forEach(function(it){ rows.push([p.nen,p.kumi,p.ban,p.name,new Date(g.at).toLocaleString('ja-JP'),g.kind,g.ten,g.sec,it.q,it.user,it.ans,it.ok?'○':'×',it.tries]); }); }); const csv=rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\r\n'); const blob=new Blob([new Uint8Array([0xEF,0xBB,0xBF]),csv],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='2次関数_yの増加量_学習記録_'+p.nen+p.kumi+p.ban+'.csv'; document.body.appendChild(a); a.click(); document.body.removeChild(a); });

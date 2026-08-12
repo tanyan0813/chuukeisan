@@ -241,7 +241,7 @@
     <div class="mlist" id="mainList"></div>
     <div class="foot"><a href="hireimenu.html">← 比例と反比例のメニューへもどる</a></div>
     <div class="credit">
-      岐阜女子大学（安藤忠展） Ver.5.01／ Web版
+      岐阜女子大学（安藤忠展） Ver.5.02／ Web版
     </div>
   </section>
 
@@ -466,11 +466,11 @@ function buildMain(){
 }
 
 /* ---- じょうたい ---- */
-let S={list:[],cur:0,pts:[],cursor:[0,0],locked:false,t0:0,showAns:false};
+let S={list:[],cur:0,pts:[],cursor:[0,0],locked:false,waiting:false,t0:0,showAns:false};
 let timerId=null;
 
 function startRound(){
-  S={list:[],cur:0,pts:[],cursor:[0,0],locked:false,t0:Date.now(),showAns:false};
+  S={list:[],cur:0,pts:[],cursor:[0,0],locked:false,waiting:false,t0:Date.now(),showAns:false};
   const used={};
   for(let i=0;i<PRMSU;i++){
     let a,guard=0;
@@ -489,7 +489,7 @@ function updateDots(){const ch=$("dots").children;
 
 function render(){
   const it=S.list[S.cur];
-  S.pts=[]; S.cursor=[0,0]; S.locked=false; S.showAns=false;
+  S.pts=[]; S.cursor=[0,0]; S.locked=false; S.waiting=false; S.showAns=false;
   $("msg").textContent=""; $("msg").className="msg";
   $("reveal").classList.remove("show"); $("reveal").innerHTML="";
   $("stamp").innerHTML=""; $("hintBox").classList.remove("show");
@@ -498,11 +498,11 @@ function render(){
 }
 function drawGraph(){
   const it=S.list[S.cur];
-  $("graphWrap").innerHTML=graphSVG(it.a, S.pts, S.locked?null:S.cursor, S.showAns);
+  $("graphWrap").innerHTML=graphSVG(it.a, S.pts, (S.locked||S.waiting)?null:S.cursor, S.showAns);
   const svg=document.getElementById("gsvg");
   if(svg) svg.querySelectorAll('.hit').forEach(function(c){
     c.addEventListener('click',function(){
-      if(S.locked) return;
+      if(S.locked||S.waiting) return;
       S.cursor=[parseInt(c.dataset.x,10),parseInt(c.dataset.y,10)];
       place();
     });
@@ -514,17 +514,17 @@ function updatePicked(){
     : "カーソル（0, 0）　矢印キーで うごかして えらびます";
 }
 function place(){
-  if(S.locked) return;
+  if(S.locked||S.waiting) return;
   if(S.pts.length>=2){ beep("wrong"); return; }
   const p=S.cursor;
   if(S.pts.length===1&&S.pts[0][0]===p[0]&&S.pts[0][1]===p[1]){ beep("wrong");
     $("msg").textContent="同じ点は えらべません"; $("msg").className="msg bad";
-    setTimeout(function(){if(!S.locked)$("msg").textContent="";},1200); return; }
+    setTimeout(function(){if(!S.locked&&!S.waiting)$("msg").textContent="";},1200); return; }
   S.pts.push([p[0],p[1]]); beep("type"); drawGraph(); updatePicked();
 }
-function undo(){ if(S.locked) return; S.pts.pop(); beep("type"); drawGraph(); updatePicked(); }
+function undo(){ if(S.locked||S.waiting) return; S.pts.pop(); beep("type"); drawGraph(); updatePicked(); }
 function moveCur(dx,dy){
-  if(S.locked) return;
+  if(S.locked||S.waiting) return;
   const nx=Math.max(-RANGE,Math.min(RANGE,S.cursor[0]+dx));
   const ny=Math.max(-RANGE,Math.min(RANGE,S.cursor[1]+dy));
   S.cursor=[nx,ny]; beep("type"); drawGraph();
@@ -539,7 +539,7 @@ document.querySelectorAll('.arrows button[data-d]').forEach(function(b){
   });
 });
 $("hintBtn").addEventListener("click",function(){beep("tap");$("hintBox").classList.toggle("show");});
-$("enterBtn").addEventListener("click",function(){ if(S.locked) next(); else submit(); });
+$("enterBtn").addEventListener("click",function(){ if(S.waiting) return; if(S.locked) next(); else submit(); });
 document.addEventListener("keydown",function(e){
   if(screens.play.classList.contains("active")){
     if(e.key==="ArrowLeft"){moveCur(-1,0);e.preventDefault();}
@@ -548,7 +548,8 @@ document.addEventListener("keydown",function(e){
     else if(e.key==="ArrowDown"){moveCur(0,-1);e.preventDefault();}
     else if(e.key===" "){place();e.preventDefault();}
     else if(e.key==="Backspace"){undo();e.preventDefault();}
-    else if(e.key==="Enter"){ if(S.locked) next(); else if(S.pts.length<2) place(); else submit(); e.preventDefault(); }
+    else if(e.key==="Enter"){ e.preventDefault(); if(S.waiting) return;
+      if(S.locked) next(); else if(S.pts.length<2) place(); else submit(); }
     return;
   }
   if(screens.main.classList.contains("active")&&(e.key==="1"||e.key==="2")){
@@ -570,11 +571,11 @@ function judge(pts,a){
   return {ok:false,type:null};
 }
 function submit(){
-  if(S.locked) return;
+  if(S.locked||S.waiting) return;   /* ○✕を 出している あいだは 判定しない */
   const it=S.list[S.cur];
   if(S.pts.length<2){ beep("wrong");
     $("msg").textContent="点を ２つ えらびましょう"; $("msg").className="msg bad";
-    setTimeout(function(){if(!S.locked)$("msg").textContent="";},1400); return; }
+    setTimeout(function(){if(!S.locked&&!S.waiting)$("msg").textContent="";},1400); return; }
   it.tries++;
   const r=judge(S.pts,it.a);
   if(r.ok){
@@ -582,7 +583,7 @@ function submit(){
     stamp("maru"); beep("correct");
     $("msg").textContent="正解！"; $("msg").className="msg good";
     drawGraph();
-    setTimeout(next,1200);
+    scheduleNext(1200);
   } else {
     stamp("batsu"); beep("wrong");
     const last=it.tries>=MISSN;
@@ -594,14 +595,21 @@ function submit(){
       drawGraph();
       $("reveal").innerHTML='正解の グラフは <b>'+eqText(it.a)+'</b>（赤い点線）';
       $("reveal").classList.add("show");
-      setTimeout(next,2800);
+      scheduleNext(2800);
     } else {
+      S.waiting=true;                          /* ✕の あいだは 待つ */
+      drawGraph();
       setTimeout(function(){ $("stamp").innerHTML=""; $("msg").textContent="";
-        S.pts=[]; drawGraph(); updatePicked(); },1300);
+        S.waiting=false; S.pts=[]; drawGraph(); updatePicked(); },1300);
     }
   }
 }
-function next(){ S.cur++; if(S.cur>=PRMSU) finish(); else render(); }
+let nextTimer=null;
+/* ○✕を 見せたあと 次へ（クリックと タイマーが かさなっても 1回だけ） */
+function scheduleNext(ms){ clearTimeout(nextTimer); nextTimer=setTimeout(next,ms); }
+function next(){ clearTimeout(nextTimer); nextTimer=null;
+  S.locked=true;                            /* すすむ あいだの 二重うけつけを 止める */
+  S.cur++; if(S.cur>=PRMSU) finish(); else render(); }
 function stamp(t){const el=$("stamp");
   if(t==="maru"){el.className="stamp maru";
     el.innerHTML='<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="#EA5040" stroke-width="9"/><circle cx="50" cy="50" r="27" fill="none" stroke="#EA5040" stroke-width="7"/></svg>';

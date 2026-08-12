@@ -140,6 +140,9 @@
   .enter-btn{width:100%;margin-top:10px;border:none;cursor:pointer;font-family:inherit;font-weight:900;
     border-radius:16px;color:#fff;padding:14px 0;font-size:19px;background:var(--green);box-shadow:0 5px 0 var(--green-deep);}
   .enter-btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--green-deep);}
+  .next-btn{width:100%;margin-top:10px;border:none;cursor:pointer;font-family:inherit;font-weight:900;
+    border-radius:16px;color:var(--ocean);padding:12px 0;font-size:16px;background:#E3F1F7;box-shadow:0 5px 0 #BFDCE8;}
+  .next-btn:active{transform:translateY(4px);box-shadow:0 1px 0 #BFDCE8;}
 
   /* ---- result ---- */
   .result-card{background:var(--card);border-radius:26px;box-shadow:var(--shadow);padding:24px 18px 22px;text-align:center;}
@@ -246,7 +249,7 @@
     <div class="mlist" id="mainList"></div>
     <div class="foot"><a href="doriru.html">← 単元メニューへもどる</a></div>
     <div class="credit">
-      岐阜女子大学（安藤忠展） Ver. 5.01／ Web版
+      岐阜女子大学（安藤忠展） Ver. 5.02／ Web版
     </div>
   </section>
 
@@ -325,6 +328,7 @@
       <button class="key sign" data-k="-">－</button><button class="key" data-k="0">0</button>
       <button class="key del" data-k="del">⌫</button>
     </div>
+    <button class="next-btn" id="nextBtn">次へ ▶ ｙ</button>
     <button class="enter-btn" id="enterBtn">こたえあわせ</button>
   </section>
 
@@ -520,11 +524,11 @@ function buildMain(){
 }
 
 /* ---- じょうたい ---- */
-let S={mode:0,list:[],cur:0,ux:"",uy:"",act:"x",locked:false,t0:0};
+let S={mode:0,list:[],cur:0,ux:"",uy:"",act:"x",locked:false,waiting:false,t0:0};
 let timerId=null;
 
 function startRound(mode){
-  S={mode:mode,list:[],cur:0,ux:"",uy:"",act:"x",locked:false,t0:Date.now()};
+  S={mode:mode,list:[],cur:0,ux:"",uy:"",act:"x",locked:false,waiting:false,t0:Date.now()};
   const pool = MODES[mode].rand ? DAT1.concat(DAT2,DAT3,DAT4) : MODES[mode].data;
   const idx=[]; while(idx.length<PRMSU){ const r=rnd(0,pool.length-1); if(idx.indexOf(r)<0) idx.push(r); }
   idx.forEach(function(r){ S.list.push({p:pool[r],tries:0,correct:false,ux:"",uy:""}); });
@@ -540,11 +544,11 @@ function updateDots(){const ch=$("dots").children;
 
 function render(){
   const it=S.list[S.cur];
-  S.ux=""; S.uy=""; S.act="x"; S.locked=false;
+  S.ux=""; S.uy=""; S.act="x"; S.locked=false; S.waiting=false;
   $("msg").textContent=""; $("msg").className="msg";
   $("reveal").classList.remove("show"); $("reveal").innerHTML="";
   $("stamp").innerHTML="";
-  $("hint").textContent="マスを タップして χ・ｙ の じゅんに 入れましょう";
+  $("hint").textContent="「次へ」ボタンや マスの タップで χ・ｙ を えらべます";
   $("eq1").textContent=it.p[0];
   $("eq2").textContent=it.p[1];
   updateDots(); updateBox();
@@ -552,16 +556,25 @@ function render(){
 function updateBox(){
   const bx=$("bx"), by=$("by");
   bx.textContent=S.ux.replace(/-/g,'－'); by.textContent=S.uy.replace(/-/g,'－');
-  bx.classList.toggle("act",S.act==="x"&&!S.locked);
-  by.classList.toggle("act",S.act==="y"&&!S.locked);
-  bx.classList.toggle("blink",S.act==="x"&&S.ux===""&&!S.locked);
-  by.classList.toggle("blink",S.act==="y"&&S.uy===""&&!S.locked);
+  const busy=S.locked||S.waiting;
+  bx.classList.toggle("act",S.act==="x"&&!busy);
+  by.classList.toggle("act",S.act==="y"&&!busy);
+  bx.classList.toggle("blink",S.act==="x"&&S.ux===""&&!busy);
+  by.classList.toggle("blink",S.act==="y"&&S.uy===""&&!busy);
+  updateNextBtn();
 }
-$("bx").addEventListener("click",function(){if(S.locked)return;S.act="x";updateBox();});
-$("by").addEventListener("click",function(){if(S.locked)return;S.act="y";updateBox();});
+/* 「次へ」ボタンの 文字（つぎに うつる マスの 名前） */
+function updateNextBtn(){ const btn=$("nextBtn"); if(!btn) return;
+  btn.textContent="次へ ▶ "+(S.act==="x"?"ｙ":"χ");
+  btn.style.display=(S.locked||S.waiting)?"none":"block"; }
+$("bx").addEventListener("click",function(){if(S.locked||S.waiting)return;S.act="x";updateBox();});
+$("by").addEventListener("click",function(){if(S.locked||S.waiting)return;S.act="y";updateBox();});
+$("nextBtn").addEventListener("click",function(){ if(S.locked||S.waiting) return;
+  S.act=(S.act==="x"?"y":"x"); beep("type"); updateBox(); });
 
 /* ---- キー ---- */
 function pressKey(k){
+  if(S.waiting) return;                       /* ✕を 出している あいだは キーを うけつけない */
   if(S.locked){ if(k==="enter") next(); return; }
   const cur=S.act==="x"?S.ux:S.uy;
   const set=v=>{ if(S.act==="x") S.ux=v; else S.uy=v; };
@@ -570,8 +583,6 @@ function pressKey(k){
   if(k==="-"){ if(cur!=="") return; set("-"); beep("type"); updateBox(); return; }
   if(cur.replace("-","").length>=3) return;
   set(cur+k); beep("type"); updateBox();
-  // χ を 入れたら 自動で ｙ へ
-  if(S.act==="x"&&S.uy===""&&(S.ux.replace("-","").length>=1)){ /* そのまま */ }
 }
 $("keypad").addEventListener("click",function(e){const b=e.target.closest(".key");if(b)pressKey(b.dataset.k);});
 $("enterBtn").addEventListener("click",function(){pressKey("enter");});
@@ -600,7 +611,7 @@ function missType(ux,uy,cx,cy,isLast){
   return isLast?0:1;
 }
 function submit(){
-  if(S.locked) return;
+  if(S.locked||S.waiting) return;   /* ○✕を 出している あいだは 判定しない */
   const it=S.list[S.cur], cx=it.p[2], cy=it.p[3];
   if(S.ux===""||S.ux==="-"){ S.act="x"; updateBox(); beep("wrong"); return; }
   if(S.uy===""||S.uy==="-"){ S.act="y"; updateBox(); beep("wrong"); return; }
@@ -610,7 +621,7 @@ function submit(){
     S.locked=true; it.correct=true; it.ux=String(ux); it.uy=String(uy);
     stamp("maru"); beep("correct");
     $("msg").textContent="正解！"; $("msg").className="msg good";
-    setTimeout(next,1050);
+    scheduleNext(1050);
   } else {
     stamp("batsu"); beep("wrong");
     const last=it.tries>=MISSN, mt=missType(ux,uy,cx,cy,last);
@@ -620,14 +631,21 @@ function submit(){
       S.locked=true; it.correct=false; it.ux=String(ux); it.uy=String(uy);
       $("reveal").innerHTML='正解＝<b>χ＝'+String(cx).replace('-','－')+'、ｙ＝'+String(cy).replace('-','－')+'</b>';
       $("reveal").classList.add("show");
-      setTimeout(next,2400);
+      scheduleNext(2400);
     } else {
+      S.waiting=true;                          /* ✕の あいだは 待つ */
+      updateBox();
       setTimeout(function(){$("stamp").innerHTML="";$("msg").textContent="";
-        S.ux="";S.uy="";S.act="x";updateBox();},1000);
+        S.waiting=false; S.ux="";S.uy="";S.act="x";updateBox();},1000);
     }
   }
 }
-function next(){ S.cur++; if(S.cur>=PRMSU) finish(); else render(); }
+let nextTimer=null;
+/* ○✕を 見せたあと 次へ（クリックと タイマーが かさなっても 1回だけ） */
+function scheduleNext(ms){ clearTimeout(nextTimer); nextTimer=setTimeout(next,ms); }
+function next(){ clearTimeout(nextTimer); nextTimer=null;
+  S.locked=true;                            /* すすむ あいだの 二重うけつけを 止める */
+  S.cur++; if(S.cur>=PRMSU) finish(); else render(); }
 function stamp(t){const el=$("stamp");
   if(t==="maru"){el.className="stamp maru";
     el.innerHTML='<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="#EA5040" stroke-width="9"/><circle cx="50" cy="50" r="27" fill="none" stroke="#EA5040" stroke-width="7"/></svg>';

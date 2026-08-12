@@ -265,7 +265,7 @@
     <div class="mlist" id="mainList"></div>
     <div class="foot"><a href="kansuumenu.html">← １次関数のメニューへもどる</a></div>
     <div class="credit">
-      岐阜女子大学（安藤忠展） Ver.5.02 ／ Web版
+      岐阜女子大学（安藤忠展） Ver.5.03 ／ Web版
     </div>
   </section>
 
@@ -446,11 +446,11 @@ function buildMain(){
   });
 }
 
-let S={mode:0,list:[],cur:0,locked:false,t0:0};
+let S={mode:0,list:[],cur:0,locked:false,waiting:false,t0:0};
 let timerId=null;
 
 function startRound(mode){
-  S={mode:mode,list:[],cur:0,locked:false,t0:Date.now()};
+  S={mode:mode,list:[],cur:0,locked:false,waiting:false,t0:Date.now()};
   const seen={};
   for(let i=0;i<PRMSU;i++){
     let p, key;
@@ -516,7 +516,7 @@ function graphHTML(it,reveal){
 
 function render(){
   const it=S.list[S.cur], m=MODES[it.mode];
-  S.locked=false;
+  S.locked=false; S.waiting=false;
   $('msg').textContent=''; $('msg').className='msg';
   $('reveal').classList.remove('show'); $('reveal').innerHTML='';
   $('stamp').className='stamp'; $('stamp').innerHTML=''; $('hintBox').classList.remove('show');
@@ -533,13 +533,13 @@ function render(){
 function bindGraph(){
   $('qline').querySelectorAll('.gcell').forEach(function(el){
     el.addEventListener('click',function(){
-      if(S.locked) return;
+      if(S.locked||S.waiting) return;
       const it=S.list[S.cur];
       const x=parseInt(el.dataset.x,10), y=parseInt(el.dataset.y,10);
       const same=it.picks.find(p=>p.x===x&&p.y===y);
       if(same){ beep('wrong'); return; }
       if(it.picks.length>=2){ beep('wrong'); return; }
-      it.picks.push({x:x,y:y}); beep('tap'); clearStamp();
+      it.picks.push({x:x,y:y}); beep('tap'); clearStamp(); it.judged=null;
       $('qline').innerHTML=graphHTML(it,false); bindGraph(); updateSelectionView();
     });
   });
@@ -547,20 +547,20 @@ function bindGraph(){
 function updateSelectionView(){
   const it=S.list[S.cur];
   $('ans').innerHTML = it.picks.length ? it.picks.map(ptText).join('　') : '—';
-  $('ans').classList.toggle('blink',it.picks.length===0&&!S.locked);
+  $('ans').classList.toggle('blink',it.picks.length===0&&!S.locked&&!S.waiting);
   $('pickNote').textContent = it.picks.length===0 ? '1つめの点を えらびましょう。' : (it.picks.length===1 ? '2つめの点を えらびましょう。' : '2点そろいました。こたえあわせできます。');
 }
 /* ✕（○）の スタンプと メッセージを 消す */
 function clearStamp(){ const el=$('stamp'); el.className='stamp'; el.innerHTML='';
   const m=$('msg'); m.textContent=''; m.className='msg'; }
-function clearPicks(){ const it=S.list[S.cur]; if(S.locked) return; it.picks=[]; clearStamp(); $('qline').innerHTML=graphHTML(it,false); bindGraph(); updateSelectionView(); beep('tap'); }
-function undoPick(){ const it=S.list[S.cur]; if(S.locked||!it.picks.length) return; it.picks.pop(); clearStamp(); $('qline').innerHTML=graphHTML(it,false); bindGraph(); updateSelectionView(); beep('tap'); }
+function clearPicks(){ const it=S.list[S.cur]; if(S.locked||S.waiting) return; it.picks=[]; it.judged=null; clearStamp(); $('qline').innerHTML=graphHTML(it,false); bindGraph(); updateSelectionView(); beep('tap'); }
+function undoPick(){ const it=S.list[S.cur]; if(S.locked||S.waiting||!it.picks.length) return; it.picks.pop(); it.judged=null; clearStamp(); $('qline').innerHTML=graphHTML(it,false); bindGraph(); updateSelectionView(); beep('tap'); }
 $('undoPtBtn').addEventListener('click',undoPick);
 $('clearPtBtn').addEventListener('click',clearPicks);
 $('enterBtn').addEventListener('click',submit);
 $('hintBtn').addEventListener('click',function(){ beep('tap'); $('hintBox').classList.toggle('show'); });
 document.addEventListener('keydown',function(e){
-  if(screens.play.classList.contains('active') && e.key==='Enter'){ submit(); e.preventDefault(); return; }
+  if(screens.play.classList.contains('active') && e.key==='Enter'){ e.preventDefault(); if(!S.waiting) submit(); return; }
   if(screens.main.classList.contains('active')&&e.key>='1'&&e.key<='2'){
     const i=parseInt(e.key,10)-1; if(MODES[i].data) openData(); else startRound(i);
   }
@@ -577,31 +577,47 @@ function classify(it){
   if(slope===it.a && intercept!==it.b) return {ok:false, miss:3, slope:slope, intercept:intercept};
   return {ok:false, miss:1, slope:slope, intercept:intercept};
 }
+function pickKey(it){ return it.picks.map(function(p){return p.x+','+p.y;}).join('/'); }
 function submit(){
-  if(S.locked) return;
+  if(S.locked||S.waiting) return;      /* ○✕を 出している あいだは 判定しない */
   const it=S.list[S.cur];
   if(it.picks.length<2){ beep('wrong'); $('msg').textContent='2点を えらびましょう。'; $('msg').className='msg bad'; return; }
+  if(it.judged===pickKey(it)){         /* 同じ 2点は 何回 おしても 数えない */
+    beep('wrong'); $('msg').textContent='点を かえてから こたえあわせ しましょう。'; $('msg').className='msg bad'; return; }
+  it.judged=pickKey(it);
   it.tries++;
   const r=classify(it);
   if(r.ok){
     S.locked=true; it.correct=true; it.user=it.picks.slice();
     stamp('maru'); beep('correct');
     $('msg').textContent='正解！'; $('msg').className='msg good';
-    setTimeout(next,1100);
+    scheduleNext(1100);
   } else {
     stamp('batsu'); beep('wrong');
     it.misses.push(r.miss);
     $('msg').textContent=MISSMSG[r.miss]||MISSMSG[1]; $('msg').className='msg bad';
     const last=it.tries>=MISSN;
+    if(!last){
+      S.waiting=true;                  /* ✕の あいだは 待つ */
+      updateSelectionView();
+      setTimeout(function(){           /* 1.1秒 たったら ✕ を 消す */
+        clearStamp(); S.waiting=false; updateSelectionView();
+      },1100);
+    }
     if(last){
       S.locked=true; it.correct=false; it.user=it.picks.slice();
       $('reveal').innerHTML=graphHTML(it,true)+'<div style="margin-top:8px">正解： <b>傾き＝'+signed(it.a)+'　切片＝'+signed(it.b)+'</b></div><div style="margin-top:4px"><b>'+eqHTML(it.a,it.b)+'</b></div>';
       $('reveal').classList.add('show');
-      setTimeout(next,2600);
+      scheduleNext(2600);
     }
   }
 }
-function next(){ S.cur++; if(S.cur>=PRMSU) finish(); else render(); }
+let nextTimer=null;
+/* ○✕を 見せたあと 次へ（クリックと タイマーが かさなっても 1回だけ） */
+function scheduleNext(ms){ clearTimeout(nextTimer); nextTimer=setTimeout(next,ms); }
+function next(){ clearTimeout(nextTimer); nextTimer=null;
+  S.locked=true;                            /* すすむ あいだの 二重うけつけを 止める */
+  S.cur++; if(S.cur>=PRMSU) finish(); else render(); }
 function stamp(t){ const el=$('stamp'); if(t==='maru'){ el.className='stamp maru'; el.innerHTML='<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="#EA5040" stroke-width="9"/><circle cx="50" cy="50" r="27" fill="none" stroke="#EA5040" stroke-width="7"/></svg>'; } else { el.className='stamp batsu'; el.innerHTML='<svg viewBox="0 0 100 100"><line x1="22" y1="22" x2="78" y2="78" stroke="#EA5040" stroke-width="11" stroke-linecap="round"/><line x1="78" y1="22" x2="22" y2="78" stroke="#EA5040" stroke-width="11" stroke-linecap="round"/></svg>'; } }
 function startTimer(){ clearInterval(timerId); timerId=setInterval(function(){ $('timerText').textContent=fmtTime(Math.floor((Date.now()-S.t0)/1000)); },500); }
 function fmtTime(s){ const m=Math.floor(s/60); return m===0?s+'びょう':m+'ふん'+(s%60)+'びょう'; }
