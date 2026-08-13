@@ -75,6 +75,7 @@
   .mcard .n{flex:none;width:30px;height:30px;border-radius:50%;background:var(--teal2);color:#fff;font-weight:900;
     display:grid;place-items:center;font-size:14px;font-family:"M PLUS Rounded 1c";box-shadow:0 3px 0 var(--teal2-deep);}
   .mcard.rand .n{background:var(--yellow);box-shadow:0 3px 0 var(--yellow-deep);color:#6a5000;}
+  .mcard.miss .n{background:var(--red);box-shadow:0 3px 0 var(--red-deep);}
   .mcard.blue .n{background:var(--blue);box-shadow:0 3px 0 var(--blue-deep);}
   .mcard .lbl{font-weight:900;font-size:15px;line-height:1.35;}
   .mcard .lbl i{font-style:italic;color:var(--teal2);}
@@ -184,6 +185,15 @@
   .big-btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--green-deep);}
   .big-btn.gray{background:#fff;color:var(--ink);box-shadow:0 5px 0 rgba(55,66,74,.15);}
   .big-btn.gray:active{box-shadow:0 1px 0 rgba(55,66,74,.15);}
+  .big-btn.red{background:var(--red);box-shadow:0 5px 0 var(--red-deep);}
+  .big-btn.red:active{box-shadow:0 1px 0 var(--red-deep);}
+
+  /* ---- まちがい直しコース ---- */
+  .miss-list{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 12px;}
+  .miss-chip{background:#FDECE9;color:var(--red-deep);border-radius:10px;padding:5px 9px;font-size:13px;
+    font-family:"M PLUS Rounded 1c";font-weight:900;}
+  .miss-chip.shaky{background:#FDF0CF;color:#6a5000;}
+  .miss-lead{font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:8px;}
 
   /* ---- 学習記録 ---- */
   .panel{background:var(--card);border-radius:22px;box-shadow:var(--shadow);padding:18px 16px;margin-bottom:14px;}
@@ -267,7 +277,7 @@
     <div class="mlist" id="mainList"></div>
     <div class="foot"><a href="2kanmenu.html">← ２次関数のメニューへもどる</a></div>
     <div class="credit">
- 岐阜女子大学（安藤忠展） Ver.5.01 ／ Web版
+ 岐阜女子大学（安藤忠展） Ver.5.02 ／ Web版
     </div>
   </section>
 
@@ -299,6 +309,14 @@
       <div style="margin-top:14px">
         <div style="font-size:12px;font-weight:900;color:var(--ink-soft);margin-bottom:4px">点数の うつりかわり（古い→新しい）</div>
         <div class="spark" id="spark"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3><span class="bar2"></span>まちがい直しコース</h3>
+      <div class="miss-lead" id="missLead"></div>
+      <div class="miss-list" id="missList"></div>
+      <div class="rowbtns">
+        <button class="sbtn pur" id="missStartBtn">まちがい直しを 始める</button>
       </div>
     </div>
     <div class="panel"><h3><span class="bar2"></span>まちがいの傾向</h3><div class="miss-bars" id="missBars"></div></div>
@@ -353,6 +371,7 @@
       <div class="review" id="review"></div>
       <div class="kaiseki panel"><h3><span class="bar2"></span>解答の分析</h3><div class="miss-bars" id="kaisekiBars"></div></div>
       <div class="result-actions">
+        <button class="big-btn red" id="missAgainBtn" style="display:none">まちがい直しをする</button>
         <button class="big-btn" id="againBtn">もっと練習する</button>
         <button class="big-btn gray" id="homeBtn">メニューへ</button>
       </div>
@@ -374,7 +393,7 @@ const sg=()=>rnd(0,1)?1:-1;
 const PRMSU=5, MISSN=3;
 
 /* 原作のＫＲ情報メッセージ（0=正解, 1〜=まちがいの種類） */
-const MISSMSG=["間違っていますよ！","もう一度　考えよう！","符号が違います！","絶対値が違います！","１が余分です！","ｘがありません！","２乗をわすれています！"];
+const MISSMSG=["間違っていますよ！","もう一度 考えよう！","符号が違います！","絶対値が違います！","１が余分です！","ｘがありません！","２乗をわすれています！"];
 const MISSMN =["正解","間違い","符号が違う","絶対値が違う","１が余分","ｘがない","２乗をわすれ"];
 
 function signed(n){ return n<0?'－'+Math.abs(n):String(n); }
@@ -386,15 +405,6 @@ function qText(it){
   return eqText(it.a)+' の比例定数';
 }
 function answerText(it){ return String(it.answer); }
-
-const MODES=[
-  {t:'ｘからｙの値を求める問題', sm:'ｙ＝ａχ² に ｘの値を あてはめて ｙを求める', gen:makeYFromX,
-   hint:'<b><i>y</i>＝<i>a</i><i>χ</i><sup>2</sup></b> の <i>χ</i> に 数を あてはめます。<br>先に <b><i>χ</i><sup>2</sup></b>（χ×χ）を 計算して、そのあとで <b><i>a</i></b> を かけましょう。<br><i>χ</i> が 負の数でも、2乗すると 正の数 になります。'},
-  {t:'比例定数を求める問題', sm:'ｙ＝ａχ² の ａ を 読みとる', gen:makeA,
-   hint:'<b><i>y</i>＝<i>a</i><i>χ</i><sup>2</sup></b> の <b><i>a</i></b> が 比例定数です。<br><i>χ</i><sup>2</sup> の前の数を そのまま 答えます。符号（＋・－）も わすれずに。<br><i>y</i>＝<i>χ</i><sup>2</sup> のときは <b>1</b>、<i>y</i>＝－<i>χ</i><sup>2</sup> のときは <b>－1</b> です。'},
-  {t:'ランダムコース', rand:true, sm:'2つのパターンから ランダムに出題'},
-  {t:'学習者反応データ処理システム', data:true, sm:'学習の記録を 見る'}
-];
 
 /* 原作 *D.SET.1 ： a=±1〜9、x=±1〜9、|y|≦150 */
 function makeYFromX(){
@@ -409,6 +419,17 @@ function makeA(){
   const a=rnd(1,9)*sg();
   return {kind:1,a:a,answer:a};
 }
+
+const MODES=[
+  {t:'ｘからｙの値を求める問題', sm:'ｙ＝ａχ² に ｘの値を あてはめて ｙを求める', gen:makeYFromX,
+   hint:'<b><i>y</i>＝<i>a</i><i>χ</i><sup>2</sup></b> の <i>χ</i> に 数を あてはめます。<br>先に <b><i>χ</i><sup>2</sup></b>（χ×χ）を 計算して、そのあとで <b><i>a</i></b> を かけましょう。<br><i>χ</i> が 負の数でも、2乗すると 正の数 になります。'},
+  {t:'比例定数を求める問題', sm:'ｙ＝ａχ² の ａ を 読みとる', gen:makeA,
+   hint:'<b><i>y</i>＝<i>a</i><i>χ</i><sup>2</sup></b> の <b><i>a</i></b> が 比例定数です。<br><i>χ</i><sup>2</sup> の前の数を そのまま 答えます。符号（＋・－）も わすれずに。<br><i>y</i>＝<i>χ</i><sup>2</sup> のときは <b>1</b>、<i>y</i>＝－<i>χ</i><sup>2</sup> のときは <b>－1</b> です。'},
+  {t:'ランダムコース', rand:true, sm:'2つのパターンから ランダムに出題'},
+  {t:'まちがい直し', review:true, sm:'まちがえた問題を あつめて 練習'},
+  {t:'学習者反応データ処理システム', data:true, sm:'学習の記録を 見る'}
+];
+const CAT_REVIEW=3, CAT_DATA=4;
 
 const KEY='2kan1.records.v1';
 const Store=(function(){
@@ -434,6 +455,86 @@ function saveLog(ten,sec,ritu,hyouka,sousuu){
   dbSave();
 }
 
+/* =========================================================
+   まちがい直しコース用の 問題プール
+   ========================================================= */
+function missPool(){
+  const p=curPerson();
+  const out={miss:[],shaky:[]};
+  if(!p) return out;
+  const st={};
+  DB.logs.forEach(function(g){
+    if(g.pid!==p.id) return;
+    g.items.forEach(function(it){
+      const state = !it.ok ? 2 : (it.tries>1 ? 1 : 0);
+      st[it.q]={ raw:it, state:state, at:g.at, kind:g.kind };
+    });
+  });
+  Object.keys(st).forEach(function(k){
+    const v=st[k];
+    if(v.state===2) out.miss.push(v);
+    else if(v.state===1) out.shaky.push(v);
+  });
+  const newFirst=function(a,b){ return b.at-a.at; };
+  out.miss.sort(newFirst); out.shaky.sort(newFirst);
+  return out;
+}
+function shuffled(a){ const r=a.slice();
+  for(let i=r.length-1;i>0;i--){ const j=rnd(0,i); const t=r[i]; r[i]=r[j]; r[j]=t; }
+  return r; }
+function missCount(){ const m=missPool(); return m.miss.length+m.shaky.length; }
+
+function parseQItem(it){
+  const q = it.q;
+  if(q.includes('のときの y')){
+    const m = /y=([+-]?\d*)x\^2 で x=([+-]?\d+)/.exec(q);
+    if(m){
+      const a = m[1]==='-' ? -1 : (m[1]===''? 1 : parseInt(m[1],10));
+      const x = parseInt(m[2],10);
+      return {kind:0, a:a, x:x, answer:a*x*x, mode:0};
+    }
+  } else {
+    const m = /y=([+-]?\d*)x\^2 の比例定数/.exec(q);
+    if(m){
+      const a = m[1]==='-' ? -1 : (m[1]===''? 1 : parseInt(m[1],10));
+      return {kind:1, a:a, answer:a, mode:1};
+    }
+  }
+  return MODES[rnd(0,1)].gen();
+}
+
+function startReview(){
+  const pool=missPool(), seen={}, list=[];
+  let nMiss=0, nShaky=0;
+  shuffled(pool.miss).forEach(function(x){
+    if(list.length>=PRMSU||seen[x.raw.q]) return;
+    seen[x.raw.q]=1; nMiss++;
+    const p=parseQItem(x.raw);
+    p.input=''; p.tries=0; p.correct=false; p.user=''; p.misses=[]; p.src="miss";
+    list.push(p);
+  });
+  shuffled(pool.shaky).forEach(function(x){
+    if(list.length>=PRMSU||seen[x.raw.q]) return;
+    seen[x.raw.q]=1; nShaky++;
+    const p=parseQItem(x.raw);
+    p.input=''; p.tries=0; p.correct=false; p.user=''; p.misses=[]; p.src="shaky";
+    list.push(p);
+  });
+  let guard=0;
+  while(list.length<PRMSU&&guard<300){
+    guard++;
+    const mm=rnd(0,1);
+    const p=MODES[mm].gen();
+    const qKey = qText(p);
+    if(seen[qKey]) continue;
+    seen[qKey]=1;
+    p.mode=mm; p.input=''; p.tries=0; p.correct=false; p.user=''; p.misses=[]; p.src="new";
+    list.push(p);
+  }
+  const chip = (nMiss+nShaky)===0 ? 'まちがい直し（ランダム）' : 'まちがい直し';
+  beginRound(CAT_REVIEW, list, chip);
+}
+
 let soundOn=true, actx=null;
 function beep(type){ if(!soundOn) return;
   try{ actx=actx||new(window.AudioContext||window.webkitAudioContext)();
@@ -445,13 +546,28 @@ function beep(type){ if(!soundOn) return;
   }catch(e){}
 }
 
+function chooseMain(i){
+  const m=MODES[i]; if(!m) return;
+  beep('tap');
+  if(m.data) openData();
+  else if(m.review) startReview();
+  else startRound(i);
+}
+
 function buildMain(){
   const l=$('mainList'); l.innerHTML='';
+  const nMiss=missCount();
   MODES.forEach((m,i)=>{
     const b=document.createElement('button');
-    b.className='mcard'+(m.rand?' rand':'')+(m.data?' blue':'');
-    b.innerHTML='<span class="n">'+(i+1)+'</span><span class="lbl">'+m.t+'<span class="sm">'+m.sm+'</span></span>';
-    b.addEventListener('click',function(){ beep('tap'); if(m.data) openData(); else startRound(i); });
+    b.className='mcard'+(m.rand?' rand':'')+(m.review?' miss':'')+(m.data?' blue':'');
+    let sm=m.sm;
+    if(m.review){
+      sm = nMiss ? 'まちがえた問題を あつめて 5問（たりないぶんは ランダム）'
+                 : 'いまは 記録がないので ランダムに5問';
+    }
+    const key = i===4 ? '0' : String(i+1);
+    b.innerHTML='<span class="n">'+key+'</span><span class="lbl">'+m.t+'<span class="sm">'+sm+'</span></span>';
+    b.addEventListener('click',function(){ chooseMain(i); });
     l.appendChild(b);
   });
 }
@@ -459,10 +575,15 @@ function buildMain(){
 let S={mode:0,list:[],cur:0,locked:false,t0:0,typeCount:[0,0,0,0,0,0,0]};
 let timerId=null;
 
+function beginRound(mode, list, chip){
+  S={mode:mode,list:list,cur:0,locked:false,t0:Date.now(),typeCount:[0,0,0,0,0,0,0]};
+  $('modeChip').textContent=chip;
+  buildDots(); show('play'); startTimer(); render();
+}
+
 function uniqueKey(p){ return [p.kind,p.a,p.x].join(','); }
 function startRound(mode){
-  S={mode:mode,list:[],cur:0,locked:false,t0:Date.now(),typeCount:[0,0,0,0,0,0,0]};
-  const seen={};
+  const seen={}, list=[];
   for(let i=0;i<PRMSU;i++){
     let p, mm, key, guard=0;
     do{
@@ -472,10 +593,9 @@ function startRound(mode){
     }while(seen[key] && ++guard<200);
     seen[key]=1;
     p.mode=mm; p.input=''; p.tries=0; p.correct=false; p.user=''; p.misses=[];
-    S.list.push(p);
+    list.push(p);
   }
-  $('modeChip').textContent=kindName(mode);
-  buildDots(); show('play'); startTimer(); render();
+  beginRound(mode, list, kindName(mode));
 }
 function buildDots(){ const d=$('dots'); d.innerHTML=''; for(let i=0;i<PRMSU;i++){ const s=document.createElement('span'); s.className='dot'; d.appendChild(s);} }
 function updateDots(){ const ch=$('dots').children; for(let i=0;i<ch.length;i++){ const el=ch[i],it=S.list[i]; el.className='dot'; if(i<S.cur){ el.classList.add(it.correct?'ok':'ng'); el.textContent=it.correct?'○':'✕'; } else if(i===S.cur){ el.classList.add('now'); el.textContent=''; } else el.textContent=''; } }
@@ -510,7 +630,6 @@ function press(k){
   const it=S.list[S.cur];
   if(k==='del'){ if(!it.input) { beep('wrong'); return; } it.input=it.input.slice(0,-1); beep('tap'); updateInputView(); return; }
   if(k==='+'||k==='-'){
-    /* 符号は先頭のみ。もう一度おすと 入れかえ */
     if(it.input===''||it.input==='+'||it.input==='-') it.input=k;
     else { beep('wrong'); return; }
     beep('tap'); updateInputView(); return;
@@ -531,8 +650,8 @@ document.addEventListener('keydown',function(e){
     if(e.key==='+'){ press('+'); return; }
     return;
   }
-  if(screens.main.classList.contains('active')&&e.key>='1'&&e.key<='4'){
-    const i=parseInt(e.key,10)-1; if(MODES[i].data) openData(); else startRound(i);
+  if(screens.main.classList.contains('active')&&e.key>='0'&&e.key<='9'){
+    chooseMain(e.key==='0' ? CAT_DATA : parseInt(e.key,10)-1);
   }
 });
 
@@ -573,7 +692,7 @@ function submit(){
   } else {
     stamp('batsu'); beep('wrong');
     it.misses.push(r.miss);
-    $('msg').textContent=(it.tries>=MISSN?MISSMSG[0]:MISSMSG[1])+'　'+(MISSMSG[r.miss]||''); $('msg').className='msg bad';
+    $('msg').textContent=(it.tries>=MISSN?MISSMSG[0]:MISSMSG[1])+' '+(MISSMSG[r.miss]||''); $('msg').className='msg bad';
     if(it.tries>=MISSN){
       S.locked=true; it.correct=false;
       $('reveal').innerHTML=revealHTML(it);
@@ -607,18 +726,21 @@ function finish(){
   const ritu=sousuu?Math.floor(100*S.typeCount[0]/sousuu):0;
   const hy=hyoukaOf(ritu,ten);
   saveLog(ten,sec,ritu,hy,sousuu);
+  buildMain();
+  const nm=missCount();
+  $("missAgainBtn").style.display = (nm>0&&curPerson()) ? "" : "none";
   $('scoreNum').textContent=ten;
   const w=$('hanamaruWrap'), m=$('resultMsg');
   if(ten===100){ m.textContent='よくできました！'; m.style.color='var(--red)'; w.innerHTML=hanamaru(); beep('fanfare'); }
   else if(ten>=80){ m.textContent='あともうすこし！'; m.style.color='var(--yellow-deep)'; w.innerHTML=star(); beep('correct'); }
   else { m.textContent='もっとがんばろう！'; m.style.color='var(--green)'; w.innerHTML=face(); }
   const p0=curPerson();
-  $('resultTime').textContent='じかん： '+fmtTime(sec)+(p0?('　／　この種類は '+kaisuu(S.mode)+'回目'):'');
-  $('hyoukaBox').innerHTML='総合評価 <span class="st">【'+hy+'】</span>　正答率 '+ritu+'％（総解答数 '+sousuu+'回）';
+  $('resultTime').textContent='じかん： '+fmtTime(sec)+(p0?(' ／ この種類は '+kaisuu(S.mode)+'回目'):'');
+  $('hyoukaBox').innerHTML='総合評価 <span class="st">【'+hy+'】</span> 正答率 '+ritu+'％（総解答数 '+sousuu+'回）';
   const rv=$('review'); rv.innerHTML='';
   S.list.forEach(function(it){
     const row=document.createElement('div'); row.className='review-row';
-    const q = (it.kind===0) ? (eqHTML(it.a)+'　<i>χ</i>＝'+signed(it.x)) : (eqHTML(it.a)+'　比例定数');
+    const q = (it.kind===0) ? (eqHTML(it.a)+' <i>χ</i>＝'+signed(it.x)) : (eqHTML(it.a)+' 比例定数');
     row.innerHTML='<span class="rmark '+(it.correct?'ok':'ng')+'">'+(it.correct?'○':'✕')+'</span>'
       +'<span class="rq">'+q+'</span>'
       +'<span>'+(it.correct?'<span class="rc">'+(it.user||'—')+'</span>'
@@ -651,13 +773,16 @@ function renderData(){
   const sp=$('spark'); sp.innerHTML='';
   if(!logs.length) sp.innerHTML='<div class="empty" style="width:100%">まだ 記録が ありません</div>';
   else logs.slice(-24).forEach(function(g){ const b=document.createElement('div'); b.className='b'+(g.ten===100?' s100':(g.ten>=80?' s80':'')); b.style.height=Math.max(6,g.ten*0.6)+'px'; b.title=fmtDate(g.at)+' '+g.kind+' '+g.ten+'点'; sp.appendChild(b); });
+
+  renderMissCourse();
+
   const mc=[0,0,0,0,0,0,0];
   let miss=0;
   logs.forEach(g=>g.items.forEach(it=>(it.misses||[]).forEach(m=>{ if(m>=0&&m<=6){ mc[m]++; miss++; } })));
   const order=[2,3,6,1], labels=['符号が違う','絶対値が違う','２乗をわすれている','そのほか'], colors=['var(--teal2)','var(--blue)','var(--yellow-deep)','#B9C3C0'];
   const mb=$('missBars'); mb.innerHTML='';
   if(!miss) mb.innerHTML='<div class="empty">まちがいの 記録が ありません</div>';
-  else order.forEach(function(idx,i){ const n=mc[idx], pc=Math.round(n/miss*100); const d=document.createElement('div'); d.className='mb'; d.innerHTML='<span class="lab">'+labels[i]+'</span><span class="track"><span class="fill" style="width:'+pc+'%;background:'+colors[i]+'"></span></span><span class="cnt">'+n+'回</span>'; mb.appendChild(d); });
+  else order.forEach(function(idx,i){ const n=mc[idx], pc=miss?Math.round(n/miss*100):0; const d=document.createElement('div'); d.className='mb'; d.innerHTML='<span class="lab">'+labels[i]+'</span><span class="track"><span class="fill" style="width:'+pc+'%;background:'+colors[i]+'"></span></span><span class="cnt">'+n+'回</span>'; mb.appendChild(d); });
   const bk={}; logs.forEach(function(g){ if(!bk[g.kind]) bk[g.kind]={n:0,sum:0,best:0}; bk[g.kind].n++; bk[g.kind].sum+=g.ten; if(g.ten>bk[g.kind].best) bk[g.kind].best=g.ten; });
   const keys=Object.keys(bk), byk=$('byKind');
   if(!keys.length) byk.innerHTML='<div class="empty">まだ 記録が ありません</div>';
@@ -666,9 +791,37 @@ function renderData(){
   if(!logs.length) hs.innerHTML='<div class="empty">まだ 記録が ありません</div>';
   else { let h='<table class="rec"><tr><th>日時</th><th>種類</th><th style="text-align:right">点数</th><th style="text-align:right">評価</th><th style="text-align:right">時間</th></tr>'; logs.slice().reverse().slice(0,30).forEach(function(g,i){ const cls=g.ten===100?'sp100':(g.ten>=80?'sp80':'sp0'); h+='<tr class="hrow" data-i="'+i+'" style="cursor:pointer"><td>'+fmtDate(g.at)+'</td><td>'+g.kind+'</td><td class="n"><span class="scorepill '+cls+'">'+g.ten+'点</span></td><td class="n">'+(g.hyouka?'【'+g.hyouka+'】':'—')+'</td><td class="n">'+fmtTime(g.sec)+'</td></tr><tr><td colspan="5" style="padding:0"><div class="detail" id="dt'+i+'">'+detailHTML(g)+'</div></td></tr>'; }); hs.innerHTML=h+'</table>'; hs.querySelectorAll('.hrow').forEach(function(tr){ tr.addEventListener('click',function(){ $('dt'+tr.dataset.i).classList.toggle('show'); }); }); }
 }
-function detailHTML(g){ let h=''; g.items.forEach(function(it){ h+='<div class="'+(it.ok?'':'ng')+'">'+(it.ok?'○':'✕')+' '+it.q+' → '+(it.user||'—')+(it.ok?'':'　（正解＝'+it.ans+'）')+'</div>'; }); return h; }
+
+function renderMissCourse(){
+  const p=curPerson(), pool=missPool();
+  const n=pool.miss.length, s=pool.shaky.length, fixed=n+s;
+  const lead=$("missLead"), box=$("missList");
+  if(!p){
+    lead.textContent="学習者を えらぶと、その人が まちがえた問題を あつめて 出題します。（いまは ランダム5問になります）";
+  } else if(fixed===0){
+    lead.textContent="いま 直す問題は ありません。始めると ランダムに5問 出題します。";
+  } else {
+    lead.textContent="直したい問題を あつめて 5問 出題します。"
+      +(fixed<PRMSU?"（たりないぶんは ランダムに出題します）":"");
+  }
+  box.innerHTML="";
+  pool.miss.slice(0,12).concat(pool.shaky.slice(0,12-Math.min(12,pool.miss.length))).forEach(function(x){
+    const d=document.createElement("span");
+    d.className="miss-chip"+(x.state===1?" shaky":"");
+    d.innerHTML=x.raw.q.replace(/x/g,'<i>χ</i>');
+    d.title=(x.state===2?"まちがえた問題":"2回以上かかった問題")+"（正解 "+signed(x.raw.ans)+"）";
+    box.appendChild(d);
+  });
+  if(fixed>12) box.appendChild(Object.assign(document.createElement("span"),
+    {className:"miss-chip shaky",textContent:"ほか"}));
+  $("missStartBtn").textContent = fixed===0 ? "ランダムで 練習する" : "まちがい直しを 始める";
+  buildMain();
+}
+$("missStartBtn").addEventListener("click",function(){ beep("tap"); startReview(); });
+
+function detailHTML(g){ let h=''; g.items.forEach(function(it){ h+='<div class="'+(it.ok?'':'ng')+'">'+(it.ok?'○':'✕')+' '+it.q+' → '+(it.user||'—')+(it.ok?'':' （正解＝'+it.ans+'）')+'</div>'; }); return h; }
 function fmtDate(t){ const d=new Date(t); return (d.getMonth()+1)+'/'+d.getDate()+' '+d.getHours()+':'+('0'+d.getMinutes()).slice(-2); }
-function renderWhoList(){ const l=$('whoList'); l.innerHTML=''; if(!DB.people.length){ l.innerHTML='<div class="empty">学習者を 登録すると 記録が のこせます</div>'; return; } DB.people.forEach(function(p){ const d=document.createElement('div'); d.className='who-item'+(p.id===DB.cur?' on':''); const n=DB.logs.filter(g=>g.pid===p.id).length; d.innerHTML='<span class="nm">'+personLabel(p)+'<span class="sm2">　'+n+'回</span></span>'; const b1=document.createElement('button'); b1.className='mini'; b1.textContent=(p.id===DB.cur?'えらび中':'えらぶ'); b1.addEventListener('click',function(){ DB.cur=p.id; dbSave(); updateWhoBadge(); renderData(); }); const b2=document.createElement('button'); b2.className='mini red'; b2.textContent='けす'; b2.addEventListener('click',function(){ if(!confirm(personLabel(p)+' を 記録ごと 消しますか？')) return; DB.people=DB.people.filter(x=>x.id!==p.id); DB.logs=DB.logs.filter(g=>g.pid!==p.id); if(DB.cur===p.id) DB.cur=DB.people.length?DB.people[0].id:null; dbSave(); updateWhoBadge(); renderData(); }); d.appendChild(b1); d.appendChild(b2); l.appendChild(d); }); }
+function renderWhoList(){ const l=$('whoList'); l.innerHTML=''; if(!DB.people.length){ l.innerHTML='<div class="empty">学習者を 登録すると 記録が のこせます</div>'; return; } DB.people.forEach(function(p){ const d=document.createElement('div'); d.className='who-item'+(p.id===DB.cur?' on':''); const n=DB.logs.filter(g=>g.pid===p.id).length; d.innerHTML='<span class="nm">'+personLabel(p)+'<span class="sm2"> '+n+'回</span></span>'; const b1=document.createElement('button'); b1.className='mini'; b1.textContent=(p.id===DB.cur?'えらび中':'えらぶ'); b1.addEventListener('click',function(){ DB.cur=p.id; dbSave(); updateWhoBadge(); renderData(); }); const b2=document.createElement('button'); b2.className='mini red'; b2.textContent='けす'; b2.addEventListener('click',function(){ if(!confirm(personLabel(p)+' を 記録ごと 消しますか？')) return; DB.people=DB.people.filter(x=>x.id!==p.id); DB.logs=DB.logs.filter(g=>g.pid!==p.id); if(DB.cur===p.id) DB.cur=DB.people.length?DB.people[0].id:null; dbSave(); updateWhoBadge(); renderData(); }); d.appendChild(b1); d.appendChild(b2); l.appendChild(d); }); }
 function pad2(s){ s=String(s).replace(/[^0-9]/g,''); return s.length?('0'+s).slice(-2):'00'; }
 $('addWhoBtn').addEventListener('click',function(){ const nen=(String($('fNen').value).replace(/[^0-9]/g,'')||'3').slice(0,1); const kumi=pad2($('fKumi').value), ban=pad2($('fBan').value), name=$('fName').value.trim(); const id=nen+kumi+ban+'-'+Date.now().toString(36); DB.people.push({id:id,nen:nen,kumi:kumi,ban:ban,name:name}); DB.cur=id; dbSave(); $('fNen').value=''; $('fKumi').value=''; $('fBan').value=''; $('fName').value=''; updateWhoBadge(); renderData(); beep('tap'); });
 $('csvBtn').addEventListener('click',function(){ const p=curPerson(); const logs=DB.logs.filter(g=>p&&g.pid===p.id); if(!p||!logs.length){ alert('書き出す記録が ありません。'); return; } const rows=[["学年","組","番号","名前","日時","種類","点数","評価","正答率","時間(秒)","問題","解答","正解","正誤","回数"]]; logs.forEach(function(g){ g.items.forEach(function(it){ rows.push([p.nen,p.kumi,p.ban,p.name,new Date(g.at).toLocaleString('ja-JP'),g.kind,g.ten,g.hyouka||'',g.ritu||'',g.sec,it.q,it.user,it.ans,it.ok?'○':'×',it.tries]); }); }); const csv=rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\r\n'); const blob=new Blob([new Uint8Array([0xEF,0xBB,0xBF]),csv],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='関数y=ax2_基本_学習記録_'+p.nen+p.kumi+p.ban+'.csv'; document.body.appendChild(a); a.click(); document.body.removeChild(a); });
@@ -677,11 +830,13 @@ $('dataBackBtn').addEventListener('click',function(){ beep('tap'); show('main');
 $('whoBadge').addEventListener('click',function(){ beep('tap'); openData(); });
 $('playBackBtn').addEventListener('click',function(){ clearInterval(timerId); show('main'); });
 $('againBtn').addEventListener('click',function(){ beep('tap'); startRound(S.mode); });
+$('missAgainBtn').addEventListener('click',function(){beep('tap');startReview();});
 $('homeBtn').addEventListener('click',function(){ beep('tap'); show('main'); });
 $('soundBtn').addEventListener('click',function(){ soundOn=!soundOn; $('soundBtn').textContent=soundOn?'🔊':'🔇'; });
 document.addEventListener('pointerdown',function(){ if(!actx){ try{ actx=new(window.AudioContext||window.webkitAudioContext)(); }catch(e){} } },{once:true});
 
 buildMain(); updateWhoBadge();
 </script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79"}' crossorigin="anonymous"></script>
 </body>
 </html>

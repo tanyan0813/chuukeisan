@@ -75,6 +75,7 @@
     display:grid;place-items:center;font-size:14px;font-family:"M PLUS Rounded 1c";box-shadow:0 3px 0 var(--ocean-deep);}
   .mcard.rand .n{background:var(--yellow);box-shadow:0 3px 0 var(--yellow-deep);color:#6a5000;}
   .mcard.blue .n{background:var(--blue);box-shadow:0 3px 0 var(--blue-deep);}
+  .mcard.miss .n{background:var(--red);box-shadow:0 3px 0 var(--red-deep);}
   .mcard .lbl{font-weight:900;font-size:15px;line-height:1.35;}
   .mcard .sm{display:block;font-size:11px;color:var(--ink-soft);font-weight:700;margin-top:3px;}
 
@@ -167,6 +168,11 @@
   .big-btn.blue:active{box-shadow:0 1px 0 var(--blue-deep);}
   .big-btn.gray{background:#fff;color:var(--ink);box-shadow:0 5px 0 rgba(55,66,74,.15);}
   .big-btn.gray:active{box-shadow:0 1px 0 rgba(55,66,74,.15);}
+  .big-btn.red{background:var(--red);box-shadow:0 5px 0 var(--red-deep);}
+  .big-btn.red:active{box-shadow:0 1px 0 var(--red-deep);}
+
+  /* ---- まちがい直しコース ---- */
+  .miss-lead{font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:10px;}
 
   /* ---- 学習記録 ---- */
   .panel{background:var(--card);border-radius:22px;box-shadow:var(--shadow);padding:18px 16px;margin-bottom:14px;}
@@ -249,7 +255,7 @@
     <div class="mlist" id="mainList"></div>
     <div class="foot"><a href="doriru.html">← 単元メニューへもどる</a></div>
     <div class="credit">
-      岐阜女子大学（安藤忠展） Ver. 5.02／ Web版
+      岐阜女子大学（安藤忠展） Ver. 5.03／ Web版
     </div>
   </section>
 
@@ -285,6 +291,13 @@
     </div>
     <div class="panel"><h3><span class="bar2"></span>まちがいの傾向</h3><div class="miss-bars" id="missBars"></div></div>
     <div class="panel"><h3><span class="bar2"></span>種類べつの記録</h3><div id="byKind"></div></div>
+    <div class="panel">
+      <h3><span class="bar2"></span>まちがい直しコース</h3>
+      <div class="miss-lead" id="missLead"></div>
+      <div class="rowbtns">
+        <button class="sbtn pur" id="missStartBtn">まちがい直しを 始める</button>
+      </div>
+    </div>
     <div class="panel"><h3><span class="bar2"></span>まちがえた問題</h3><div id="weak"></div></div>
     <div class="panel"><h3><span class="bar2"></span>練習の履歴</h3><div id="history"></div></div>
     <div class="rowbtns">
@@ -341,6 +354,7 @@
       <div class="time-line" id="resultTime"></div>
       <div class="review" id="review"></div>
       <div class="result-actions">
+        <button class="big-btn red" id="missAgainBtn" style="display:none">まちがい直しをする</button>
         <button class="big-btn" id="againBtn">もっと練習する</button>
         <button class="big-btn blue" id="otherBtn">別の問題を練習する</button>
         <button class="big-btn gray" id="homeBtn">メニューへ</button>
@@ -456,8 +470,10 @@ const MODES=[
  {t:'加減法　その２', data:DAT3, sm:'ひくと 文字が 消える 形'},
  {t:'加減法　その３', data:DAT4, sm:'何倍かしてから たす・ひく 形'},
  {t:'ランダムコース', rand:true, sm:'４つの 中から ランダムに出題'},
+ {t:'まちがい直しコース', review:true, sm:'まちがえた問題を あつめて 出題'},
  {t:'学習者反応データ処理システム', dataScreen:true, sm:'学習の記録を 見る'},
 ];
+const MODE_REVIEW=MODES.findIndex(function(m){return m.review;});
 const PRMSU=5, MISSN=3;
 const MISSMSG=["間違っていますよ！","もう一度　考えよう！","符号が違います！","絶対値が違います！"];
 
@@ -480,7 +496,7 @@ function curPerson(){ if(!DB.cur) return null;
   for(let i=0;i<DB.people.length;i++) if(DB.people[i].id===DB.cur) return DB.people[i]; return null; }
 function personLabel(p){ if(!p) return "学習者なし";
   const s=p.nen+"年"+p.kumi+"組"+p.ban+"番"; return p.name?s+" "+p.name:s; }
-function updateWhoBadge(){ $("whoBadge").textContent=personLabel(curPerson()); }
+function updateWhoBadge(){ $("whoBadge").textContent=personLabel(curPerson()); buildMain(); }
 function kindName(m){ return MODES[m].t; }
 function kaisuu(m){ const p=curPerson(); if(!p) return 0;
   const k=kindName(m); let n=0;
@@ -493,6 +509,72 @@ function saveLog(ten,sec){
             tries:it.tries, miss:it.lastMiss==null?-1:it.lastMiss}; });
   DB.logs.push({pid:p.id,at:Date.now(),mode:S.mode,kind:kindName(S.mode),ten:ten,sec:sec,items:items});
   dbSave();
+}
+
+/* =========================================================
+   まちがい直しコース
+   記録から「その問題の いちばん新しい結果」を あつめる。
+     state 2 … 最後まで まちがえた
+     state 1 … 正解したが 2回以上かかった
+     state 0 … 1回で正解（なおったので もう出さない）
+   ========================================================= */
+const ALLDAT=DAT1.concat(DAT2,DAT3,DAT4);
+const DATINDEX=(function(){ const m={};
+  ALLDAT.forEach(function(q){ m[q[0]+"\u3000"+q[1]]=q; }); return m; })();
+function missPool(){
+  const p=curPerson(), out={miss:[],shaky:[]};
+  if(!p) return out;
+  const st={};
+  DB.logs.forEach(function(g){                   // 古い→新しい順。あとの結果で 上書き
+    if(g.pid!==p.id) return;
+    g.items.forEach(function(it){
+      if(!it.q) return;
+      st[it.q]={ key:it.q, ax:it.ax, ay:it.ay,
+                 state:(!it.ok?2:(it.tries>1?1:0)), at:g.at };
+    });
+  });
+  Object.keys(st).forEach(function(k){
+    const v=st[k];
+    v.p=DATINDEX[k]||null;                       // もんだいデータを 引きあてる
+    if(!v.p){                                    // 見つからない ときは 記録から 組み立てる
+      const t=String(k).split("\u3000");
+      if(t.length!==2||isNaN(parseInt(v.ax,10))||isNaN(parseInt(v.ay,10))) return;
+      v.p=[t[0],t[1],parseInt(v.ax,10),parseInt(v.ay,10)];
+    }
+    if(v.state===2) out.miss.push(v); else if(v.state===1) out.shaky.push(v);
+  });
+  const newFirst=function(a,b){ return b.at-a.at; };
+  out.miss.sort(newFirst); out.shaky.sort(newFirst);
+  return out;
+}
+function shuffled(a){ const r=a.slice();
+  for(let i=r.length-1;i>0;i--){ const j=rnd(0,i); const t=r[i]; r[i]=r[j]; r[j]=t; }
+  return r; }
+function missCount(){ const m=missPool(); return m.miss.length+m.shaky.length; }
+
+function startReview(){
+  const pool=missPool(), seen={}, list=[];
+  let fixed=0;
+  const add=function(x){
+    if(list.length>=PRMSU||seen[x.key]) return false;
+    seen[x.key]=1;
+    list.push({p:x.p,tries:0,correct:false,ux:"",uy:""});
+    return true;
+  };
+  shuffled(pool.miss).forEach(function(x){ if(add(x)) fixed++; });
+  shuffled(pool.shaky).forEach(function(x){ if(add(x)) fixed++; });
+  let guard=0;
+  while(list.length<PRMSU&&guard<300){                    // たりないぶんは ランダム
+    guard++;
+    const q=ALLDAT[rnd(0,ALLDAT.length-1)];
+    const key=q[0]+"\u3000"+q[1];
+    if(seen[key]) continue;
+    seen[key]=1;
+    list.push({p:q,tries:0,correct:false,ux:"",uy:""});
+  }
+  S={mode:MODE_REVIEW,list:list,cur:0,ux:"",uy:"",act:"x",locked:false,waiting:false,t0:Date.now()};
+  $("modeChip").textContent = fixed===0 ? "まちがい直し（ランダム）" : "まちがい直し";
+  buildDots(); show("play"); startTimer(); render();
 }
 
 /* ---- おと ---- */
@@ -512,13 +594,22 @@ function beep(type){ if(!soundOn) return;
 }
 
 /* ---- メニュー ---- */
+function chooseMain(i){
+  const m=MODES[i]; if(!m) return;
+  beep("tap");
+  if(m.dataScreen) openData(); else if(m.review) startReview(); else startRound(i);
+}
 function buildMain(){
   const l=$("mainList"); l.innerHTML="";
+  const nMiss=missCount();
   MODES.forEach((m,i)=>{
     const b=document.createElement("button");
-    b.className="mcard"+(m.rand?" rand":"")+(m.dataScreen?" blue":"");
-    b.innerHTML='<span class="n">'+(i+1)+'</span><span class="lbl">'+m.t+'<span class="sm">'+m.sm+'</span></span>';
-    b.addEventListener("click",function(){beep("tap"); if(m.dataScreen) openData(); else startRound(i);});
+    b.className="mcard"+(m.rand?" rand":"")+(m.dataScreen?" blue":"")+(m.review?" miss":"");
+    const sm = m.review ? (nMiss?'まちがえた問題を あつめて 出題（たりないぶんは ランダム）'
+                              :'いまは 記録がないので ランダムに出題')
+                        : m.sm;
+    b.innerHTML='<span class="n">'+(i+1)+'</span><span class="lbl">'+m.t+'<span class="sm">'+sm+'</span></span>';
+    b.addEventListener("click",function(){ chooseMain(i); });
     l.appendChild(b);
   });
 }
@@ -596,9 +687,8 @@ document.addEventListener("keydown",function(e){
       else pressKey("enter"); e.preventDefault();}
     return;
   }
-  if(screens.main.classList.contains("active")&&e.key>="1"&&e.key<="6"){
-    const i=parseInt(e.key,10)-1;
-    if(MODES[i].dataScreen) openData(); else startRound(i);
+  if(screens.main.classList.contains("active")&&e.key>="1"&&e.key<="9"){
+    chooseMain(parseInt(e.key,10)-1);
   }
 });
 
@@ -661,6 +751,8 @@ function finish(){
   let ok=0; for(let i=0;i<S.list.length;i++) if(S.list[i].correct) ok++;
   const ten=Math.floor(ok/PRMSU*100), sec=Math.floor((Date.now()-S.t0)/1000);
   saveLog(ten,sec);
+  buildMain();
+  $("missAgainBtn").style.display = (curPerson()&&missCount()>0) ? "" : "none";
   $("scoreNum").textContent=ten;
   const w=$("hanamaruWrap"), m=$("resultMsg");
   if(ten===100){m.textContent="よくできました！";m.style.color="var(--red)";w.innerHTML=hanamaru();beep("fanfare");}
@@ -734,6 +826,8 @@ function renderData(){
     keys.forEach(function(k){const v=bk[k];
       h+='<tr><td>'+k+'</td><td class="n">'+v.n+'</td><td class="n">'+Math.round(v.sum/v.n)+'</td><td class="n">'+v.best+'</td></tr>';});
     byk.innerHTML=h+'</table>';}
+  // まちがい直しコース
+  renderMissCourse();
   // まちがえた問題
   const wc={}; logs.forEach(function(g){g.items.forEach(function(it){
     if(!it.ok){ if(!wc[it.q])wc[it.q]={n:0,ax:it.ax,ay:it.ay}; wc[it.q].n++; } });});
@@ -759,6 +853,18 @@ function renderData(){
       tr.addEventListener('click',function(){$("dt"+tr.dataset.i).classList.toggle('show');});});
   }
 }
+/* まちがい直しパネル */
+function renderMissCourse(){
+  const p=curPerson(), fixed=missCount(), lead=$("missLead");
+  if(!p) lead.textContent="学習者を えらぶと、その人が まちがえた問題を あつめて 出題します。（いまは ランダムに出題します）";
+  else if(fixed===0) lead.textContent="いま 直す問題は ありません。始めると ランダムに出題します。";
+  else lead.textContent="下の「まちがえた問題」から あつめて 出題します。"
+    +(fixed<PRMSU?"（たりないぶんは ランダムに出題します）":"");
+  $("missStartBtn").textContent = fixed===0 ? "ランダムで 練習する" : "まちがい直しを 始める";
+  buildMain();
+}
+$("missStartBtn").addEventListener("click",function(){ beep("tap"); startReview(); });
+
 function detailHTML(g){
   let h='';
   g.items.forEach(function(it){
@@ -818,7 +924,9 @@ $("clearBtn").addEventListener("click",function(){
 $("dataBackBtn").addEventListener("click",function(){beep("tap");show("main");});
 $("whoBadge").addEventListener("click",function(){beep("tap");openData();});
 $("playBackBtn").addEventListener("click",function(){clearInterval(timerId);show("main");});
-$("againBtn").addEventListener("click",function(){beep("tap");startRound(S.mode);});
+$("againBtn").addEventListener("click",function(){beep("tap");
+  if(MODES[S.mode].review) startReview(); else startRound(S.mode);});
+$("missAgainBtn").addEventListener("click",function(){beep("tap");startReview();});
 $("otherBtn").addEventListener("click",function(){beep("tap");show("main");});
 $("homeBtn").addEventListener("click",function(){beep("tap");show("main");});
 $("soundBtn").addEventListener("click",function(){soundOn=!soundOn;$("soundBtn").textContent=soundOn?"🔊":"🔇";});

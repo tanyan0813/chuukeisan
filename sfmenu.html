@@ -71,6 +71,7 @@
   .mcard .n{flex:none;width:30px;height:30px;border-radius:50%;background:var(--purple);color:#fff;font-weight:900;
     display:grid;place-items:center;font-size:14px;font-family:"M PLUS Rounded 1c";box-shadow:0 3px 0 var(--purple-deep);}
   .mcard.rand .n{background:var(--yellow);box-shadow:0 3px 0 var(--yellow-deep);color:#6a5000;}
+  .mcard.miss .n{background:var(--red);box-shadow:0 3px 0 var(--red-deep);}
   .mcard .lbl{font-weight:900;font-size:15px;line-height:1.35;}
   .mcard .ex{font-family:"M PLUS Rounded 1c";font-weight:900;font-size:17px;}
   .mcard .sm{display:block;font-size:11px;color:var(--ink-soft);font-weight:700;margin-top:2px;}
@@ -155,6 +156,15 @@
   .big-btn.blue:active{box-shadow:0 1px 0 var(--blue-deep);}
   .big-btn.gray{background:#fff;color:var(--ink);box-shadow:0 5px 0 rgba(55,66,74,.15);}
   .big-btn.gray:active{box-shadow:0 1px 0 rgba(55,66,74,.15);}
+  .big-btn.red{background:var(--red);box-shadow:0 5px 0 var(--red-deep);}
+  .big-btn.red:active{box-shadow:0 1px 0 var(--red-deep);}
+
+  /* ---- まちがい直しコース ---- */
+  .miss-list{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 12px;}
+  .miss-chip{background:#FDECE9;color:var(--red-deep);border-radius:10px;padding:5px 9px;font-size:13px;
+    font-family:"M PLUS Rounded 1c";font-weight:900;}
+  .miss-chip.shaky{background:#FDF0CF;color:#6a5000;}
+  .miss-lead{font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:8px;}
 
   /* ---- 学習者バッジ ---- */
   .who{display:flex;align-items:center;gap:6px;}
@@ -246,11 +256,11 @@
       <div class="sub">計算ドリル</div>
       <div class="prompt">つぎのなかから、勉強することを えらびましょう。</div>
     </div>
-    <div class="menu-head"><h2>計算ドリルのメニュー</h2><p>番号キー 1〜9 でも えらべます</p></div>
+    <div class="menu-head"><h2>計算ドリルのメニュー</h2><p>番号キー 1〜9・0 でも えらべます</p></div>
     <div class="mlist" id="mainList"></div>
     <div class="foot"><a href="doriru.html">← 単元メニューへもどる</a></div>
     <div class="credit">
-      岐阜女子大学（安藤忠展） Ver. 5.03<br>
+      岐阜女子大学（安藤忠展） Ver. 5.04<br>
     </div>
   </section>
 
@@ -284,6 +294,15 @@
       <div style="margin-top:14px">
         <div style="font-size:12px;font-weight:900;color:var(--ink-soft);margin-bottom:4px">点数の うつりかわり（古い→新しい）</div>
         <div class="spark" id="spark"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3><span class="bar2"></span>まちがい直しコース</h3>
+      <div class="miss-lead" id="missLead"></div>
+      <div class="miss-list" id="missList"></div>
+      <div class="rowbtns">
+        <button class="sbtn pur" id="missStartBtn">まちがい直しを 始める</button>
       </div>
     </div>
 
@@ -355,6 +374,7 @@
       <div class="time-line" id="resultTime"></div>
       <div class="review" id="review"></div>
       <div class="result-actions">
+        <button class="big-btn red" id="missAgainBtn" style="display:none">まちがい直しをする</button>
         <button class="big-btn" id="againBtn">もっと練習する</button>
         <button class="big-btn blue" id="otherBtn">別の問題を練習する</button>
         <button class="big-btn gray" id="homeBtn">メニューへ</button>
@@ -429,8 +449,10 @@ const CATS=[
    {t:'（－５²） の ような計算', g:()=>{const a=d9(); return G('（－'+a+'<sup>2</sup>）',-a*a);} },
  ]},
  { name:'総合計算練習', label:'正の数・負の数　総合計算練習', sub:[] },
+ { name:'まちがい直し', label:'まちがい直しコース', review:true, sub:[] },
  { name:'学習記録', label:'学習者反応データ処理システム', data:true, sub:[] },
 ];
+const CAT_TOTAL=7, CAT_REVIEW=8, CAT_DATA=9;
 /* かっこなし(2)：3項・4項（先頭の符号も ランダム） */
 function term(k){
   const v=[], s=[];
@@ -480,10 +502,11 @@ function curPerson(){ if(!DB.cur) return null;
 function personLabel(p){ if(!p) return "学習者なし";
   const s=p.nen+"年"+p.kumi+"組"+p.ban+"番";
   return p.name? s+" "+p.name : s; }
-function updateWhoBadge(){ $("whoBadge").textContent=personLabel(curPerson()); }
+function updateWhoBadge(){ $("whoBadge").textContent=personLabel(curPerson()); buildMain(); }
 
 /* 種類の名前（記録用） */
 function kindName(cat,sub){
+  if(cat===CAT_REVIEW) return "まちがい直しコース";
   if(cat===7) return "総合計算練習";
   if(sub===-1) return CATS[cat].name+"／ランダムコース";
   return CATS[cat].name+"　"+CATS[cat].sub[sub].t;
@@ -505,6 +528,67 @@ function saveLog(ten,sec){
   DB.logs.push({ pid:p.id, at:Date.now(), cat:S.cat, sub:S.sub,
                  kind:kindName(S.cat,S.sub), ten:ten, sec:sec, items:items });
   dbSave();
+}
+
+/* =========================================================
+   まちがい直しコース用の 問題プール
+   記録から「その問題の いちばん新しい結果」を 取り出す。
+     state 2 … 最後まで まちがえた（正解できなかった）
+     state 1 … 正解したが 2回以上かかった（あやしい）
+     state 0 … 1回で正解（なおったので 出題しない）
+   ========================================================= */
+function missPool(){
+  const p=curPerson();
+  const out={miss:[],shaky:[]};
+  if(!p) return out;
+  const st={};
+  DB.logs.forEach(function(g){            // 古い→新しい順。あとの結果で 上書きされる
+    if(g.pid!==p.id) return;
+    g.items.forEach(function(it){
+      const state = !it.ok ? 2 : (it.tries>1 ? 1 : 0);
+      st[it.q]={ q:it.q, ans:parseInt(it.ans,10), state:state, at:g.at, kind:g.kind };
+    });
+  });
+  Object.keys(st).forEach(function(k){
+    const v=st[k];
+    if(isNaN(v.ans)) return;
+    if(v.state===2) out.miss.push(v);
+    else if(v.state===1) out.shaky.push(v);
+  });
+  const newFirst=function(a,b){ return b.at-a.at; };
+  out.miss.sort(newFirst); out.shaky.sort(newFirst);
+  return out;
+}
+function shuffled(a){ const r=a.slice();
+  for(let i=r.length-1;i>0;i--){ const j=rnd(0,i); const t=r[i]; r[i]=r[j]; r[j]=t; }
+  return r; }
+function missCount(){ const m=missPool(); return m.miss.length+m.shaky.length; }
+
+/* まちがい直しコースを 始める（足りない分は ランダム出題で うめる） */
+function startReview(){
+  const pool=missPool(), seen={}, list=[];
+  let nMiss=0, nShaky=0, nNew=0;
+  shuffled(pool.miss).forEach(function(x){
+    if(list.length>=PRMSU||seen[x.q]) return;
+    seen[x.q]=1; nMiss++;
+    list.push({p:{q:x.q,ans:x.ans,hint:''},tries:0,correct:false,user:"",src:"miss"});
+  });
+  shuffled(pool.shaky).forEach(function(x){
+    if(list.length>=PRMSU||seen[x.q]) return;
+    seen[x.q]=1; nShaky++;
+    list.push({p:{q:x.q,ans:x.ans,hint:''},tries:0,correct:false,user:"",src:"shaky"});
+  });
+  let guard=0;
+  while(list.length<PRMSU&&guard<300){                 // 5問に足りないぶんは ランダム
+    guard++;
+    const p=randomOf(ALLSUB);
+    if(seen[p.q]) continue;
+    seen[p.q]=1; nNew++;
+    list.push({p:p,tries:0,correct:false,user:"",src:"new"});
+  }
+  const fixed=nMiss+nShaky;
+  const chip = fixed===0 ? 'まちがい直し（ランダム）' : 'まちがい直し';
+  beginRound(CAT_REVIEW,0,list,chip);
 }
 
 /* ---- 学習記録がめん ---- */
@@ -534,6 +618,8 @@ function renderData(){
       b.title=fmtDate(g.at)+" "+g.kind+" "+g.ten+"点";
       sp.appendChild(b);
     }); }
+  // まちがい直しコース
+  renderMissCourse();
   // まちがいの傾向
   const mc=[0,0,0,0];  let miss=0;
   logs.forEach(function(g){ g.items.forEach(function(it){
@@ -582,6 +668,34 @@ function renderData(){
     });
   }
 }
+/* まちがい直しパネルの ひょうじ */
+function renderMissCourse(){
+  const p=curPerson(), pool=missPool();
+  const n=pool.miss.length, s=pool.shaky.length, fixed=n+s;
+  const lead=$("missLead"), box=$("missList");
+  if(!p){
+    lead.textContent="学習者を えらぶと、その人が まちがえた問題を あつめて 出題します。（いまは ランダム5問になります）";
+  } else if(fixed===0){
+    lead.textContent="いま 直す問題は ありません。始めると ランダムに5問 出題します。";
+  } else {
+    lead.textContent="直したい問題を あつめて 5問 出題します。"
+      +(fixed<PRMSU?"（たりないぶんは ランダムに出題します）":"");
+  }
+  box.innerHTML="";
+  pool.miss.slice(0,12).concat(pool.shaky.slice(0,12-Math.min(12,pool.miss.length))).forEach(function(x){
+    const d=document.createElement("span");
+    d.className="miss-chip"+(x.state===1?" shaky":"");
+    d.innerHTML=x.q.replace(/<sup>2<\/sup>/g,"²");
+    d.title=(x.state===2?"まちがえた問題":"2回以上かかった問題")+"（正解 "+ansStr(x.ans)+"）";
+    box.appendChild(d);
+  });
+  if(fixed>12) box.appendChild(Object.assign(document.createElement("span"),
+    {className:"miss-chip shaky",textContent:"ほか"}));
+  $("missStartBtn").textContent = fixed===0 ? "ランダムで 練習する" : "まちがい直しを 始める";
+  buildMain();
+}
+$("missStartBtn").addEventListener("click",function(){ beep("tap"); startReview(); });
+
 function detailHTML(g){
   let h='';
   g.items.forEach(function(it){
@@ -673,17 +787,29 @@ function beep(type){ if(!soundOn) return;
 }
 
 /* ---- メインメニュー ---- */
+function chooseMain(i){
+  const c=CATS[i]; if(!c) return;
+  beep("tap");
+  if(c.data) openData();
+  else if(c.review) startReview();
+  else if(i===CAT_TOTAL) startRound(CAT_TOTAL,0);
+  else openSub(i);
+}
 function buildMain(){
   const l=$("mainList"); l.innerHTML="";
+  const nMiss=missCount();
   CATS.forEach((c,i)=>{
     const b=document.createElement("button");
-    b.className="mcard"+(i===7?" rand":"");
-    const sm = c.data ? '学習の記録を 見る' : (i===7?'すべてから ランダムに出題':'の 計算練習');
-    b.innerHTML='<span class="n">'+(i+1)+'</span><span class="lbl">'+c.label
+    b.className="mcard"+(i===CAT_TOTAL?" rand":"")+(c.review?" miss":"");
+    let sm;
+    if(c.data) sm='学習の記録を 見る';
+    else if(c.review) sm = nMiss ? 'まちがえた問題を あつめて 5問（たりないぶんは ランダム）'
+                                 : 'いまは 記録がないので ランダムに5問';    else sm = (i===CAT_TOTAL?'すべてから ランダムに出題':'の 計算練習');
+    const key = i===9 ? '0' : String(i+1);
+    b.innerHTML='<span class="n">'+key+'</span><span class="lbl">'+c.label
       +'<span class="sm">'+sm+'</span></span>';
     if(c.data) b.querySelector('.n').style.background='var(--blue)';
-    b.addEventListener("click",function(){ beep("tap");
-      if(c.data) openData(); else if(i===7) startRound(7,0); else openSub(i); });
+    b.addEventListener("click",function(){ chooseMain(i); });
     l.appendChild(b);
   });
 }
@@ -712,9 +838,14 @@ function openSub(ci){
 let S={cat:0,sub:0,list:[],cur:0,input:"",locked:false,waiting:false,t0:0};
 let timerId=null;
 
+/* 1コース分の 開始（出題リストは よびだし側で つくる） */
+function beginRound(cat,sub,list,chip){
+  S={cat:cat,sub:sub,list:list,cur:0,input:"",locked:false,waiting:false,t0:Date.now()};
+  $("modeChip").textContent=chip;
+  buildDots(); show("play"); startTimer(); render();
+}
 function startRound(cat,sub){
-  S={cat:cat,sub:sub,list:[],cur:0,input:"",locked:false,waiting:false,t0:Date.now()};
-  const seen={};
+  const seen={}, list=[];
   for(let i=0;i<PRMSU;i++){
     let p,guard=0;
     do{
@@ -724,11 +855,11 @@ function startRound(cat,sub){
       guard++;
     }while(seen[p.q]&&guard<60);
     seen[p.q]=1;
-    S.list.push({p:p,tries:0,correct:false,user:""});
+    list.push({p:p,tries:0,correct:false,user:""});
   }
-  $("modeChip").textContent = cat===7 ? '総合計算練習'
+  const chip = cat===7 ? '総合計算練習'
     : CATS[cat].name + (sub===-1?'／ランダム':'　'+CATS[cat].sub[sub].t);
-  buildDots(); show("play"); startTimer(); render();
+  beginRound(cat,sub,list,chip);
 }
 function buildDots(){const d=$("dots");d.innerHTML="";
   for(let i=0;i<PRMSU;i++){const s=document.createElement("span");s.className="dot";d.appendChild(s);}}
@@ -773,9 +904,8 @@ document.addEventListener("keydown",function(e){
     else if(e.key==="Enter"){pressKey("enter");e.preventDefault();}
     return;
   }
-  if(screens.main.classList.contains("active")&&e.key>="1"&&e.key<="9"){
-    const i=parseInt(e.key,10)-1;
-    if(i===8) openData(); else if(i===7) startRound(7,0); else openSub(i);
+  if(screens.main.classList.contains("active")&&e.key>="0"&&e.key<="9"){
+    chooseMain(e.key==="0" ? CAT_DATA : parseInt(e.key,10)-1);
   } else if(screens.sub.classList.contains("active")&&e.key>="1"&&e.key<="9"){
     const i=parseInt(e.key,10)-1, n=CATS[curCat].sub.length;
     if(i<n) startRound(curCat,i); else if(i===n) startRound(curCat,-1);
@@ -841,6 +971,9 @@ function finish(){
   const ten=Math.floor(ok/PRMSU*100);
   const sec=Math.floor((Date.now()-S.t0)/1000);
   saveLog(ten,sec);                        // 学習記録に のこす
+  buildMain();                             // メニューの「○問」表示を 更新
+  const nm=missCount();
+  $("missAgainBtn").style.display = (nm>0&&curPerson()) ? "" : "none";
   $("scoreNum").textContent=ten;
   const w=$("hanamaruWrap"), m=$("resultMsg");
   if(ten===100){m.textContent="よくできました！";m.style.color="var(--red)";w.innerHTML=hanamaru();beep("fanfare");}
@@ -870,10 +1003,12 @@ function star(){let pts="";
   return '<svg width="115" height="115" viewBox="0 0 120 120"><polygon points="'+pts+'" fill="#F6B93B" stroke="#D89A2C" stroke-width="4" stroke-linejoin="round"/></svg>';}
 function face(){return '<svg width="115" height="115" viewBox="0 0 120 120"><circle cx="60" cy="60" r="42" fill="#EAF6F0" stroke="#34B37A" stroke-width="5"/><circle cx="46" cy="52" r="5" fill="#34B37A"/><circle cx="74" cy="52" r="5" fill="#34B37A"/><path d="M42 74 Q60 90 78 74" fill="none" stroke="#34B37A" stroke-width="5" stroke-linecap="round"/></svg>';}
 
-$("playBackBtn").addEventListener("click",function(){clearInterval(timerId); if(S.cat===7) show("main"); else openSub(S.cat);});
+$("playBackBtn").addEventListener("click",function(){clearInterval(timerId); if(S.cat>=CAT_TOTAL) show("main"); else openSub(S.cat);});
 $("toMainBtn").addEventListener("click",function(){beep("tap");show("main");});
-$("againBtn").addEventListener("click",function(){beep("tap");startRound(S.cat,S.sub);});
-$("otherBtn").addEventListener("click",function(){beep("tap"); if(S.cat===7) show("main"); else openSub(S.cat);});
+$("againBtn").addEventListener("click",function(){beep("tap");
+  if(S.cat===CAT_REVIEW) startReview(); else startRound(S.cat,S.sub);});
+$("otherBtn").addEventListener("click",function(){beep("tap"); if(S.cat>=CAT_TOTAL) show("main"); else openSub(S.cat);});
+$("missAgainBtn").addEventListener("click",function(){beep("tap");startReview();});
 $("homeBtn").addEventListener("click",function(){beep("tap");show("main");});
 $("soundBtn").addEventListener("click",function(){soundOn=!soundOn;$("soundBtn").textContent=soundOn?"🔊":"🔇";});
 document.addEventListener("pointerdown",function(){if(!actx){try{actx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}},{once:true});

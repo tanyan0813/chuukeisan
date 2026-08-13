@@ -73,6 +73,7 @@
   .mcard .n{flex:none;width:30px;height:30px;border-radius:50%;background:var(--teal2);color:#fff;font-weight:900;
     display:grid;place-items:center;font-size:14px;font-family:"M PLUS Rounded 1c";box-shadow:0 3px 0 var(--teal2-deep);}
   .mcard.rand .n{background:var(--yellow);box-shadow:0 3px 0 var(--yellow-deep);color:#6a5000;}
+  .mcard.miss .n{background:var(--red);box-shadow:0 3px 0 var(--red-deep);}
   .mcard.blue .n{background:var(--blue);box-shadow:0 3px 0 var(--blue-deep);}
   .mcard .lbl{font-weight:900;font-size:15px;line-height:1.35;}
   .mcard .sm{display:block;font-size:11px;color:var(--ink-soft);font-weight:700;margin-top:3px;}
@@ -147,6 +148,19 @@
   .enter-btn{width:100%;margin-top:10px;border:none;cursor:pointer;font-family:inherit;font-weight:900;
     border-radius:16px;color:#fff;padding:14px 0;font-size:19px;background:var(--green);box-shadow:0 5px 0 var(--green-deep);}
   .enter-btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--green-deep);}
+
+  .graph-wrap{margin:4px auto 0;max-width:330px}
+  .graph-card{background:#fff;border-radius:18px;padding:10px;box-shadow:inset 0 0 0 3px #E6F2EE, 0 4px 0 rgba(55,66,74,.08)}
+  .graph-card svg{display:block;width:100%;height:auto}
+  .graphcap{margin-top:8px;font-size:12px;font-weight:900;color:var(--ink-soft);line-height:1.65}
+  .graphcap i{font-style:italic;color:var(--teal2)}
+  .info-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .ibox{background:#fff;border-radius:16px;padding:10px 14px;box-shadow:inset 0 0 0 3px #E6F2EE, 0 4px 0 rgba(55,66,74,.08);font-family:"M PLUS Rounded 1c";font-weight:900;font-size:clamp(17px,4.2vw,24px);color:var(--teal2-deep)}
+  .ibox .cap{display:block;font-size:12px;color:var(--ink-soft);font-family:"Zen Maru Gothic";margin-bottom:3px}
+  .formula-card{display:inline-flex;align-items:center;justify-content:center;min-height:54px;padding:10px 14px;background:#fff;border-radius:16px;box-shadow:inset 0 0 0 3px #E6F2EE, 0 4px 0 rgba(55,66,74,.08);font-family:"M PLUS Rounded 1c";font-weight:900;font-size:clamp(22px,5vw,30px);color:var(--teal2-deep)}
+  .formula-card i{font-style:italic;color:var(--teal2)}
+  .eq-note{margin-top:10px;font-size:14px;font-weight:900;color:var(--ink-soft);line-height:1.7}
+  .eq-note b{color:var(--teal2-deep)}
 
   /* ---- result ---- */
   .result-card{background:var(--card);border-radius:26px;box-shadow:var(--shadow);padding:24px 18px 22px;text-align:center;}
@@ -229,20 +243,6 @@
   .detail .ng{color:var(--red);}
 
   @media (prefers-reduced-motion: reduce){*{animation-duration:.001ms !important;}}
-
-  .graph-wrap{margin:4px auto 0;max-width:330px}
-  .graph-card{background:#fff;border-radius:18px;padding:10px;box-shadow:inset 0 0 0 3px #E6F2EE, 0 4px 0 rgba(55,66,74,.08)}
-  .graph-card svg{display:block;width:100%;height:auto}
-  .graphcap{margin-top:8px;font-size:12px;font-weight:900;color:var(--ink-soft);line-height:1.65}
-  .graphcap i{font-style:italic;color:var(--teal2)}
-  .info-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:10px}
-  .ibox{background:#fff;border-radius:16px;padding:10px 14px;box-shadow:inset 0 0 0 3px #E6F2EE, 0 4px 0 rgba(55,66,74,.08);font-family:"M PLUS Rounded 1c";font-weight:900;font-size:clamp(17px,4.2vw,24px);color:var(--teal2-deep)}
-  .ibox .cap{display:block;font-size:12px;color:var(--ink-soft);font-family:"Zen Maru Gothic";margin-bottom:3px}
-  .formula-card{display:inline-flex;align-items:center;justify-content:center;min-height:54px;padding:10px 14px;background:#fff;border-radius:16px;box-shadow:inset 0 0 0 3px #E6F2EE, 0 4px 0 rgba(55,66,74,.08);font-family:"M PLUS Rounded 1c";font-weight:900;font-size:clamp(22px,5vw,30px);color:var(--teal2-deep)}
-  .formula-card i{font-style:italic;color:var(--teal2)}
-  .eq-note{margin-top:10px;font-size:14px;font-weight:900;color:var(--ink-soft);line-height:1.7}
-  .eq-note b{color:var(--teal2-deep)}
-
 </style>
 </head>
 <body>
@@ -266,7 +266,7 @@
     <div class="mlist" id="mainList"></div>
     <div class="foot"><a href="2kanmenu.html">← ２次関数のメニューへもどる</a></div>
     <div class="credit">
-       岐阜女子大学（安藤忠展） Ver.5.02 ／ Web版
+      岐阜女子大学（安藤忠展） Ver.5.03 ／ Web版
     </div>
   </section>
 
@@ -298,6 +298,14 @@
       <div style="margin-top:14px">
         <div style="font-size:12px;font-weight:900;color:var(--ink-soft);margin-bottom:4px">点数の うつりかわり（古い→新しい）</div>
         <div class="spark" id="spark"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3><span class="bar2"></span>まちがい直しコース</h3>
+      <div class="miss-lead" id="missLead"></div>
+      <div class="miss-list" id="missList"></div>
+      <div class="rowbtns">
+        <button class="sbtn pur" id="missStartBtn">まちがい直しを 始める</button>
       </div>
     </div>
     <div class="panel"><h3><span class="bar2"></span>まちがいの傾向</h3><div class="miss-bars" id="missBars"></div></div>
@@ -351,6 +359,7 @@
       <div class="time-line" id="resultTime"></div>
       <div class="review" id="review"></div>
       <div class="result-actions">
+        <button class="big-btn red" id="missAgainBtn" style="display:none">まちがい直しをする</button>
         <button class="big-btn" id="againBtn">もっと練習する</button>
         <button class="big-btn gray" id="homeBtn">メニューへ</button>
       </div>
@@ -385,6 +394,20 @@ function missTypeNum(us,cs){
 }
 function modeQuestionLabel(it){ return formulaText(it.a)+' / x＝'+signed(it.x1)+' から '+signed(it.x2); }
 
+function makeQuestion(modeTarget){
+  const targetMode = modeTarget===0 ? rnd(1,4) : modeTarget;
+  const absA=rnd(1,8);
+  const sign=(targetMode===1||targetMode===2)?1:-1;
+  const a=absA*sign;
+  const base1=rnd(1,4);
+  const base2=rnd(base1+1,9);
+  let x1=base1, x2=base2;
+  if(targetMode===2 || targetMode===4){ x1=-base2; x2=-base1; }
+  const y1=a*x1*x1, y2=a*x2*x2;
+  const delta=y2-y1;
+  return {a:a,x1:x1,x2:x2,y1:y1,y2:y2,delta:delta,ans:String(delta),mode:targetMode-1};
+}
+
 const MODES=[
   {t:'正の比例定数・正の x', sm:'x が正の区間で y の増加量を求める', gen:()=>makeQuestion(1),
    hint:'まず <b>x のはじめ</b> と <b>x のおわり</b> に対応する <b>y の値</b> を読みます。<br><b>y の増加量＝あと の y − はじめ の y</b> です。'},
@@ -394,22 +417,11 @@ const MODES=[
    hint:'下に開く放物線では、x が増えると y が減ることがあります。<br><b>y の増加量＝あと の y − はじめ の y</b> なので、答えが <b>負</b> になることもあります。'},
   {t:'負の比例定数・負の x', sm:'負の x の区間で y の増加量を求める', gen:()=>makeQuestion(4),
    hint:'負の x から負の x へ動くときも、<b>増加量＝あと の y − はじめ の y</b> です。<br>2つの点の y をていねいに比べましょう。'},
-  {t:'ランダムコース', rand:true, sm:'4つのパターンから ランダムに出題'},
+  {t:'ランダムコース', rand:true, sm:'4つのパターンから ランダムに出題', gen:()=>makeQuestion(0)},
+  {t:'まちがい直し', review:true, sm:'まちがえた問題を あつめて 練習'},
   {t:'学習者反応データ処理システム', data:true, sm:'学習の記録を 見る'}
 ];
-
-function makeQuestion(mode){
-  const absA=rnd(1,8);
-  const sign=(mode===1||mode===2)?1:-1;
-  const a=absA*sign;
-  const base1=rnd(1,4);
-  const base2=rnd(base1+1,9);
-  let x1=base1, x2=base2;
-  if(mode===2 || mode===4){ x1=-base2; x2=-base1; }
-  const y1=a*x1*x1, y2=a*x2*x2;
-  const delta=y2-y1;
-  return {a:a,x1:x1,x2:x2,y1:y1,y2:y2,delta:delta,ans:String(delta)};
-}
+const CAT_REVIEW=5, CAT_DATA=6;
 
 const KEY='2kan3.records.v1';
 const Store=(function(){
@@ -425,7 +437,7 @@ let DB=Store.load();
 function dbSave(){ Store.save(DB); }
 function curPerson(){ if(!DB.cur) return null; for(let i=0;i<DB.people.length;i++) if(DB.people[i].id===DB.cur) return DB.people[i]; return null; }
 function personLabel(p){ if(!p) return '学習者なし'; const s=p.nen+'年'+p.kumi+'組'+p.ban+'番'; return p.name?s+' '+p.name:s; }
-function updateWhoBadge(){ $('whoBadge').textContent=personLabel(curPerson()); }
+function updateWhoBadge(){ $('whoBadge').textContent=personLabel(curPerson()); buildMain(); }
 function kindName(m){ return MODES[m].t; }
 function kaisuu(m){ const p=curPerson(); if(!p) return 0; const k=kindName(m); let n=0; DB.logs.forEach(g=>{ if(g.pid===p.id&&g.kind===k) n++; }); return n; }
 function qText(it){ return modeQuestionLabel(it); }
@@ -434,6 +446,77 @@ function saveLog(ten,sec){
   const items=S.list.map(it=>({mode:it.mode,q:qText(it),ans:it.ans,user:it.user||'',ok:it.correct,tries:it.tries,misses:it.misses||[],a:it.a,x1:it.x1,x2:it.x2,y1:it.y1,y2:it.y2,delta:it.delta}));
   DB.logs.push({pid:p.id,at:Date.now(),mode:S.mode,kind:kindName(S.mode),ten:ten,sec:sec,items:items});
   dbSave();
+}
+
+/* =========================================================
+   まちがい直しコース用の 問題プール
+   ========================================================= */
+function missPool(){
+  const p=curPerson();
+  const out={miss:[],shaky:[]};
+  if(!p) return out;
+  const st={};
+  DB.logs.forEach(function(g){
+    if(g.pid!==p.id) return;
+    g.items.forEach(function(it){
+      const state = !it.ok ? 2 : (it.tries>1 ? 1 : 0);
+      st[it.q]={ raw:it, state:state, at:g.at, kind:g.kind };
+    });
+  });
+  Object.keys(st).forEach(function(k){
+    const v=st[k];
+    if(v.state===2) out.miss.push(v);
+    else if(v.state===1) out.shaky.push(v);
+  });
+  const newFirst=function(a,b){ return b.at-a.at; };
+  out.miss.sort(newFirst); out.shaky.sort(newFirst);
+  return out;
+}
+function shuffled(a){ const r=a.slice();
+  for(let i=r.length-1;i>0;i--){ const j=rnd(0,i); const t=r[i]; r[i]=r[j]; r[j]=t; }
+  return r; }
+function missCount(){ const m=missPool(); return m.miss.length+m.shaky.length; }
+
+function parseQItem(it){
+  const m=it.raw;
+  if(m && m.a!==undefined && m.x1!==undefined && m.x2!==undefined){
+    const y1=m.y1!==undefined?m.y1:m.a*m.x1*m.x1;
+    const y2=m.y2!==undefined?m.y2:m.a*m.x2*m.x2;
+    const delta=m.delta!==undefined?m.delta:(y2-y1);
+    return {a:m.a, x1:m.x1, x2:m.x2, y1:y1, y2:y2, delta:delta, ans:String(delta), mode:m.mode!==undefined?m.mode:0};
+  }
+  return makeQuestion(0);
+}
+
+function startReview(){
+  const pool=missPool(), seen={}, list=[];
+  let nMiss=0, nShaky=0;
+  shuffled(pool.miss).forEach(function(x){
+    if(list.length>=PRMSU||seen[x.raw.q]) return;
+    seen[x.raw.q]=1; nMiss++;
+    const p=parseQItem(x);
+    p.tries=0; p.correct=false; p.user=""; p.misses=[]; p.src="miss";
+    list.push(p);
+  });
+  shuffled(pool.shaky).forEach(function(x){
+    if(list.length>=PRMSU||seen[x.raw.q]) return;
+    seen[x.raw.q]=1; nShaky++;
+    const p=parseQItem(x);
+    p.tries=0; p.correct=false; p.user=""; p.misses=[]; p.src="shaky";
+    list.push(p);
+  });
+  let guard=0;
+  while(list.length<PRMSU&&guard<300){
+    guard++;
+    const p=makeQuestion(0);
+    const qKey=qText(p);
+    if(seen[qKey]) continue;
+    seen[qKey]=1;
+    p.tries=0; p.correct=false; p.user=""; p.misses=[]; p.src="new";
+    list.push(p);
+  }
+  const chip = (nMiss+nShaky)===0 ? 'まちがい直し（ランダム）' : 'まちがい直し';
+  beginRound(CAT_REVIEW, list, chip);
 }
 
 let soundOn=true, actx=null;
@@ -447,13 +530,28 @@ function beep(type){ if(!soundOn) return;
   }catch(e){}
 }
 
+function chooseMain(i){
+  const m=MODES[i]; if(!m) return;
+  beep('tap');
+  if(m.data) openData();
+  else if(m.review) startReview();
+  else startRound(i);
+}
+
 function buildMain(){
   const l=$('mainList'); l.innerHTML='';
+  const nMiss=missCount();
   MODES.forEach((m,i)=>{
     const b=document.createElement('button');
-    b.className='mcard'+(m.rand?' rand':'')+(m.data?' blue':'');
-    b.innerHTML='<span class="n">'+(i+1)+'</span><span class="lbl">'+m.t+'<span class="sm">'+m.sm+'</span></span>';
-    b.addEventListener('click',function(){ beep('tap'); if(m.data) openData(); else startRound(i); });
+    b.className='mcard'+(m.rand?' rand':'')+(m.review?' miss':'')+(m.data?' blue':'');
+    let sm=m.sm;
+    if(m.review){
+      sm = nMiss ? 'まちがえた問題を あつめて 5問（たりないぶんは ランダム）'
+                 : 'いまは 記録がないので ランダムに5問';
+    }
+    const key = i===5 ? '0' : String(i+1);
+    b.innerHTML='<span class="n">'+key+'</span><span class="lbl">'+m.t+'<span class="sm">'+sm+'</span></span>';
+    b.addEventListener('click',function(){ chooseMain(i); });
     l.appendChild(b);
   });
 }
@@ -513,9 +611,14 @@ function renderInfo(it){
     +'</div><div class="eq-note">点 <b>A</b> は <b>x＝'+signed(it.x1)+'</b>、点 <b>B</b> は <b>x＝'+signed(it.x2)+'</b> の位置です。<br><b>y の増加量</b> を入力しましょう。</div>';
 }
 
+function beginRound(mode, list, chip){
+  S={mode:mode,list:list,cur:0,input:'',locked:false,t0:Date.now()};
+  $('modeChip').textContent=chip;
+  buildDots(); show('play'); startTimer(); render();
+}
+
 function startRound(mode){
-  S={mode:mode,list:[],cur:0,input:'',locked:false,t0:Date.now()};
-  const seen={};
+  const seen={}, list=[];
   for(let i=0;i<PRMSU;i++){
     let p, mm, key;
     do{
@@ -525,11 +628,11 @@ function startRound(mode){
     }while(seen[key]);
     seen[key]=1;
     p.mode=mm; p.tries=0; p.correct=false; p.user=''; p.misses=[];
-    S.list.push(p);
+    list.push(p);
   }
-  $('modeChip').textContent=kindName(mode);
-  buildDots(); show('play'); startTimer(); render();
+  beginRound(mode, list, kindName(mode));
 }
+
 function buildDots(){ const d=$('dots'); d.innerHTML=''; for(let i=0;i<PRMSU;i++){ const s=document.createElement('span'); s.className='dot'; d.appendChild(s);} }
 function updateDots(){ const ch=$('dots').children; for(let i=0;i<ch.length;i++){ const el=ch[i],it=S.list[i]; el.className='dot'; if(i<S.cur){ el.classList.add(it.correct?'ok':'ng'); el.textContent=it.correct?'○':'✕'; } else if(i===S.cur){ el.classList.add('now'); el.textContent=''; } else el.textContent=''; } }
 function render(){
@@ -572,8 +675,8 @@ document.addEventListener('keydown',function(e){
     else if(e.key==='Enter'){ pressKey('enter'); e.preventDefault(); }
     return;
   }
-  if(screens.main.classList.contains('active')&&e.key>='1'&&e.key<='6'){
-    const i=parseInt(e.key,10)-1; if(MODES[i].data) openData(); else startRound(i);
+  if(screens.main.classList.contains('active')&&e.key>='0'&&e.key<='9'){
+    chooseMain(e.key==='0' ? CAT_DATA : parseInt(e.key,10)-1);
   }
 });
 
@@ -581,7 +684,7 @@ function submit(){
   if(S.locked) return;
   if(S.input===''||S.input==='-'||S.input==='+' ) { beep('wrong'); return; }
   
-  S.locked = true; // 連打による二重・三重判定をガード
+  S.locked = true;
 
   const it=S.list[S.cur];
   it.tries++;
@@ -607,7 +710,7 @@ function submit(){
         $('stamp').innerHTML=''; 
         $('msg').textContent=''; 
         S.input=''; 
-        S.locked=false; // 再入力用にロック解除
+        S.locked=false;
         updateBox(); 
       },1100);
     }
@@ -623,6 +726,9 @@ function finish(){
   let ok=0; for(let i=0;i<S.list.length;i++) if(S.list[i].correct) ok++;
   const ten=Math.floor(ok/PRMSU*100), sec=Math.floor((Date.now()-S.t0)/1000);
   saveLog(ten,sec);
+  buildMain();
+  const nm=missCount();
+  $("missAgainBtn").style.display = (nm>0&&curPerson()) ? "" : "none";
   $('scoreNum').textContent=ten;
   const w=$('hanamaruWrap'), m=$('resultMsg');
   if(ten===100){ m.textContent='よくできました！'; m.style.color='var(--red)'; w.innerHTML=hanamaru(); beep('fanfare'); }
@@ -656,6 +762,9 @@ function renderData(){
   const sp=$('spark'); sp.innerHTML='';
   if(!logs.length) sp.innerHTML='<div class="empty" style="width:100%">まだ 記録が ありません</div>';
   else logs.slice(-24).forEach(function(g){ const b=document.createElement('div'); b.className='b'+(g.ten===100?' s100':(g.ten>=80?' s80':'')); b.style.height=Math.max(6,g.ten*0.6)+'px'; b.title=fmtDate(g.at)+' '+g.kind+' '+g.ten+'点'; sp.appendChild(b); });
+
+  renderMissCourse();
+
   const mc=[0,0,0], miss=logs.reduce((t,g)=>t+g.items.reduce((s,it)=>s+((it.misses&&it.misses.length)||0),0),0);
   logs.forEach(g=>g.items.forEach(it=>(it.misses||[]).forEach(m=>{ if(m>=0&&m<=2) mc[m]++; })));
   const order=[2,1], labels=['符号が違う','そのほか'], colors=['var(--teal2)','#B9C3C0'];
@@ -670,6 +779,34 @@ function renderData(){
   if(!logs.length) hs.innerHTML='<div class="empty">まだ 記録が ありません</div>';
   else { let h='<table class="rec"><tr><th>日時</th><th>種類</th><th style="text-align:right">点数</th><th style="text-align:right">時間</th></tr>'; logs.slice().reverse().slice(0,30).forEach(function(g,i){ const cls=g.ten===100?'sp100':(g.ten>=80?'sp80':'sp0'); h+='<tr class="hrow" data-i="'+i+'" style="cursor:pointer"><td>'+fmtDate(g.at)+'</td><td>'+g.kind+'</td><td class="n"><span class="scorepill '+cls+'">'+g.ten+'点</span></td><td class="n">'+fmtTime(g.sec)+'</td></tr><tr><td colspan="4" style="padding:0"><div class="detail" id="dt'+i+'">'+detailHTML(g)+'</div></td></tr>'; }); hs.innerHTML=h+'</table>'; hs.querySelectorAll('.hrow').forEach(function(tr){ tr.addEventListener('click',function(){ $('dt'+tr.dataset.i).classList.toggle('show'); }); }); }
 }
+
+function renderMissCourse(){
+  const p=curPerson(), pool=missPool();
+  const n=pool.miss.length, s=pool.shaky.length, fixed=n+s;
+  const lead=$("missLead"), box=$("missList");
+  if(!p){
+    lead.textContent="学習者を えらぶと、その人が まちがえた問題を あつめて 出題します。（いまは ランダム5問になります）";
+  } else if(fixed===0){
+    lead.textContent="いま 直す問題は ありません。始めると ランダムに5問 出題します。";
+  } else {
+    lead.textContent="直したい問題を あつめて 5問 出題します。"
+      +(fixed<PRMSU?"（たりないぶんは ランダムに出題します）":"");
+  }
+  box.innerHTML="";
+  pool.miss.slice(0,12).concat(pool.shaky.slice(0,12-Math.min(12,pool.miss.length))).forEach(function(x){
+    const d=document.createElement("span");
+    d.className="miss-chip"+(x.state===1?" shaky":"");
+    d.innerHTML=x.raw.q.replace(/x/g,'<i>χ</i>');
+    d.title=(x.state===2?"まちがえた問題":"2回以上かかった問題")+"（正解 "+signed(x.raw.ans)+"）";
+    box.appendChild(d);
+  });
+  if(fixed>12) box.appendChild(Object.assign(document.createElement("span"),
+    {className:"miss-chip shaky",textContent:"ほか"}));
+  $("missStartBtn").textContent = fixed===0 ? "ランダムで 練習する" : "まちがい直しを 始める";
+  buildMain();
+}
+$("missStartBtn").addEventListener("click",function(){ beep("tap"); startReview(); });
+
 function detailHTML(g){ let h=''; g.items.forEach(function(it){ h+='<div class="'+(it.ok?'':'ng')+'">'+(it.ok?'○':'✕')+' '+it.q+' → '+plainNum(it.user||'—')+(it.ok?'':' （正解＝'+plainNum(it.ans)+'）')+'</div>'; }); return h; }
 function fmtDate(t){ const d=new Date(t); return (d.getMonth()+1)+'/'+d.getDate()+' '+d.getHours()+':'+('0'+d.getMinutes()).slice(-2); }
 function renderWhoList(){ const l=$('whoList'); l.innerHTML=''; if(!DB.people.length){ l.innerHTML='<div class="empty">学習者を 登録すると 記録が のこせます</div>'; return; } DB.people.forEach(function(p){ const d=document.createElement('div'); d.className='who-item'+(p.id===DB.cur?' on':''); const n=DB.logs.filter(g=>g.pid===p.id).length; d.innerHTML='<span class="nm">'+personLabel(p)+'<span class="sm2"> '+n+'回</span></span>'; const b1=document.createElement('button'); b1.className='mini'; b1.textContent=(p.id===DB.cur?'えらび中':'えらぶ'); b1.addEventListener('click',function(){ DB.cur=p.id; dbSave(); updateWhoBadge(); renderData(); }); const b2=document.createElement('button'); b2.className='mini red'; b2.textContent='けす'; b2.addEventListener('click',function(){ if(!confirm(personLabel(p)+' を 記録ごと 消しますか？')) return; DB.people=DB.people.filter(x=>x.id!==p.id); DB.logs=DB.logs.filter(g=>g.pid!==p.id); if(DB.cur===p.id) DB.cur=DB.people.length?DB.people[0].id:null; dbSave(); updateWhoBadge(); renderData(); }); d.appendChild(b1); d.appendChild(b2); l.appendChild(d); }); }
@@ -681,12 +818,12 @@ $('dataBackBtn').addEventListener('click',function(){ beep('tap'); show('main');
 $('whoBadge').addEventListener('click',function(){ beep('tap'); openData(); });
 $('playBackBtn').addEventListener('click',function(){ clearInterval(timerId); show('main'); });
 $('againBtn').addEventListener('click',function(){ beep('tap'); startRound(S.mode); });
+$('missAgainBtn').addEventListener('click',function(){beep('tap');startReview();});
 $('homeBtn').addEventListener('click',function(){ beep('tap'); show('main'); });
 $('soundBtn').addEventListener('click',function(){ soundOn=!soundOn; $('soundBtn').textContent=soundOn?'🔊':'🔇'; });
 document.addEventListener('pointerdown',function(){ if(!actx){ try{ actx=new(window.AudioContext||window.webkitAudioContext)(); }catch(e){} } },{once:true});
 
 buildMain(); updateWhoBadge();
 </script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79"}' crossorigin="anonymous"></script>
 </body>
 </html>
