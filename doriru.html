@@ -135,13 +135,13 @@
   .mcard .ex { font-family: "M PLUS Rounded 1c"; font-weight: 900; font-size: 16px; }
   .mcard .sm { display: block; font-size: 12px; color: var(--ink-soft); font-weight: 700; margin-top: 2px; }
 
-  .foot { display: flex; justify-content: center; margin-top: 18px; gap: 10px; }
-  .foot button {
+  .foot { display: flex; justify-content: center; margin-top: 18px; gap: 10px; flex-wrap: wrap; }
+  .foot button, .foot a {
     display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 900;
     border: none; border-radius: 16px; padding: 12px 22px; font-size: 15px; color: var(--ink); background: #fff;
     box-shadow: 0 5px 0 rgba(55,66,74,.15); font-family: inherit; cursor: pointer;
   }
-  .foot button:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(55,66,74,.15); }
+  .foot button:active, .foot a:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(55,66,74,.15); }
   .credit { text-align: center; margin-top: 16px; font-size: 11px; color: #9AA4A9; line-height: 1.7; }
 
   /* ---- play ---- */
@@ -272,6 +272,11 @@
   .sbtn.pur:active { box-shadow: 0 1px 0 var(--blue-deep); }
   .sbtn.danger { background: #FDECE9; color: var(--red); box-shadow: 0 4px 0 #F3C4BC; }
   .sbtn.danger:active { box-shadow: 0 1px 0 #F3C4BC; }
+  .sbtn.youbo {
+    display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
+    background: #E4F1FA; color: var(--blue-deep); box-shadow: 0 4px 0 rgba(31,124,174,.28);
+  }
+  .sbtn.youbo:active { box-shadow: 0 1px 0 rgba(31,124,174,.28); }
   .form-row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; justify-content: center; }
   .fld { display: flex; flex-direction: column; gap: 4px; }
   .fld label { font-size: 11px; font-weight: 900; color: var(--ink-soft); }
@@ -317,7 +322,7 @@
       <h1>中学校数学ドリル</h1>
       <button class="splash-btn" id="startSplashBtn">学習をはじめる</button>
       <div class="credit" style="margin-top: 24px;">
-        岐阜女子大学（安藤忠展） Ver 5.01
+        岐阜女子大学（安藤忠展） Ver 5.05
       </div>
     </div>
   </section>
@@ -339,8 +344,9 @@
     <div class="menu-head"><h2 id="gradeHead">1年生の単元</h2><p>クリックして選択</p></div>
     <div class="mlist" id="mainList"></div>
     <div class="foot" style="margin-top:20px;">
-      <button id="mainDataBtn" class="sbtn pur">📊 学習記録・成績データ</button>
+      <button id="mainDataBtn" class="sbtn">📊 学習者反応データ処理</button>
       <button id="mainAboutBtn" class="sbtn">ℹ️ このアプリについて</button>
+      <a id="mainYouboBtn" class="sbtn youbo" href="https://forms.gle/4Xn2iEos2LuAUATo9" target="_blank" rel="noopener">📝 要望など</a>
     </div>
   </section>
 
@@ -1086,6 +1092,7 @@ $("startSplashBtn").addEventListener("click", () => { beep("tap"); show("main");
 $("appLogo").addEventListener("click", () => { beep("tap"); show("main"); buildMain(); });
 $("mainDataBtn").addEventListener("click", () => { beep("tap"); openData(); });
 $("mainAboutBtn").addEventListener("click", () => { beep("tap"); show("about"); });
+$("mainYouboBtn").addEventListener("click", () => { beep("tap"); });   // 要望など（Googleフォームを別タブで開く）
 $("aboutBackBtn").addEventListener("click", () => { beep("tap"); show("main"); });
 $("dataBackBtn").addEventListener("click", () => { beep("tap"); show("main"); });
 $("whoBadge").addEventListener("click", () => { beep("tap"); openData(); });
