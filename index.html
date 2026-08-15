@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>中学校数学ドリル - Webアプリ版</title>
+<title>数学ドリル - Webアプリ版</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=M+PLUS+Rounded+1c:wght@700;800;900&display=swap" rel="stylesheet">
@@ -308,7 +308,7 @@
 <body>
 <div class="app">
   <header class="bar">
-    <div class="logo" id="appLogo"><span class="pin">📐</span><b>中学校数学ドリル</b></div>
+    <div class="logo" id="appLogo"><span class="pin">📐</span><b>数学ドリル</b></div>
     <div class="who">
       <button class="badge" id="whoBadge" title="学習者の切りかえ">学習者なし</button>
       <button class="icon-btn" id="soundBtn" title="おと">🔊</button>
@@ -319,7 +319,7 @@
   <section class="screen active" id="splashScreen">
     <div class="splash-card">
       <div style="font-size: 48px;">📐✏️</div>
-      <h1>中学校数学ドリル</h1>
+      <h1>数学ドリル</h1>
       <button class="splash-btn" id="startSplashBtn">学習をはじめる</button>
       <div class="credit" style="margin-top: 24px;">
         岐阜女子大学（安藤忠展） Ver 5.05
@@ -330,15 +330,15 @@
   <!-- ===== メインメニュー (FRMMAIN) ===== -->
   <section class="screen" id="mainScreen">
     <div class="title-card">
-      <h1>中学校数学ドリル</h1>
+      <h1>数学ドリル</h1>
       <div class="sub">学年と単元を選んで練習をスタートしましょう</div>
       <div class="prompt">学年タブを切り替えてコースを選択できます</div>
     </div>
 
     <div class="grade-tabs">
-      <button class="gtab active" data-g="1">中1 数学</button>
-      <button class="gtab" data-g="2">中2 数学</button>
-      <button class="gtab" data-g="3">中3 数学</button>
+      <button class="gtab active" data-g="1">１年生</button>
+      <button class="gtab" data-g="2">２年生</button>
+      <button class="gtab" data-g="3">３年生</button>
     </div>
 
     <div class="menu-head"><h2 id="gradeHead">1年生の単元</h2><p>クリックして選択</p></div>
@@ -446,8 +446,8 @@
   <!-- ===== アプリ情報 (frmAbout) ===== -->
   <section class="screen" id="aboutScreen">
     <div class="title-card">
-      <h1>中学校数学ドリル について</h1>
-        </div>
+      <h1>数学ドリル について</h1>
+    </div>
     <div class="panel">
       <h3><span class="bar2"></span>概要</h3>
       <p style="font-size:14px;line-height:1.6;margin:0 0 10px;">
@@ -455,7 +455,7 @@
       </p>
       <p style="font-size:12px;color:var(--ink-soft);margin:0;">
         制作・著作: 岐阜女子大学（安藤忠展）
-         </p>
+      </p>
     </div>
     <div class="foot"><button id="aboutBackBtn">← メインメニューへ</button></div>
   </section>
@@ -611,7 +611,7 @@ const DRILL_CURRICULUM = {
 function generateProblem(type) {
   let q = "", ans = "", hint = "";
 
-  // 中1: 正負の数
+  // 1年生: 正負の数
   if (type === "1-1-1") {
     const a = rnd(-9, 9), b = rnd(-9, 9);
     q = (a < 0 ? `(${a})` : `${a}`) + " ＋ " + (b < 0 ? `(${b})` : `${b}`) + " ＝";
@@ -633,7 +633,7 @@ function generateProblem(type) {
       ans = String(a);
     }
   }
-  // 中1: 文字と式
+  // 1年生: 文字と式
   else if (type === "1-2-1") {
     const a = rnd(-8, 8) || 1, b = rnd(-8, 8) || 1;
     const sum = a + b;
@@ -648,7 +648,7 @@ function generateProblem(type) {
     const kbStr = kb > 0 ? `＋${kb}` : `－${Math.abs(kb)}`;
     ans = `${ka === 1 ? '' : ka}χ${kbStr}`;
   }
-  // 中1: 方程式
+  // 1年生: 方程式
   else if (type === "1-3-1" || type === "1-3-2") {
     const x = rnd(-9, 9);
     if (type === "1-3-1") {
@@ -663,7 +663,7 @@ function generateProblem(type) {
       ans = String(x);
     }
   }
-  // 中3: 展開・平方根・2次方程式
+  // 3年生: 展開・平方根・2次方程式
   else if (type === "3-1-2") {
     const a = rnd(-8, 8) || 1, b = rnd(-8, 8) || 1;
     const sum = a + b, prod = a * b;
