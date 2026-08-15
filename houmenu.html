@@ -79,11 +79,13 @@
   .mcard .lbl{font-weight:900;font-size:15px;line-height:1.35;}
   .mcard .sm{display:block;font-size:11px;color:var(--ink-soft);font-weight:700;margin-top:3px;}
 
-  .foot{display:flex;justify-content:center;margin-top:18px;}
+  .foot{display:flex;justify-content:center;margin-top:18px;gap:10px;flex-wrap:wrap;}
   .foot a,.foot button{display:inline-flex;align-items:center;gap:8px;font-weight:900;border:none;border-radius:16px;
     padding:12px 22px;font-size:15px;color:var(--ink);background:#fff;box-shadow:0 5px 0 rgba(55,66,74,.15);
     font-family:inherit;cursor:pointer;text-decoration:none;}
   .foot a:active,.foot button:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(55,66,74,.15);}
+  .foot a.enquete{background:#E4F1FA;color:var(--blue-deep);box-shadow:0 4px 0 rgba(31,124,174,.28);}
+  .foot a.enquete:active{box-shadow:0 1px 0 rgba(31,124,174,.28);}
   .credit{text-align:center;margin-top:14px;font-size:11px;color:#9AA4A9;line-height:1.7;}
 
   /* ---- play ---- */
@@ -253,9 +255,12 @@
     </div>
     <div class="menu-head"><h2>メニュー</h2><p>番号キーでも えらべます</p></div>
     <div class="mlist" id="mainList"></div>
-    <div class="foot"><a href="doriru.html">← 単元メニューへもどる</a></div>
+    <div class="foot">
+      <a href="doriru.html">← 単元メニューへもどる</a>
+      <a id="mainEnqueteBtn" class="enquete" href="https://forms.gle/f3zVUSiP8LqeNbvj9" target="_blank" rel="noopener">📋 アンケート</a>
+    </div>
     <div class="credit">
-      岐阜女子大学（安藤忠展） Ver. 5.03／ Web版
+      岐阜女子大学（安藤忠展） Ver. 5.04／ Web版
     </div>
   </section>
 
@@ -466,16 +471,16 @@ const DAT4=[
 
 const MODES=[
  {t:'代入法', data:DAT1, sm:'ｙ＝χ＋１ を もう一方に 代入して 解く'},
- {t:'加減法　その１', data:DAT2, sm:'たすと ｙ が 消える 形'},
- {t:'加減法　その２', data:DAT3, sm:'ひくと 文字が 消える 形'},
- {t:'加減法　その３', data:DAT4, sm:'何倍かしてから たす・ひく 形'},
+ {t:'加減法 その１', data:DAT2, sm:'たすと ｙ が 消える 形'},
+ {t:'加減法 その２', data:DAT3, sm:'ひくと 文字が 消える 形'},
+ {t:'加減法 その３', data:DAT4, sm:'何倍かしてから たす・ひく 形'},
  {t:'ランダムコース', rand:true, sm:'４つの 中から ランダムに出題'},
  {t:'まちがい直しコース', review:true, sm:'まちがえた問題を あつめて 出題'},
  {t:'学習者反応データ処理システム', dataScreen:true, sm:'学習の記録を 見る'},
 ];
 const MODE_REVIEW=MODES.findIndex(function(m){return m.review;});
 const PRMSU=5, MISSN=3;
-const MISSMSG=["間違っていますよ！","もう一度　考えよう！","符号が違います！","絶対値が違います！"];
+const MISSMSG=["間違っていますよ！","もう一度 考えよう！","符号が違います！","絶対値が違います！"];
 
 /* =========================================================
    学習記録
@@ -504,7 +509,7 @@ function kaisuu(m){ const p=curPerson(); if(!p) return 0;
 function saveLog(ten,sec){
   const p=curPerson(); if(!p) return;
   const items=S.list.map(function(it){
-    return {q:it.p[0]+"　"+it.p[1], ax:it.p[2], ay:it.p[3],
+    return {q:it.p[0]+" "+it.p[1], ax:it.p[2], ay:it.p[3],
             ux:it.ux||"", uy:it.uy||"", ok:it.correct,
             tries:it.tries, miss:it.lastMiss==null?-1:it.lastMiss}; });
   DB.logs.push({pid:p.id,at:Date.now(),mode:S.mode,kind:kindName(S.mode),ten:ten,sec:sec,items:items});
@@ -752,6 +757,7 @@ function finish(){
   const ten=Math.floor(ok/PRMSU*100), sec=Math.floor((Date.now()-S.t0)/1000);
   saveLog(ten,sec);
   buildMain();
+  const nm=missCount();
   $("missAgainBtn").style.display = (curPerson()&&missCount()>0) ? "" : "none";
   $("scoreNum").textContent=ten;
   const w=$("hanamaruWrap"), m=$("resultMsg");
@@ -759,14 +765,14 @@ function finish(){
   else if(ten>=80){m.textContent="あともうすこし！";m.style.color="var(--yellow-deep)";w.innerHTML=star();beep("correct");}
   else{m.textContent="もっとがんばろう！";m.style.color="var(--green)";w.innerHTML=face();}
   const p0=curPerson();
-  $("resultTime").textContent="じかん： "+fmtTime(sec)+(p0?("　／　この種類は "+kaisuu(S.mode)+"回目"):"");
+  $("resultTime").textContent="じかん： "+fmtTime(sec)+(p0?(" ／ この種類は "+kaisuu(S.mode)+"回目"):"");
   const rv=$("review"); rv.innerHTML="";
   S.list.forEach(function(it){
     const row=document.createElement("div"); row.className="review-row";
     const cs='χ＝'+String(it.p[2]).replace('-','－')+'、ｙ＝'+String(it.p[3]).replace('-','－');
     const us='χ＝'+String(it.ux||"―").replace('-','－')+'、ｙ＝'+String(it.uy||"―").replace('-','－');
     row.innerHTML='<span class="rmark '+(it.correct?"ok":"ng")+'">'+(it.correct?"○":"✕")+'</span>'
-      +'<span class="rq">'+it.p[0]+'　'+it.p[1]+'<br>'
+      +'<span class="rq">'+it.p[0]+' '+it.p[1]+'<br>'
       +(it.correct?'<span class="rc">'+cs+'</span>'
         :'<span class="ra wrong">'+us+'</span><span class="rc">'+cs+'</span>')+'</span>';
     rv.appendChild(row);
@@ -869,8 +875,8 @@ function detailHTML(g){
   let h='';
   g.items.forEach(function(it){
     h+='<div class="'+(it.ok?'':'ng')+'">'+(it.ok?'○':'✕')+' '+it.q
-      +'　χ＝'+String(it.ux||'―').replace('-','－')+'、ｙ＝'+String(it.uy||'―').replace('-','－')
-      +(it.ok?'':'　（正解＝χ＝'+String(it.ax).replace('-','－')+'、ｙ＝'+String(it.ay).replace('-','－')+'）')+'</div>';});
+      +' χ＝'+String(it.ux||'―').replace('-','－')+'、ｙ＝'+String(it.uy||'―').replace('-','－')
+      +(it.ok?'':' （正解＝χ＝'+String(it.ax).replace('-','－')+'、ｙ＝'+String(it.ay).replace('-','－')+'）')+'</div>';});
   return h;
 }
 function fmtDate(t){const d=new Date(t);
@@ -882,7 +888,7 @@ function renderWhoList(){
     const d=document.createElement("div");
     d.className="who-item"+(p.id===DB.cur?" on":"");
     const n=DB.logs.filter(function(g){return g.pid===p.id;}).length;
-    d.innerHTML='<span class="nm">'+personLabel(p)+'<span class="sm2">　'+n+'回</span></span>';
+    d.innerHTML='<span class="nm">'+personLabel(p)+'<span class="sm2"> '+n+'回</span></span>';
     const b1=document.createElement("button"); b1.className="mini";
     b1.textContent=(p.id===DB.cur?"えらび中":"えらぶ");
     b1.addEventListener("click",function(){DB.cur=p.id;dbSave();updateWhoBadge();renderData();});
@@ -929,6 +935,7 @@ $("againBtn").addEventListener("click",function(){beep("tap");
 $("missAgainBtn").addEventListener("click",function(){beep("tap");startReview();});
 $("otherBtn").addEventListener("click",function(){beep("tap");show("main");});
 $("homeBtn").addEventListener("click",function(){beep("tap");show("main");});
+$("mainEnqueteBtn").addEventListener("click",function(){beep("tap");}); // アンケート（Googleフォームを別タブで開く）
 $("soundBtn").addEventListener("click",function(){soundOn=!soundOn;$("soundBtn").textContent=soundOn?"🔊":"🔇";});
 document.addEventListener("pointerdown",function(){if(!actx){try{actx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}},{once:true});
 

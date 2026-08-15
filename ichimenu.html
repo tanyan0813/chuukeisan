@@ -79,11 +79,13 @@
   .mcard .ex{font-family:"M PLUS Rounded 1c";font-weight:900;font-size:18px;}
   .mcard .sm{display:block;font-size:11px;color:var(--ink-soft);font-weight:700;margin-top:3px;}
 
-  .foot{display:flex;justify-content:center;margin-top:18px;}
+  .foot{display:flex;justify-content:center;margin-top:18px;gap:10px;flex-wrap:wrap;}
   .foot a,.foot button{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-weight:900;
     border:none;border-radius:16px;padding:12px 22px;font-size:15px;color:var(--ink);background:#fff;
     box-shadow:0 5px 0 rgba(55,66,74,.15);font-family:inherit;cursor:pointer;}
   .foot a:active,.foot button:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(55,66,74,.15);}
+  .foot a.enquete{background:#E4F1FA;color:var(--blue-deep);box-shadow:0 4px 0 rgba(31,124,174,.28);}
+  .foot a.enquete:active{box-shadow:0 1px 0 rgba(31,124,174,.28);}
   .credit{text-align:center;margin-top:14px;font-size:11px;color:#9AA4A9;line-height:1.7;}
 
   /* ---- play ---- */
@@ -245,9 +247,12 @@
     </div>
     <div class="menu-head"><h2>メニュー</h2><p>番号キー 1〜5 でも えらべます</p></div>
     <div class="mlist" id="mainList"></div>
-    <div class="foot"><a href="doriru.html">← 単元メニューへもどる</a></div>
+    <div class="foot">
+      <a href="doriru.html">← 単元メニューへもどる</a>
+      <a id="mainEnqueteBtn" class="enquete" href="https://forms.gle/f3zVUSiP8LqeNbvj9" target="_blank" rel="noopener">📋 アンケート</a>
+    </div>
     <div class="credit">
-      岐阜女子大学（安藤忠展）　Ver. 5.03／ Web版
+      岐阜女子大学（安藤忠展） Ver. 5.04／ Web版
     </div>
   </section>
 
@@ -393,7 +398,7 @@ const MODES=[
 ];
 const MODE_REVIEW=MODES.findIndex(function(m){return m.review;});
 const PRMSU=5, MISSN=3;
-const MISSMSG=["間違っていますよ！","もう一度　考えよう！","符号が違います！","絶対値が違います！"];
+const MISSMSG=["間違っていますよ！","もう一度 考えよう！","符号が違います！","絶対値が違います！"];
 
 /* =========================================================
    学習記録
@@ -648,7 +653,7 @@ function finish(){
   else if(ten>=80){m.textContent="あともうすこし！";m.style.color="var(--yellow-deep)";w.innerHTML=star();beep("correct");}
   else{m.textContent="もっとがんばろう！";m.style.color="var(--green)";w.innerHTML=face();}
   const p0=curPerson();
-  $("resultTime").textContent="じかん： "+fmtTime(sec)+(p0?("　／　この種類は "+kaisuu(S.mode)+"回目"):"");
+  $("resultTime").textContent="じかん： "+fmtTime(sec)+(p0?(" ／ この種類は "+kaisuu(S.mode)+"回目"):"");
   const rv=$("review"); rv.innerHTML="";
   S.list.forEach(function(it){
     const row=document.createElement("div"); row.className="review-row";
@@ -758,8 +763,8 @@ $("missStartBtn").addEventListener("click",function(){ beep("tap"); startReview(
 function detailHTML(g){
   let h='';
   g.items.forEach(function(it){
-    h+='<div class="'+(it.ok?'':'ng')+'">'+(it.ok?'○':'✕')+' '+it.q+'　χ＝'+String(it.user||'―').replace('-','－')
-      +(it.ok?'':'　（正解＝χ＝'+String(it.ans).replace('-','－')+'）')+'</div>';});
+    h+='<div class="'+(it.ok?'':'ng')+'">'+(it.ok?'○':'✕')+' '+it.q+' χ＝'+String(it.user||'―').replace('-','－')
+      +(it.ok?'':' （正解＝χ＝'+String(it.ans).replace('-','－')+'）')+'</div>';});
   return h;
 }
 function fmtDate(t){const d=new Date(t);
@@ -771,7 +776,7 @@ function renderWhoList(){
     const d=document.createElement("div");
     d.className="who-item"+(p.id===DB.cur?" on":"");
     const n=DB.logs.filter(function(g){return g.pid===p.id;}).length;
-    d.innerHTML='<span class="nm">'+personLabel(p)+'<span class="sm2">　'+n+'回</span></span>';
+    d.innerHTML='<span class="nm">'+personLabel(p)+'<span class="sm2"> '+n+'回</span></span>';
     const b1=document.createElement("button"); b1.className="mini";
     b1.textContent=(p.id===DB.cur?"えらび中":"えらぶ");
     b1.addEventListener("click",function(){DB.cur=p.id;dbSave();updateWhoBadge();renderData();});
@@ -818,6 +823,7 @@ $("againBtn").addEventListener("click",function(){beep("tap");
 $("missAgainBtn").addEventListener("click",function(){beep("tap");startReview();});
 $("otherBtn").addEventListener("click",function(){beep("tap");show("main");});
 $("homeBtn").addEventListener("click",function(){beep("tap");show("main");});
+$("mainEnqueteBtn").addEventListener("click",function(){beep("tap");}); // アンケート（Googleフォームを別タブで開く）
 $("soundBtn").addEventListener("click",function(){soundOn=!soundOn;$("soundBtn").textContent=soundOn?"🔊":"🔇";});
 document.addEventListener("pointerdown",function(){if(!actx){try{actx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}},{once:true});
 

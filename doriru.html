@@ -322,7 +322,7 @@
       <h1>数学ドリル</h1>
       <button class="splash-btn" id="startSplashBtn">学習をはじめる</button>
       <div class="credit" style="margin-top: 24px;">
-        岐阜女子大学（安藤忠展） Ver 5.05
+        岐阜女子大学（安藤忠展） Ver 5.06
       </div>
     </div>
   </section>
@@ -346,6 +346,7 @@
     <div class="foot" style="margin-top:20px;">
       <button id="mainDataBtn" class="sbtn">📊 学習者反応データ処理</button>
       <button id="mainAboutBtn" class="sbtn">ℹ️ このアプリについて</button>
+      <a id="mainEnqueteBtn" class="sbtn youbo" href="https://forms.gle/f3zVUSiP8LqeNbvj9" target="_blank" rel="noopener">📋 アンケート</a>
       <a id="mainYouboBtn" class="sbtn youbo" href="https://forms.gle/4Xn2iEos2LuAUATo9" target="_blank" rel="noopener">📝 要望など</a>
     </div>
   </section>
@@ -1092,6 +1093,7 @@ $("startSplashBtn").addEventListener("click", () => { beep("tap"); show("main");
 $("appLogo").addEventListener("click", () => { beep("tap"); show("main"); buildMain(); });
 $("mainDataBtn").addEventListener("click", () => { beep("tap"); openData(); });
 $("mainAboutBtn").addEventListener("click", () => { beep("tap"); show("about"); });
+$("mainEnqueteBtn").addEventListener("click", () => { beep("tap"); }); // アンケート（Googleフォームを別タブで開く）
 $("mainYouboBtn").addEventListener("click", () => { beep("tap"); });   // 要望など（Googleフォームを別タブで開く）
 $("aboutBackBtn").addEventListener("click", () => { beep("tap"); show("main"); });
 $("dataBackBtn").addEventListener("click", () => { beep("tap"); show("main"); });

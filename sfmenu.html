@@ -76,11 +76,13 @@
   .mcard .ex{font-family:"M PLUS Rounded 1c";font-weight:900;font-size:17px;}
   .mcard .sm{display:block;font-size:11px;color:var(--ink-soft);font-weight:700;margin-top:2px;}
 
-  .foot{display:flex;justify-content:center;margin-top:18px;}
+  .foot{display:flex;justify-content:center;margin-top:18px;gap:10px;flex-wrap:wrap;}
   .foot a,.foot button{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-weight:900;
     border:none;border-radius:16px;padding:12px 22px;font-size:15px;color:var(--ink);background:#fff;
     box-shadow:0 5px 0 rgba(55,66,74,.15);font-family:inherit;cursor:pointer;}
   .foot a:active,.foot button:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(55,66,74,.15);}
+  .foot a.enquete{background:#E4F1FA;color:var(--blue-deep);box-shadow:0 4px 0 rgba(31,124,174,.28);}
+  .foot a.enquete:active{box-shadow:0 1px 0 rgba(31,124,174,.28);}
   .credit{text-align:center;margin-top:14px;font-size:11px;color:#9AA4A9;line-height:1.7;}
 
   /* ---- play ---- */
@@ -258,9 +260,12 @@
     </div>
     <div class="menu-head"><h2>計算ドリルのメニュー</h2><p>番号キー 1〜9・0 でも えらべます</p></div>
     <div class="mlist" id="mainList"></div>
-    <div class="foot"><a href="doriru.html">← 単元メニューへもどる</a></div>
+    <div class="foot">
+      <a href="doriru.html">← 単元メニューへもどる</a>
+      <a id="mainEnqueteBtn" class="enquete" href="https://forms.gle/f3zVUSiP8LqeNbvj9" target="_blank" rel="noopener">📋 アンケート</a>
+    </div>
     <div class="credit">
-      岐阜女子大学（安藤忠展） Ver. 5.04<br>
+      岐阜女子大学（安藤忠展） Ver. 5.05<br>
     </div>
   </section>
 
@@ -442,13 +447,13 @@ const CATS=[
    {t:'３－５＋２ の ような計算', g:()=>term(3) },
    {t:'３－５＋２＋４ の ような計算', g:()=>term(4) },
  ]},
- { name:'乗法　累乗', label:'乗法　累乗', sub:[
+ { name:'乗法 累乗', label:'乗法 累乗', sub:[
    {t:'（＋５）² の ような計算', g:()=>{const a=d9(); return G('（＋'+a+'）<sup>2</sup>',a*a);} },
    {t:'（－５）² の ような計算', g:()=>{const a=d9(); return G('（－'+a+'）<sup>2</sup>',a*a);} },
    {t:'（＋５²） の ような計算', g:()=>{const a=d9(); return G('（＋'+a+'<sup>2</sup>）',a*a);} },
    {t:'（－５²） の ような計算', g:()=>{const a=d9(); return G('（－'+a+'<sup>2</sup>）',-a*a);} },
  ]},
- { name:'総合計算練習', label:'正の数・負の数　総合計算練習', sub:[] },
+ { name:'総合計算練習', label:'正の数・負の数 総合計算練習', sub:[] },
  { name:'まちがい直し', label:'まちがい直しコース', review:true, sub:[] },
  { name:'学習記録', label:'学習者反応データ処理システム', data:true, sub:[] },
 ];
@@ -471,7 +476,7 @@ const ALLSUB=[];
 CATS.forEach((c,ci)=>{ if(ci<7) c.sub.forEach(s=>ALLSUB.push(s)); });
 
 const PRMSU=5, MISSN=3;
-const MISSMSG=["間違っていますよ！","もう一度　考えよう！","符号が違います！","絶対値が違います！"];
+const MISSMSG=["間違っていますよ！","もう一度 考えよう！","符号が違います！","絶対値が違います！"];
 
 /* =========================================================
    学習記録（原作「学習者反応データ処理システム」）
@@ -509,7 +514,7 @@ function kindName(cat,sub){
   if(cat===CAT_REVIEW) return "まちがい直しコース";
   if(cat===7) return "総合計算練習";
   if(sub===-1) return CATS[cat].name+"／ランダムコース";
-  return CATS[cat].name+"　"+CATS[cat].sub[sub].t;
+  return CATS[cat].name+" "+CATS[cat].sub[sub].t;
 }
 /* この種類は何回目か（原作 KAISUU） */
 function kaisuu(cat,sub){
@@ -701,7 +706,7 @@ function detailHTML(g){
   g.items.forEach(function(it){
     h+='<div class="'+(it.ok?'':'ng')+'">'+(it.ok?'○':'✕')+' '+it.q.replace(/<sup>2<\/sup>/g,'²')
       +' ＝ '+(it.user||'―').replace('+','＋').replace('-','－')
-      +(it.ok?'':'　（正解＝'+it.ans.replace('+','＋').replace('-','－')+'）')+'</div>';
+      +(it.ok?'':' （正解＝'+it.ans.replace('+','＋').replace('-','－')+'）')+'</div>';
   });
   return h;
 }
@@ -716,7 +721,7 @@ function renderWhoList(){
     const d=document.createElement("div");
     d.className="who-item"+(p.id===DB.cur?" on":"");
     const n=DB.logs.filter(function(g){return g.pid===p.id;}).length;
-    d.innerHTML='<span class="nm">'+personLabel(p)+'<span class="sm2">　'+n+'回</span></span>';
+    d.innerHTML='<span class="nm">'+personLabel(p)+'<span class="sm2"> '+n+'回</span></span>';
     const b1=document.createElement("button"); b1.className="mini";
     b1.textContent=(p.id===DB.cur?"えらび中":"えらぶ");
     b1.addEventListener("click",function(){ DB.cur=p.id; dbSave(); updateWhoBadge(); renderData(); });
@@ -858,7 +863,7 @@ function startRound(cat,sub){
     list.push({p:p,tries:0,correct:false,user:""});
   }
   const chip = cat===7 ? '総合計算練習'
-    : CATS[cat].name + (sub===-1?'／ランダム':'　'+CATS[cat].sub[sub].t);
+    : CATS[cat].name + (sub===-1?'／ランダム':' '+CATS[cat].sub[sub].t);
   beginRound(cat,sub,list,chip);
 }
 function buildDots(){const d=$("dots");d.innerHTML="";
@@ -980,7 +985,7 @@ function finish(){
   else if(ten>=80){m.textContent="あともうすこし！";m.style.color="var(--yellow-deep)";w.innerHTML=star();beep("correct");}
   else{m.textContent="もっとがんばろう！";m.style.color="var(--green)";w.innerHTML=face();}
   const p0=curPerson();
-  const kn=p0?("　／　この種類は "+kaisuu(S.cat,S.sub)+"回目"):"";
+  const kn=p0?(" ／ この種類は "+kaisuu(S.cat,S.sub)+"回目"):"";
   $("resultTime").textContent="じかん： "+fmtTime(sec)+kn;
   const rv=$("review"); rv.innerHTML="";
   S.list.forEach(function(it){
@@ -1010,6 +1015,7 @@ $("againBtn").addEventListener("click",function(){beep("tap");
 $("otherBtn").addEventListener("click",function(){beep("tap"); if(S.cat>=CAT_TOTAL) show("main"); else openSub(S.cat);});
 $("missAgainBtn").addEventListener("click",function(){beep("tap");startReview();});
 $("homeBtn").addEventListener("click",function(){beep("tap");show("main");});
+$("mainEnqueteBtn").addEventListener("click",function(){beep("tap");}); // アンケート（Googleフォームを別タブで開く）
 $("soundBtn").addEventListener("click",function(){soundOn=!soundOn;$("soundBtn").textContent=soundOn?"🔊":"🔇";});
 document.addEventListener("pointerdown",function(){if(!actx){try{actx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}},{once:true});
 

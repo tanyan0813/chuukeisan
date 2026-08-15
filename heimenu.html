@@ -110,13 +110,15 @@
   .mcard .ex { font-family: "M PLUS Rounded 1c"; font-weight: 900; font-size: 16px; }
   .mcard .sm { display: block; font-size: 12px; color: var(--ink-soft); font-weight: 700; margin-top: 2px; }
 
-  .foot { display: flex; justify-content: center; margin-top: 18px; }
+  .foot { display: flex; justify-content: center; margin-top: 18px; gap: 10px; flex-wrap: wrap; }
   .foot a, .foot button {
     display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 900;
     border: none; border-radius: 16px; padding: 12px 22px; font-size: 15px; color: var(--ink); background: #fff;
     box-shadow: 0 5px 0 rgba(55,66,74,.15); font-family: inherit; cursor: pointer;
   }
   .foot a:active, .foot button:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(55,66,74,.15); }
+  .foot a.enquete { background: #E4F1FA; color: var(--blue-deep); box-shadow: 0 4px 0 rgba(31,124,174,.28); }
+  .foot a.enquete:active { box-shadow: 0 1px 0 rgba(31,124,174,.28); }
   .credit { text-align: center; margin-top: 16px; font-size: 11px; color: #9AA4A9; line-height: 1.7; }
 
   /* ---- play ---- */
@@ -317,9 +319,12 @@
     </div>
     <div class="menu-head"><h2>メインメニュー</h2><p>数字キーでも選べます</p></div>
     <div class="mlist" id="mainList"></div>
-    <div class="foot"><a href="doriru.html">← 単元メニューへもどる</a></div>
+    <div class="foot">
+      <a href="doriru.html">← 単元メニューへもどる</a>
+      <a id="mainEnqueteBtn" class="enquete" href="https://forms.gle/f3zVUSiP8LqeNbvj9" target="_blank" rel="noopener">📋 アンケート</a>
+    </div>
     <div class="credit">
-      岐阜女子大学（安藤忠展）　Ver 5.03／ Web版
+      岐阜女子大学（安藤忠展） Ver 5.04／ Web版
     </div>
   </section>
 
@@ -459,12 +464,12 @@ const MENU_STRUCTURE = [
     id: 1,
     title: "平方根の基本",
     sub: [
-      { id: 1, name: "平方根の基本　その１ (a^2 の平方根)", type: "1.1" },
-      { id: 2, name: "平方根の基本　その２ (非乗数 a の平方根)", type: "1.2" },
-      { id: 3, name: "平方根の基本　その３ (素因数分解と根号)", type: "1.3" },
+      { id: 1, name: "平方根の基本 その１ (a^2 の平方根)", type: "1.1" },
+      { id: 2, name: "平方根の基本 その２ (非乗数 a の平方根)", type: "1.2" },
+      { id: 3, name: "平方根の基本 その３ (素因数分解と根号)", type: "1.3" },
       { id: 4, name: "根号を使わず表す問題 (±√a^2)", type: "1.4" },
-      { id: 5, name: "平方根の２乗　その１ (√(±a)^2)", type: "1.5" },
-      { id: 6, name: "平方根の２乗　その２ ((±√a)^2)", type: "1.6" },
+      { id: 5, name: "平方根の２乗 その１ (√(±a)^2)", type: "1.5" },
+      { id: 6, name: "平方根の２乗 その２ ((±√a)^2)", type: "1.6" },
       { id: 7, name: "√１２＝２√３ にする問題", type: "1.7" },
       { id: 8, name: "ランダムコース", type: "1.8" }
     ]
@@ -473,8 +478,8 @@ const MENU_STRUCTURE = [
     id: 2,
     title: "平方根の加法",
     sub: [
-      { id: 1, name: "平方根の加法　その１ (a√c ＋ b√c)", type: "2.1" },
-      { id: 2, name: "平方根の加法　その２ (√a ＋ √b の変形)", type: "2.2" },
+      { id: 1, name: "平方根の加法 その１ (a√c ＋ b√c)", type: "2.1" },
+      { id: 2, name: "平方根の加法 その２ (√a ＋ √b の変形)", type: "2.2" },
       { id: 3, name: "ランダムコース", type: "2.3" }
     ]
   },
@@ -482,8 +487,8 @@ const MENU_STRUCTURE = [
     id: 3,
     title: "平方根の減法",
     sub: [
-      { id: 1, name: "平方根の減法　その１ (a√c － b√c)", type: "3.1" },
-      { id: 2, name: "平方根の減法　その２ (√a － √b の変形)", type: "3.2" },
+      { id: 1, name: "平方根の減法 その１ (a√c － b√c)", type: "3.1" },
+      { id: 2, name: "平方根の減法 その２ (√a － √b の変形)", type: "3.2" },
       { id: 3, name: "ランダムコース", type: "3.3" }
     ]
   },
@@ -491,9 +496,9 @@ const MENU_STRUCTURE = [
     id: 4,
     title: "平方根の乗法",
     sub: [
-      { id: 1, name: "平方根の乗法　その１ (√a × √b)", type: "4.1" },
-      { id: 2, name: "平方根の乗法　その２ (a√b × c√d)", type: "4.2" },
-      { id: 3, name: "平方根の乗法　その３ (応用)", type: "4.3" },
+      { id: 1, name: "平方根の乗法 その１ (√a × √b)", type: "4.1" },
+      { id: 2, name: "平方根の乗法 その２ (a√b × c√d)", type: "4.2" },
+      { id: 3, name: "平方根の乗法 その３ (応用)", type: "4.3" },
       { id: 4, name: "ランダムコース", type: "4.4" }
     ]
   },
@@ -501,8 +506,8 @@ const MENU_STRUCTURE = [
     id: 5,
     title: "平方根の除法",
     sub: [
-      { id: 1, name: "平方根の除法　その１ (√a ÷ √b)", type: "5.1" },
-      { id: 2, name: "平方根の除法　その２ (a√b ÷ √c)", type: "5.2" },
+      { id: 1, name: "平方根の除法 その１ (√a ÷ √b)", type: "5.1" },
+      { id: 2, name: "平方根の除法 その２ (a√b ÷ √c)", type: "5.2" },
       { id: 3, name: "ランダムコース", type: "5.3" }
     ]
   },
@@ -1304,7 +1309,7 @@ function detailHTML(g) {
   g.items.forEach(it => {
     h += '<div class="' + (it.ok ? '' : 'ng') + '">' + (it.ok ? '○' : '✕') + ' '
       + mathHTML(it.q) + ' ＝ ' + mathHTML(it.user || '―')
-      + (it.ok ? '' : '　（正解＝' + mathHTML(it.ans) + '）') + '</div>';
+      + (it.ok ? '' : ' （正解＝' + mathHTML(it.ans) + '）') + '</div>';
   });
   return h;
 }
@@ -1321,7 +1326,7 @@ function renderWhoList() {
     const d = document.createElement("div");
     d.className = "who-item" + (p.id === DB.cur ? " on" : "");
     const n = DB.logs.filter(g => g.pid === p.id).length;
-    d.innerHTML = '<span class="nm">' + personLabel(p) + '<span class="sm2">　' + n + '回練習</span></span>';
+    d.innerHTML = '<span class="nm">' + personLabel(p) + '<span class="sm2"> ' + n + '回練習</span></span>';
     const b1 = document.createElement("button"); b1.className = "mini";
     b1.textContent = (p.id === DB.cur ? "選択中" : "選択");
     b1.addEventListener("click", () => { DB.cur = p.id; dbSave(); updateWhoBadge(); renderData(); });
@@ -1351,7 +1356,7 @@ $("addWhoBtn").addEventListener("click", () => {
 $("csvBtn").addEventListener("click", () => {
   const p = curPerson();
   const logs = DB.logs.filter(g => p && g.pid === p.id);
-  if (!p || !logs.length) { alert("出力できる記録がありません。"); return; }
+  if (!p || !logs.length) { alert("書き出す記録がありません。"); return; }
   const rows = [["学年", "組", "番号", "氏名", "日時", "コース", "点数", "時間(秒)", "問題", "解答入力", "正解", "判定", "試行回数"]];
   logs.forEach(g => {
     g.items.forEach(it => {
@@ -1384,6 +1389,7 @@ $("missAgainBtn").addEventListener("click", () => { beep("tap"); startReview(); 
 $("otherBtn").addEventListener("click", () => { beep("tap");
   if (S.type === "review") show("main"); else openSub(curMenu1); });
 $("homeBtn").addEventListener("click", () => { beep("tap"); show("main"); });
+$("mainEnqueteBtn").addEventListener("click", () => { beep("tap"); }); // アンケート（Googleフォームを別タブで開く）
 $("soundBtn").addEventListener("click", () => { soundOn = !soundOn; $("soundBtn").textContent = soundOn ? "🔊" : "🔇"; });
 
 buildMain(); updateWhoBadge();

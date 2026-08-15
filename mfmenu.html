@@ -80,11 +80,13 @@
   .mcard .ex{font-family:"M PLUS Rounded 1c";font-weight:900;font-size:16px;}
   .mcard .sm{display:block;font-size:11px;color:var(--ink-soft);font-weight:700;margin-top:2px;}
 
-  .foot{display:flex;justify-content:center;margin-top:18px;}
+  .foot{display:flex;justify-content:center;margin-top:18px;gap:10px;flex-wrap:wrap;}
   .foot a,.foot button{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-weight:900;
     border:none;border-radius:16px;padding:12px 22px;font-size:15px;color:var(--ink);background:#fff;
     box-shadow:0 5px 0 rgba(55,66,74,.15);font-family:inherit;cursor:pointer;}
   .foot a:active,.foot button:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(55,66,74,.15);}
+  .foot a.enquete{background:#E4F1FA;color:var(--blue-deep);box-shadow:0 4px 0 rgba(31,124,174,.28);}
+  .foot a.enquete:active{box-shadow:0 1px 0 rgba(31,124,174,.28);}
   .credit{text-align:center;margin-top:14px;font-size:11px;color:#9AA4A9;line-height:1.7;}
 
   /* ---- play ---- */
@@ -215,7 +217,7 @@
   .fld label{font-size:11px;font-weight:900;color:var(--ink-soft);}
   .fld input{font-family:"M PLUS Rounded 1c";font-weight:900;font-size:18px;padding:8px 10px;width:74px;
     border:2px solid #E1E8E5;border-radius:12px;text-align:center;color:var(--ink);background:#fff;}
-  .fld input.wide{width:150px;font-size:15px;text-align:left;font-family:"Zen Maru Gothic";}
+  .fld input.wide{width:150px;font-size:15px;text-align:left;font-family:Zen Maru Gothic;}
   .fld input:focus{outline:none;border-color:var(--teal);}
   .who-list{display:flex;flex-direction:column;gap:8px;}
   .who-item{display:flex;align-items:center;gap:10px;background:#F7FAF9;border-radius:14px;padding:10px 12px;}
@@ -254,9 +256,12 @@
     </div>
     <div class="menu-head"><h2>計算ドリルのメニュー</h2><p>番号キーでも えらべます</p></div>
     <div class="mlist" id="mainList"></div>
-    <div class="foot"><a href="doriru.html">← 単元メニューへもどる</a></div>
+    <div class="foot">
+      <a href="doriru.html">← 単元メニューへもどる</a>
+      <a id="mainEnqueteBtn" class="enquete" href="https://forms.gle/f3zVUSiP8LqeNbvj9" target="_blank" rel="noopener">📋 アンケート</a>
+    </div>
     <div class="credit">
-      岐阜女子大学（安藤忠展） Ver.5.04 ／ Web版
+      岐阜女子大学（安藤忠展） Ver.5.05 ／ Web版
     </div>
   </section>
 
@@ -453,7 +458,7 @@ const CATS=[
   {t:'５χ×（－３χ） の ような計算', g:()=>{const a=d9(),b=d9(); return Q(xd(a)+'×'+par('－'+cf(b)+X), ansOf(-a*b,0,0));}},
   {t:'－５χ×３χ の ような計算', g:()=>{const a=d9(),b=d9(); return Q(xd(-a)+'×'+cf(b)+X, ansOf(-a*b,0,0));}},
  ]},
- {name:'乗法　２乗', label:'乗法  ２乗  の  計算練習', sub:[
+ {name:'乗法 ２乗', label:'乗法  ２乗  の  計算練習', sub:[
   {t:'（＋５χ）² の ような計算', g:()=>{const a=d9(); return Q(par('＋'+cf(a)+X)+'<sup>2</sup>', ansOf(a*a,0,0));}},
   {t:'（－５χ）² の ような計算', g:()=>{const a=d9(); return Q(par('－'+cf(a)+X)+'<sup>2</sup>', ansOf(a*a,0,0));}},
   {t:'（＋５χ²） の ような計算', g:()=>{const a=d9(); return Q(par('＋'+cf(a)+X2), ansOf(a,0,0));}},
@@ -489,7 +494,7 @@ const ALLSUB=[];
 CATS.forEach((c,i)=>{ if(i<8) c.sub.forEach(s=>ALLSUB.push(s)); });
 
 const PRMSU=5, MISSN=3;
-const MISSMSG=["間違っていますよ！","もう一度　考えよう！","符号が違います！","絶対値が違います！",
+const MISSMSG=["間違っていますよ！","もう一度 考えよう！","符号が違います！","絶対値が違います！",
                "１が余分です！","χがありません！"];
 
 /* =========================================================
@@ -557,9 +562,9 @@ function personLabel(p){ if(!p) return "学習者なし";
 function updateWhoBadge(){ $("whoBadge").textContent=personLabel(curPerson()); buildMain(); }
 function kindName(cat,sub){
   if(CATS[cat].review) return "まちがい直しコース";
-  if(CATS[cat].total) return "文字と式　総合版";
+  if(CATS[cat].total) return "文字と式 総合版";
   if(sub===-1) return CATS[cat].name+"／ランダムコース";
-  return CATS[cat].name+"　"+CATS[cat].sub[sub].t;
+  return CATS[cat].name+" "+CATS[cat].sub[sub].t;
 }
 function kaisuu(cat,sub){ const p=curPerson(); if(!p) return 0;
   const k=kindName(cat,sub); let n=0;
@@ -845,13 +850,13 @@ function finish(){
   else if(ten>=80){m.textContent="あともうすこし！";m.style.color="var(--yellow-deep)";w.innerHTML=star();beep("correct");}
   else{m.textContent="もっとがんばろう！";m.style.color="var(--green)";w.innerHTML=face();}
   const p0=curPerson();
-  $("resultTime").textContent="じかん： "+fmtTime(sec)+(p0?("　／　この種類は "+kaisuu(S.cat,S.sub)+"回目"):"");
+  $("resultTime").textContent="じかん： "+fmtTime(sec)+(p0?(" ／ この種類は "+kaisuu(S.cat,S.sub)+"回目"):"");
   const rv=$("review"); rv.innerHTML="";
   S.list.forEach(function(it){
     const row=document.createElement("div"); row.className="review-row";
     const cs=ansDisp(it.p.ans), us=ansDisp(it.user||"―");
     row.innerHTML='<span class="rmark '+(it.correct?"ok":"ng")+'">'+(it.correct?"○":"✕")+'</span>'
-      +'<span class="rq">'+(it.p.subst?it.p.subst+'　':'')+it.p.q+' ＝</span>'
+      +'<span class="rq">'+(it.p.subst?it.p.subst+' ':'')+it.p.q+' ＝</span>'
       +'<span>'+(it.correct?'<span class="rc">'+cs+'</span>'
         :'<span class="ra wrong">'+us+'</span><span class="rc">'+cs+'</span>')+'</span>';
     rv.appendChild(row);
@@ -946,7 +951,7 @@ function renderMissCourse(){
   chips.forEach(function(x){
     const d=document.createElement("span");
     d.className="miss-chip"+(x.state===1?" shaky":"");
-    d.innerHTML=(x.subst?x.subst+'　':'')+x.q;
+    d.innerHTML=(x.subst?x.subst+' ':'')+x.q;
     d.title=(x.state===2?"まちがえた問題":"2回以上かかった問題")+"（正解 "+ansDisp(x.ans)+"）";
     box.appendChild(d);
   });
@@ -964,7 +969,7 @@ function detailHTML(g){
   g.items.forEach(function(it){
     h+='<div class="'+(it.ok?'':'ng')+'">'+(it.ok?'○':'✕')+' '
       +(it.subst?stripTags(it.subst)+' ':'')+stripTags(it.q)+' ＝ '+ansDisp(it.user||'―')
-      +(it.ok?'':'　（正解＝'+ansDisp(it.ans)+'）')+'</div>'; });
+      +(it.ok?'':' （正解＝'+ansDisp(it.ans)+'）')+'</div>'; });
   return h;
 }
 function fmtDate(t){const d=new Date(t);
@@ -976,7 +981,7 @@ function renderWhoList(){
     const d=document.createElement("div");
     d.className="who-item"+(p.id===DB.cur?" on":"");
     const n=DB.logs.filter(function(g){return g.pid===p.id;}).length;
-    d.innerHTML='<span class="nm">'+personLabel(p)+'<span class="sm2">　'+n+'回</span></span>';
+    d.innerHTML='<span class="nm">'+personLabel(p)+'<span class="sm2"> '+n+'回</span></span>';
     const b1=document.createElement("button"); b1.className="mini";
     b1.textContent=(p.id===DB.cur?"えらび中":"えらぶ");
     b1.addEventListener("click",function(){DB.cur=p.id;dbSave();updateWhoBadge();renderData();});
@@ -1030,6 +1035,7 @@ $("otherBtn").addEventListener("click",function(){beep("tap");
   if(CATS[S.cat].total||CATS[S.cat].review) show("main"); else openSub(S.cat);});
 $("missAgainBtn").addEventListener("click",function(){beep("tap");startReview();});
 $("homeBtn").addEventListener("click",function(){beep("tap");show("main");});
+$("mainEnqueteBtn").addEventListener("click",function(){beep("tap");}); // アンケート（Googleフォームを別タブで開く）
 $("soundBtn").addEventListener("click",function(){soundOn=!soundOn;$("soundBtn").textContent=soundOn?"🔊":"🔇";});
 document.addEventListener("pointerdown",function(){if(!actx){try{actx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}},{once:true});
 
