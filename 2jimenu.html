@@ -286,15 +286,28 @@
   .sbtn.pur:active { box-shadow: 0 1px 0 var(--teal-deep); }
   .sbtn.danger { background: #FDECE9; color: var(--red); box-shadow: 0 4px 0 #F3C4BC; }
   .sbtn.danger:active { box-shadow: 0 1px 0 #F3C4BC; }
-  .form-row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; justify-content: center; }
-  .fld { display: flex; flex-direction: column; gap: 4px; }
+
+  /* 学習者フォーム */
+  .form-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; justify-content: center; }
+  .fld { display: flex; flex-direction: column; gap: 4px; align-items: center; }
   .fld label { font-size: 11px; font-weight: 900; color: var(--ink-soft); }
   .fld input {
-    font-family: "M PLUS Rounded 1c"; font-weight: 900; font-size: 18px; padding: 8px 10px; width: 74px;
+    font-family: "M PLUS Rounded 1c"; font-weight: 900; font-size: 18px; padding: 6px 4px; width: 68px;
     border: 2px solid #E1E8E5; border-radius: 12px; text-align: center; color: var(--ink); background: #fff;
   }
-  .fld input.wide { width: 150px; font-size: 15px; text-align: left; font-family: "Zen Maru Gothic"; }
+  .fld input.wide { width: 140px; font-size: 15px; text-align: left; font-family: "Zen Maru Gothic"; padding: 8px 10px; }
   .fld input:focus { outline: none; border-color: var(--teal); }
+
+  /* スピン（上下矢印）コントロール */
+  .spin-box { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .arrow-btn {
+    border: none; background: #EDF7F6; color: var(--teal-deep); border-radius: 8px; width: 100%; height: 26px;
+    font-size: 13px; line-height: 1; cursor: pointer; font-weight: 900; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 0 #C4E3E0; user-select: none;
+  }
+  .arrow-btn:active { transform: translateY(2px); box-shadow: none; }
+  .spin-box input { cursor: default; user-select: none; }
+
   .who-list { display: flex; flex-direction: column; gap: 8px; }
   .who-item { display: flex; align-items: center; gap: 10px; background: #F7FAF9; border-radius: 14px; padding: 10px 12px; }
   .who-item.on { background: #EDF7F6; box-shadow: 0 0 0 2px var(--teal) inset; }
@@ -311,6 +324,7 @@
   .detail.show { display: block; }
   .detail div { padding: 3px 0; font-family: "M PLUS Rounded 1c"; font-weight: 900; }
   .detail .ng { color: var(--red); }
+  .detail .time-meta { font-size: 11px; color: var(--ink-soft); font-weight: 700; margin-left: 6px; }
 
   @media (prefers-reduced-motion: reduce){ *{ animation-duration: .001ms !important; } }
 </style>
@@ -339,7 +353,7 @@
       <a id="mainEnqueteBtn" class="enquete" href="https://forms.gle/f3zVUSiP8LqeNbvj9" target="_blank" rel="noopener">📋 アンケート</a>
     </div>
     <div class="credit">
-      岐阜女子大学（安藤忠展） Ver 5.05／ Web版
+      岐阜女子大学（安藤忠展） Ver 5.07／ Web版
     </div>
   </section>
 
@@ -412,11 +426,39 @@
       <h3><span class="bar2"></span>学習者情報設定</h3>
       <div class="who-list" id="whoList"></div>
       <div style="margin-top:12px" class="form-row">
-        <div class="fld"><label>学年</label><input id="fNen" inputmode="numeric" maxlength="1" placeholder="3"></div>
-        <div class="fld"><label>組</label><input id="fKumi" inputmode="numeric" maxlength="2" placeholder="01"></div>
-        <div class="fld"><label>番号</label><input id="fBan" inputmode="numeric" maxlength="2" placeholder="01"></div>
-        <div class="fld"><label>氏名（任意）</label><input id="fName" class="wide" maxlength="12" placeholder="生徒氏名"></div>
-        <button class="sbtn pur" id="addWhoBtn">＋ 登録・追加</button>
+        <!-- 学年 -->
+        <div class="fld">
+          <label>学年</label>
+          <div class="spin-box">
+            <button type="button" class="arrow-btn" id="btnNenUp" title="1つ増やす">▲</button>
+            <input id="fNen" readonly value="3">
+            <button type="button" class="arrow-btn" id="btnNenDown" title="1つ減らす">▼</button>
+          </div>
+        </div>
+        <!-- 組 -->
+        <div class="fld">
+          <label>組</label>
+          <div class="spin-box">
+            <button type="button" class="arrow-btn" id="btnKumiUp" title="1つ増やす">▲</button>
+            <input id="fKumi" readonly value="1">
+            <button type="button" class="arrow-btn" id="btnKumiDown" title="1つ減らす">▼</button>
+          </div>
+        </div>
+        <!-- 番号 -->
+        <div class="fld">
+          <label>番号</label>
+          <div class="spin-box">
+            <button type="button" class="arrow-btn" id="btnBanUp" title="1つ増やす">▲</button>
+            <input id="fBan" readonly value="1">
+            <button type="button" class="arrow-btn" id="btnBanDown" title="1つ減らす">▼</button>
+          </div>
+        </div>
+        <!-- 名前 -->
+        <div class="fld" style="align-items:flex-start">
+          <label>氏名（任意）</label>
+          <input id="fName" class="wide" maxlength="12" placeholder="生徒氏名" style="height:38px;margin-bottom:29px;">
+        </div>
+        <button class="sbtn pur" id="addWhoBtn" style="height:38px;margin-bottom:29px;">＋ 登録・追加</button>
       </div>
     </div>
     <div class="panel">
@@ -795,6 +837,7 @@ function saveLog(ten, sec) {
     user: it.user || "",
     ok: it.correct,
     tries: it.tries,
+    times: it.times || [],
     miss: it.lastMiss === undefined ? -1 : it.lastMiss
   }));
   DB.logs.push({
@@ -850,12 +893,12 @@ function startReview() {
   shuffled(pool.miss).forEach(function(x) {
     if (list.length >= PRMSU || seen[x.q]) return;
     seen[x.q] = 1; nMiss++;
-    list.push({ p: { q: x.q, ans: x.ans, isEquation: true, form: x.ans.includes("/") ? "frac" : (x.ans.includes("，") ? "two" : "root") }, tries: 0, correct: false, user: "", src: "miss" });
+    list.push({ p: { q: x.q, ans: x.ans, isEquation: true, form: x.ans.includes("/") ? "frac" : (x.ans.includes("，") ? "two" : "root") }, tries: 0, correct: false, user: "", times: [], src: "miss" });
   });
   shuffled(pool.shaky).forEach(function(x) {
     if (list.length >= PRMSU || seen[x.q]) return;
     seen[x.q] = 1; nShaky++;
-    list.push({ p: { q: x.q, ans: x.ans, isEquation: true, form: x.ans.includes("/") ? "frac" : (x.ans.includes("，") ? "two" : "root") }, tries: 0, correct: false, user: "", src: "shaky" });
+    list.push({ p: { q: x.q, ans: x.ans, isEquation: true, form: x.ans.includes("/") ? "frac" : (x.ans.includes("，") ? "two" : "root") }, tries: 0, correct: false, user: "", times: [], src: "shaky" });
   });
   let guard = 0;
   while (list.length < PRMSU && guard < 300) {
@@ -863,7 +906,7 @@ function startReview() {
     const p = generateProblem("random");
     if (seen[p.q]) continue;
     seen[p.q] = 1; nNew++;
-    list.push({ p: p, tries: 0, correct: false, user: "", src: "new" });
+    list.push({ p: p, tries: 0, correct: false, user: "", times: [], src: "new" });
   }
   const fixed = nMiss + nShaky;
   const chip = fixed === 0 ? 'まちがい直し（ランダム）' : 'まちがい直し';
@@ -960,7 +1003,7 @@ function startRound(m1, m2, type, kindName) {
       guard++;
     } while (seen[p.q] && guard < 60);
     seen[p.q] = 1;
-    list.push({ p: p, tries: 0, correct: false, user: "" });
+    list.push({ p: p, tries: 0, correct: false, user: "", times: [] });
   }
   beginRound(m1, m2, type, kindName, list);
 }
@@ -1015,6 +1058,7 @@ function render() {
   const kinds = slotKinds(it.p);
   S.kinds = kinds; S.slots = kinds.map(() => ""); S.slot = 0;
   S.locked = false; S.waiting = false;
+  it.qStartTime = Date.now(); // 問題表示開始時刻を記録
   $("msg").textContent = ""; $("msg").className = "msg";
   $("reveal").classList.remove("show"); $("reveal").innerHTML = "";
   $("stamp").innerHTML = "";
@@ -1196,6 +1240,11 @@ function submit() {
     if (S.slots[0] === "" || S.slots[0] === "＋" || S.slots[0] === "－") { beep("wrong"); return; }
   }
 
+  // 表示（または再開）からエンターキー押下判定までの所要秒数を記録（小数第1位）
+  const spentSec = Math.max(0.1, Math.round(((Date.now() - (it.qStartTime || Date.now())) / 1000) * 10) / 10);
+  if (!it.times) it.times = [];
+  it.times.push(spentSec);
+
   it.tries++;
   let resCode;
   if (p.form === "two") {
@@ -1238,6 +1287,7 @@ function submit() {
       setTimeout(() => {
         $("stamp").innerHTML = ""; $("msg").textContent = "";
         S.waiting = false; S.slots = S.slots.map(() => ""); S.slot = 0; updateBox();
+        it.qStartTime = Date.now(); // 次の試行（2回目、3回目）の計測開始
       }, 1200);
     }
   }
@@ -1379,7 +1429,7 @@ function renderData() {
     });
   });
   
-  const labels = ["正解", "間違い(その他)", "符号が違う", "絶対値が違う", "１が余分", "√がない"];
+  const labels = ["正解", "間違い(その他)", "符号が違う", "絶対値が違う", "１が余分", "根号が必要"];
   const colors = ["var(--green)", "#B9C3C0", "var(--teal)", "var(--blue)", "var(--yellow)", "var(--red)"];
   const mb = $("missBars"); mb.innerHTML = "";
   if (!totalAnswers) mb.innerHTML = '<div class="empty">誤答分析データがありません</div>';
@@ -1456,9 +1506,12 @@ $("missStartBtn").addEventListener("click", function() { beep("tap"); startRevie
 function detailHTML(g) {
   let h = '';
   g.items.forEach(it => {
+    const timeStrs = (it.times || []).map((t, idx) => (idx + 1) + '回目:' + t + '秒').join(' / ');
     h += '<div class="' + (it.ok ? '' : 'ng') + '">' + (it.ok ? '○' : '✕') + ' '
       + mathHTML(it.q) + ' ＝ ' + formatAnsDisplay(it.user || '―')
-      + (it.ok ? '' : ' （正解＝' + it.ans + '）') + '</div>';
+      + (it.ok ? '' : ' （正解＝' + formatAnsDisplay(it.ans) + '）')
+      + ' <span class="time-meta">[' + it.tries + '回目' + (timeStrs ? ' : ' + timeStrs : '') + ']</span>'
+      + '</div>';
   });
   return h;
 }
@@ -1491,26 +1544,81 @@ function renderWhoList() {
   });
 }
 
-function pad2(s) { s = String(s).replace(/[^0-9]/g, ""); return s.length ? ("0" + s).slice(-2) : "00"; }
+/* =========================================================
+   学年・組・番号 スピンボタン定義
+   ========================================================= */
+const KUMI_LIST = [];
+for (let i = 1; i <= 20; i++) KUMI_LIST.push(String(i));
+['A', 'B', 'C', 'D', 'E', 'F', 'G'].forEach(c => KUMI_LIST.push(c));
+
+function spinNen(delta) {
+  beep("type");
+  let val = parseInt($("fNen").value, 10) || 1;
+  val += delta;
+  if (val > 9) val = 1;
+  if (val < 1) val = 9;
+  $("fNen").value = val;
+}
+
+function spinKumi(delta) {
+  beep("type");
+  const cur = $("fKumi").value || "1";
+  let idx = KUMI_LIST.indexOf(cur);
+  if (idx === -1) idx = 0;
+  idx = (idx + delta + KUMI_LIST.length) % KUMI_LIST.length;
+  $("fKumi").value = KUMI_LIST[idx];
+}
+
+function spinBan(delta) {
+  beep("type");
+  let val = parseInt($("fBan").value, 10) || 1;
+  val += delta;
+  if (val > 45) val = 1;
+  if (val < 1) val = 45;
+  $("fBan").value = val;
+}
+
+$("btnNenUp").addEventListener("click", () => spinNen(1));
+$("btnNenDown").addEventListener("click", () => spinNen(-1));
+$("btnKumiUp").addEventListener("click", () => spinKumi(1));
+$("btnKumiDown").addEventListener("click", () => spinKumi(-1));
+$("btnBanUp").addEventListener("click", () => spinBan(1));
+$("btnBanDown").addEventListener("click", () => spinBan(-1));
+
+function pad2(s) {
+  s = String(s).trim();
+  if (/^[0-9]+$/.test(s)) return ("0" + s).slice(-2);
+  return s;
+}
+
 $("addWhoBtn").addEventListener("click", () => {
   const nen = (String($("fNen").value).replace(/[^0-9]/g, "") || "3").slice(0, 1);
-  const kumi = pad2($("fKumi").value), ban = pad2($("fBan").value), name = $("fName").value.trim();
+  const kumi = pad2($("fKumi").value || "1");
+  const ban = pad2($("fBan").value || "1");
+  const name = $("fName").value.trim();
   const id = nen + kumi + ban + "-" + Date.now().toString(36);
   DB.people.push({ id: id, nen: nen, kumi: kumi, ban: ban, name: name });
   DB.cur = id; dbSave();
-  $("fNen").value = ""; $("fKumi").value = ""; $("fBan").value = ""; $("fName").value = "";
+  $("fName").value = "";
   updateWhoBadge(); renderData(); beep("tap");
 });
 
+/* CSV書き出し（試行回数の右側に 1回目(秒)、2回目(秒)、3回目(秒) を出力） */
 $("csvBtn").addEventListener("click", () => {
   const p = curPerson();
   const logs = DB.logs.filter(g => p && g.pid === p.id);
   if (!p || !logs.length) { alert("書き出す記録がありません。"); return; }
-  const rows = [["学年", "組", "番号", "氏名", "日時", "コース", "点数", "時間(秒)", "問題", "解答入力", "正解", "判定", "試行回数"]];
+  const rows = [["学年", "組", "番号", "氏名", "日時", "コース", "点数", "時間(秒)", "問題", "解答入力", "正解", "判定", "試行回数", "1回目(秒)", "2回目(秒)", "3回目(秒)"]];
   logs.forEach(g => {
     g.items.forEach(it => {
-      rows.push([p.nen, p.kumi, p.ban, p.name, new Date(g.at).toLocaleString("ja-JP"), g.kind, g.ten, g.sec,
-        it.q, it.user, it.ans, it.ok ? "○" : "×", it.tries]);
+      const t1 = (it.times && it.times[0] != null) ? it.times[0] : "";
+      const t2 = (it.times && it.times[1] != null) ? it.times[1] : "";
+      const t3 = (it.times && it.times[2] != null) ? it.times[2] : "";
+      rows.push([
+        p.nen, p.kumi, p.ban, p.name, new Date(g.at).toLocaleString("ja-JP"), g.kind, g.ten, g.sec,
+        it.q, it.user, it.ans, it.ok ? "○" : "×", it.tries,
+        t1, t2, t3
+      ]);
     });
   });
   const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(",")).join("\r\n");
@@ -1544,7 +1652,7 @@ $("otherBtn").addEventListener("click", () => {
 });
 $("missAgainBtn").addEventListener("click", function() { beep("tap"); startReview(); });
 $("homeBtn").addEventListener("click", () => { beep("tap"); show("main"); });
-$("mainEnqueteBtn").addEventListener("click", () => { beep("tap"); }); // アンケート（Googleフォームを別タブで開く）
+$("mainEnqueteBtn").addEventListener("click", () => { beep("tap"); });
 $("soundBtn").addEventListener("click", () => { soundOn = !soundOn; $("soundBtn").textContent = soundOn ? "🔊" : "🔇"; });
 
 buildMain(); updateWhoBadge();
