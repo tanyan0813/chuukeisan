@@ -86,6 +86,8 @@
   .foot a:active,.foot button:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(55,66,74,.15);}
   .foot a.enquete{background:#E4F1FA;color:var(--blue-deep);box-shadow:0 4px 0 rgba(31,124,174,.28);}
   .foot a.enquete:active{box-shadow:0 1px 0 rgba(31,124,174,.28);}
+  .foot button.submit-btn{background:#EAF6F0;color:var(--green-deep);box-shadow:0 4px 0 rgba(39,152,98,.28);}
+  .foot button.submit-btn:active{box-shadow:0 1px 0 rgba(39,152,98,.28);}
   .credit{text-align:center;margin-top:14px;font-size:11px;color:#9AA4A9;line-height:1.7;}
 
   /* ---- play ---- */
@@ -244,6 +246,14 @@
   .detail .ng{color:var(--red);}
   .detail .time-meta{font-size:11px;color:var(--ink-soft);font-weight:700;margin-left:6px;}
 
+  /* 提出用モーダル */
+  .modal-overlay{position:fixed;inset:0;background:rgba(55,66,74,.45);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px;}
+  .modal-overlay.active{display:flex;}
+  .modal-card{background:var(--card);border-radius:24px;box-shadow:var(--shadow);padding:24px 20px;max-width:440px;width:100%;text-align:center;}
+  .modal-card h3{margin:0 0 12px;font-size:19px;color:var(--ocean);display:flex;align-items:center;justify-content:center;gap:6px;}
+  .modal-desc{background:#F7FAF9;border-radius:14px;padding:14px;font-size:13px;line-height:1.6;color:var(--ink);margin-bottom:18px;text-align:left;}
+  .modal-notice{font-size:12px;font-weight:900;color:var(--green-deep);margin-top:8px;}
+
   @media (prefers-reduced-motion: reduce){*{animation-duration:.001ms !important;}}
 </style>
 </head>
@@ -268,6 +278,7 @@
     <div class="mlist" id="mainList"></div>
     <div class="foot">
       <a href="doriru.html">← 単元メニューへもどる</a>
+      <button type="button" class="submit-btn" id="openSubmitBtn">📤 学習履歴提出</button>
       <a id="mainEnqueteBtn" class="enquete" href="https://forms.gle/f3zVUSiP8LqeNbvj9" target="_blank" rel="noopener">📋 アンケート</a>
     </div>
     <div class="credit">
@@ -405,6 +416,25 @@
       </div>
     </div>
   </section>
+</div>
+
+<!-- ===== 学習履歴提出ダイアログ ===== -->
+<div class="modal-overlay" id="submitModal">
+  <div class="modal-card">
+    <h3>📤 学習履歴の提出</h3>
+    <div class="modal-desc">
+      学習履歴を先生に提出して、教材の改善・研究に協力します。<br>
+      <div class="modal-notice">
+        ※ 個人名や学年・組・番号は提出されません。<br>
+        ※ 単元名、問題内容、解答、正誤、かかった時間のみが安全に送信されます。
+      </div>
+    </div>
+    <div class="rowbtns">
+      <button class="sbtn pur" id="doSubmitBtn" style="font-size:15px;padding:12px 24px;">送信</button>
+      <button class="sbtn" id="cancelSubmitBtn" style="font-size:15px;padding:12px 20px;">キャンセル</button>
+    </div>
+    <div id="submitStatus" style="margin-top:12px;font-size:13px;font-weight:900;"></div>
+  </div>
 </div>
 
 <script>
@@ -1010,7 +1040,7 @@ $("addWhoBtn").addEventListener("click",function(){
   beep("tap");
 });
 
-/* CSV書き出し（回数の右側に 1回目(秒)、2回目(秒)、3回目(秒) を出力） */
+/* CSV書き出し（端末ローカル保存用） */
 $("csvBtn").addEventListener("click",function(){
   const p=curPerson();
   const logs=DB.logs.filter(function(g){return p&&g.pid===p.id;});
@@ -1030,6 +1060,102 @@ $("csvBtn").addEventListener("click",function(){
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
   a.download="連立方程式_学習記録_"+p.nen+p.kumi+p.ban+".csv";
   document.body.appendChild(a); a.click(); document.body.removeChild(a);});
+
+/* =========================================================
+   学習履歴の匿名送信（Google Drive自動連携）
+   ========================================================= */
+const GAS_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbzufJVdZcGVYkyoTrJ-_ozIOUgJ_3KvrYWqBEfk_lpFmUKwvFx_S7yitAs14qZ-34Gr/exec";
+const UNIT_TITLE = "連立方程式";
+
+const submitModal = $("submitModal");
+const submitStatus = $("submitStatus");
+
+$("openSubmitBtn").addEventListener("click", function(){
+  beep("tap");
+  const p = curPerson();
+  const logs = DB.logs.filter(function(g){ return !p || g.pid === p.id; });
+  if(!logs.length){
+    alert("まだ練習の履歴がありません。何問か練習してから提出してください。");
+    return;
+  }
+  submitStatus.textContent = "";
+  $("doSubmitBtn").disabled = false;
+  submitModal.classList.add("active");
+});
+
+$("cancelSubmitBtn").addEventListener("click", function(){
+  beep("tap");
+  submitModal.classList.remove("active");
+});
+
+$("doSubmitBtn").addEventListener("click", async function(){
+  beep("tap");
+  const p = curPerson();
+  const logs = DB.logs.filter(function(g){ return !p || g.pid === p.id; });
+
+  if(!logs.length){
+    alert("提出する履歴がありません。");
+    return;
+  }
+
+  // 個人名・学年・組・番号は完全に除外してCSVデータを生成
+  const rows = [["単元名","日時","種類","点数","時間(秒)","問題","χの解答","ｙの解答","χの正解","ｙの正解","正誤","回数","1回目(秒)","2回目(秒)","3回目(秒)"]];
+  logs.forEach(function(g){
+    g.items.forEach(function(it){
+      const t1 = (it.times && it.times[0] != null) ? it.times[0] : "";
+      const t2 = (it.times && it.times[1] != null) ? it.times[1] : "";
+      const t3 = (it.times && it.times[2] != null) ? it.times[2] : "";
+      rows.push([
+        UNIT_TITLE,
+        new Date(g.at).toLocaleString("ja-JP"),
+        g.kind,
+        g.ten,
+        g.sec,
+        it.q,
+        it.ux,
+        it.uy,
+        it.ax,
+        it.ay,
+        it.ok ? "○" : "×",
+        it.tries,
+        t1,
+        t2,
+        t3
+      ]);
+    });
+  });
+
+  const csvText = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(",")).join("\r\n");
+
+  $("doSubmitBtn").disabled = true;
+  submitStatus.style.color = "var(--blue-deep)";
+  submitStatus.textContent = "送信中... そのまま待ってね";
+
+  try {
+    await fetch(GAS_SUBMIT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        unit: UNIT_TITLE,
+        csvContent: csvText
+      })
+    });
+
+    submitStatus.style.color = "var(--green-deep)";
+    submitStatus.textContent = "✅ 提出が完了しました！ありがとう！";
+    beep("fanfare");
+    setTimeout(function(){
+      submitModal.classList.remove("active");
+    }, 2000);
+
+  } catch (err) {
+    submitStatus.style.color = "var(--red)";
+    submitStatus.textContent = "送信に失敗しました。電波を確認してね。";
+    $("doSubmitBtn").disabled = false;
+  }
+});
+
 $("clearBtn").addEventListener("click",function(){
   const p=curPerson(); if(!p){alert("学習者が えらばれていません。");return;}
   if(!confirm(personLabel(p)+" の 記録を すべて 消しますか？")) return;

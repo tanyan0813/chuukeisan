@@ -80,11 +80,13 @@
   .mcard .ex{font-family:"M PLUS Rounded 1c";font-weight:900;font-size:16px;}
   .mcard .sm{display:block;font-size:11px;color:var(--ink-soft);font-weight:700;margin-top:2px;}
 
-  .foot{display:flex;justify-content:center;margin-top:18px;}
+  .foot{display:flex;justify-content:center;margin-top:18px;gap:10px;flex-wrap:wrap;}
   .foot a,.foot button{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-weight:900;
     border:none;border-radius:16px;padding:12px 22px;font-size:15px;color:var(--ink);background:#fff;
     box-shadow:0 5px 0 rgba(55,66,74,.15);font-family:inherit;cursor:pointer;}
   .foot a:active,.foot button:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(55,66,74,.15);}
+  .foot button.submit-btn{background:#EAF6F0;color:var(--green-deep);box-shadow:0 4px 0 rgba(39,152,98,.28);}
+  .foot button.submit-btn:active{box-shadow:0 1px 0 rgba(39,152,98,.28);}
   .credit{text-align:center;margin-top:14px;font-size:11px;color:#9AA4A9;line-height:1.7;}
 
   /* ---- play ---- */
@@ -243,6 +245,14 @@
   .detail div{padding:3px 0;font-family:"M PLUS Rounded 1c";font-weight:900;}
   .detail .ng{color:var(--red);}
 
+  /* 提出用モーダル */
+  .modal-overlay{position:fixed;inset:0;background:rgba(55,66,74,.45);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px;}
+  .modal-overlay.active{display:flex;}
+  .modal-card{background:var(--card);border-radius:24px;box-shadow:var(--shadow);padding:24px 20px;max-width:440px;width:100%;text-align:center;}
+  .modal-card h3{margin:0 0 12px;font-size:19px;color:var(--teal);display:flex;align-items:center;justify-content:center;gap:6px;}
+  .modal-desc{background:#F7FAF9;border-radius:14px;padding:14px;font-size:13px;line-height:1.6;color:var(--ink);margin-bottom:18px;text-align:left;}
+  .modal-notice{font-size:12px;font-weight:900;color:var(--green-deep);margin-top:8px;}
+
   @media (prefers-reduced-motion: reduce){*{animation-duration:.001ms !important;}}
 </style>
 </head>
@@ -265,7 +275,10 @@
     </div>
     <div class="menu-head"><h2>計算ドリルのメニュー</h2><p>番号キーでも えらべます</p></div>
     <div class="mlist" id="mainList"></div>
-    <div class="foot"><a href="doriru.html">← 単元メニューへもどる</a></div>
+    <div class="foot">
+      <a href="doriru.html">← 単元メニューへもどる</a>
+      <button type="button" class="submit-btn" id="openSubmitBtn">📤 学習履歴提出</button>
+    </div>
     <div class="credit">
       岐阜女子大学（安藤忠展） Ver.5.05 ／ Web版
     </div>
@@ -404,6 +417,25 @@
       </div>
     </div>
   </section>
+</div>
+
+<!-- ===== 学習履歴提出ダイアログ ===== -->
+<div class="modal-overlay" id="submitModal">
+  <div class="modal-card">
+    <h3>📤 学習履歴の提出</h3>
+    <div class="modal-desc">
+      学習履歴を先生に提出して、教材の改善・研究に協力します。<br>
+      <div class="modal-notice">
+        ※ 個人名や学年・組・番号は提出されません。<br>
+        ※ 単元名、問題内容、解答、正誤、かかった時間のみが安全に送信されます。
+      </div>
+    </div>
+    <div class="rowbtns">
+      <button class="sbtn pur" id="doSubmitBtn" style="font-size:15px;padding:12px 24px;">送信</button>
+      <button class="sbtn" id="cancelSubmitBtn" style="font-size:15px;padding:12px 20px;">キャンセル</button>
+    </div>
+    <div id="submitStatus" style="margin-top:12px;font-size:13px;font-weight:900;"></div>
+  </div>
 </div>
 
 <script>
@@ -605,7 +637,7 @@ function saveLog(ten,sec){
   const p=curPerson(); if(!p) return;
   const items=S.list.map(function(it){
     return {q:it.p.q, subst:it.p.subst||'', ans:it.p.ans, user:it.user||"", ok:it.correct,
-            tries:it.tries, miss:it.lastMiss==null?-1:it.lastMiss}; });
+            tries:it.tries, times:it.times||[], miss:it.lastMiss==null?-1:it.lastMiss}; });
   DB.logs.push({pid:p.id,at:Date.now(),cat:S.cat,sub:S.sub,kind:kindName(S.cat,S.sub),ten:ten,sec:sec,items:items});
   dbSave();
 }
@@ -652,7 +684,7 @@ function startReview(){
     const key=x.q+"|"+(x.subst||"");
     if(list.length>=PRMSU||seen[key]) return false;
     seen[key]=1;
-    list.push({p:reviveQ(x),tries:0,correct:false,user:"",src:src});
+    list.push({p:reviveQ(x),tries:0,correct:false,user:"",times:[],src:src});
     return true;
   };
   shuffled(pool.miss).forEach(function(x){ if(add(x,"miss")) nMiss++; });
@@ -664,7 +696,7 @@ function startReview(){
     const key=p.q+"|"+(p.subst||"");
     if(seen[key]) continue;
     seen[key]=1;
-    list.push({p:p,tries:0,correct:false,user:"",src:"new"});
+    list.push({p:p,tries:0,correct:false,user:"",times:[],src:"new"});
   }
   const chip=(nMiss+nShaky)===0?'まちがい直し（ランダム）':'まちがい直し';
   beginRound(CAT_REVIEW,0,list,chip);
@@ -753,7 +785,7 @@ function startRound(cat,sub){
       guard++;
     }while(seen[p.q+p.subst]&&guard<60);
     seen[p.q+p.subst]=1;
-    list.push({p:p,tries:0,correct:false,user:""});
+    list.push({p:p,tries:0,correct:false,user:"",times:[]});
   }
   beginRound(cat,sub,list,kindName(cat,sub));
 }
@@ -767,6 +799,7 @@ function updateDots(){const ch=$("dots").children;
 function render(){
   const it=S.list[S.cur];
   S.input=""; S.locked=false; S.waiting=false;
+  it.qStartTime = Date.now();
   $("msg").textContent=""; $("msg").className="msg";
   $("reveal").classList.remove("show"); $("reveal").innerHTML="";
   $("stamp").innerHTML="";
@@ -822,6 +855,11 @@ function submit(){
   if(S.locked||S.waiting) return;
   const it=S.list[S.cur], c=it.p.ans;
   if(S.input===""||S.input==="+"||S.input==="-"){ beep("wrong"); return; }
+  
+  const spentSec = Math.max(0.1, Math.round(((Date.now() - (it.qStartTime || Date.now())) / 1000) * 10) / 10);
+  if(!it.times) it.times = [];
+  it.times.push(spentSec);
+
   it.tries++;
   const ok = norm(S.input)===norm(c) || (it.p.alt&&norm(S.input)===norm(it.p.alt));
   if(ok){
@@ -841,8 +879,11 @@ function submit(){
       scheduleNext(2300);
     } else {
       S.waiting=true;
-      setTimeout(function(){$("stamp").innerHTML="";$("msg").textContent="";
-        S.waiting=false; S.input=""; updateBox();},1000);
+      setTimeout(function(){
+        $("stamp").innerHTML="";$("msg").textContent="";
+        S.waiting=false; S.input=""; updateBox();
+        it.qStartTime = Date.now();
+      },1000);
     }
   }
 }
@@ -992,9 +1033,12 @@ $("missStartBtn").addEventListener("click",function(){ beep("tap"); startReview(
 function detailHTML(g){
   let h='';
   g.items.forEach(function(it){
+    const timeStrs=(it.times||[]).map((t,idx)=>(idx+1)+'回目:'+t+'秒').join(' / ');
     h+='<div class="'+(it.ok?'':'ng')+'">'+(it.ok?'○':'✕')+' '
       +(it.subst?stripTags(it.subst)+' ':'')+stripTags(it.q)+' ＝ '+ansDisp(it.user||'―')
-      +(it.ok?'':' （正解＝'+ansDisp(it.ans)+'）')+'</div>'; });
+      +(it.ok?'':' （正解＝'+ansDisp(it.ans)+'）')
+      +' <span style="font-size:11px;color:var(--ink-soft);font-weight:700;margin-left:6px;">['+it.tries+'回目'+(timeStrs?' : '+timeStrs:'')+']</span>'
+      +'</div>'; });
   return h;
 }
 function fmtDate(t){const d=new Date(t);
@@ -1083,19 +1127,134 @@ $("addWhoBtn").addEventListener("click",function(){
   beep("tap");
 });
 
+/* CSV書き出し（端末ローカル保存用） */
 $("csvBtn").addEventListener("click",function(){
   const p=curPerson();
   const logs=DB.logs.filter(function(g){return p&&g.pid===p.id;});
   if(!p||!logs.length){ alert("書き出す記録が ありません。"); return; }
-  const rows=[["学年","組","番号","名前","日時","種類","点数","時間(秒)","問題","条件","解答","正解","正誤","回数"]];
-  logs.forEach(function(g){ g.items.forEach(function(it){
-    rows.push([p.nen,p.kumi,p.ban,p.name,new Date(g.at).toLocaleString("ja-JP"),g.kind,g.ten,g.sec,
-      stripTags(it.q),stripTags(it.subst),it.user,it.ans,it.ok?"○":"×",it.tries]); }); });
+  const rows=[["名前","日時","種類","点数","時間(秒)","問題","条件","解答","正解","正誤","回数","1回目(秒)","2回目(秒)","3回目(秒)"]];
+  logs.forEach(function(g){
+    g.items.forEach(function(it){
+      const t1 = (it.times && it.times[0] != null) ? it.times[0] : "";
+      const t2 = (it.times && it.times[1] != null) ? it.times[1] : "";
+      const t3 = (it.times && it.times[2] != null) ? it.times[2] : "";
+      rows.push([
+        personLabel(p),
+        new Date(g.at).toLocaleString("ja-JP"),
+        g.kind,
+        g.ten,
+        g.sec,
+        stripTags(it.q),
+        stripTags(it.subst),
+        it.user,
+        it.ans,
+        it.ok ? "○" : "×",
+        it.tries,
+        t1,
+        t2,
+        t3
+      ]);
+    });
+  });
   const csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(",");}).join("\r\n");
   const blob=new Blob([new Uint8Array([0xEF,0xBB,0xBF]),csv],{type:"text/csv"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
   a.download="文字と式_学習記録_"+p.nen+p.kumi+p.ban+".csv";
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
+});
+
+/* =========================================================
+   学習履歴の匿名送信（Google Drive自動連携）
+   ========================================================= */
+const GAS_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbzufJVdZcGVYkyoTrJ-_ozIOUgJ_3KvrYWqBEfk_lpFmUKwvFx_S7yitAs14qZ-34Gr/exec";
+const UNIT_TITLE = "文字と式";
+
+const submitModal = $("submitModal");
+const submitStatus = $("submitStatus");
+
+$("openSubmitBtn").addEventListener("click", function(){
+  beep("tap");
+  const p = curPerson();
+  const logs = DB.logs.filter(function(g){ return !p || g.pid === p.id; });
+  if(!logs.length){
+    alert("まだ練習の履歴がありません。何問か練習してから提出してください。");
+    return;
+  }
+  submitStatus.textContent = "";
+  $("doSubmitBtn").disabled = false;
+  submitModal.classList.add("active");
+});
+
+$("cancelSubmitBtn").addEventListener("click", function(){
+  beep("tap");
+  submitModal.classList.remove("active");
+});
+
+$("doSubmitBtn").addEventListener("click", async function(){
+  beep("tap");
+  const p = curPerson();
+  const logs = DB.logs.filter(function(g){ return !p || g.pid === p.id; });
+
+  if(!logs.length){
+    alert("提出する履歴がありません。");
+    return;
+  }
+
+  // 個人名・学年・組・番号は完全に除外してCSVデータを生成
+  const rows = [["単元名","日時","種類","点数","時間(秒)","問題","条件","解答","正解","正誤","回数","1回目(秒)","2回目(秒)","3回目(秒)"]];
+  logs.forEach(function(g){
+    g.items.forEach(function(it){
+      const t1 = (it.times && it.times[0] != null) ? it.times[0] : "";
+      const t2 = (it.times && it.times[1] != null) ? it.times[1] : "";
+      const t3 = (it.times && it.times[2] != null) ? it.times[2] : "";
+      rows.push([
+        UNIT_TITLE,
+        new Date(g.at).toLocaleString("ja-JP"),
+        g.kind,
+        g.ten,
+        g.sec,
+        stripTags(it.q),
+        stripTags(it.subst),
+        it.user,
+        it.ans,
+        it.ok ? "○" : "×",
+        it.tries,
+        t1,
+        t2,
+        t3
+      ]);
+    });
+  });
+
+  const csvText = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(",")).join("\r\n");
+
+  $("doSubmitBtn").disabled = true;
+  submitStatus.style.color = "var(--blue-deep)";
+  submitStatus.textContent = "送信中... そのまま待ってね";
+
+  try {
+    await fetch(GAS_SUBMIT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        unit: UNIT_TITLE,
+        csvContent: csvText
+      })
+    });
+
+    submitStatus.style.color = "var(--green-deep)";
+    submitStatus.textContent = "✅ 提出が完了しました！ありがとう！";
+    beep("fanfare");
+    setTimeout(function(){
+      submitModal.classList.remove("active");
+    }, 2000);
+
+  } catch (err) {
+    submitStatus.style.color = "var(--red)";
+    submitStatus.textContent = "送信に失敗しました。電波を確認してね。";
+    $("doSubmitBtn").disabled = false;
+  }
 });
 
 $("clearBtn").addEventListener("click",function(){
