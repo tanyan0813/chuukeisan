@@ -1011,7 +1011,8 @@ $("doSubmitBtn").addEventListener("click", async function(){
     });
   });
 
-  const csvText = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(",")).join("\r\n");
+  // Excelでダブルクリックして開いた際の文字化けを防ぐため、先頭にBOM(\uFEFF)を付与
+  const csvText = "\uFEFF" + rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(",")).join("\r\n");
 
   $("doSubmitBtn").disabled = true;
   submitStatus.style.color = "var(--blue-deep)";
