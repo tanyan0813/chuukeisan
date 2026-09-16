@@ -275,7 +275,7 @@
       <a id="mainEnqueteBtn" class="enquete" href="https://forms.gle/f3zVUSiP8LqeNbvj9" target="_blank" rel="noopener">📋 アンケート</a>
     </div>
     <div class="credit">
-      岐阜女子大学（安藤忠展） Ver. 5.06／ Web版
+      岐阜女子大学（安藤忠展） Ver. 5.07／ Web版
     </div>
   </section>
 
@@ -408,7 +408,7 @@
       学習履歴を先生に提出して、教材の改善・研究に協力します。<br>
       <div class="modal-notice">
         ※ 個人名や学年・組・番号は提出されません。<br>
-        ※ 単元名、問題内容、解答、正誤、かかった時間のみが安全に送信されます。
+        ※ 単元名、問題内容、各回の解答、所要秒数、正誤のみが安全に送信されます。
       </div>
     </div>
     <div class="rowbtns">
@@ -494,11 +494,21 @@ function kindName(m){ return MODES[m].rand?"ランダムコース":MODES[m].t; }
 function kaisuu(m){ const p=curPerson(); if(!p) return 0;
   const k=kindName(m); let n=0;
   DB.logs.forEach(function(g){ if(g.pid===p.id&&g.kind===k) n++; }); return n; }
+
 function saveLog(ten,sec){
   const p=curPerson(); if(!p) return;
   const items=S.list.map(function(it){
-    return {q:it.p[0], ans:it.p[1], user:it.user||"", ok:it.correct,
-            tries:it.tries, times:it.times||[], miss:it.lastMiss==null?-1:it.lastMiss}; });
+    return {
+      q: it.p[0],
+      ans: it.p[1],
+      user: it.user||"",
+      ok: it.correct,
+      tries: it.tries,
+      times: it.times||[],
+      answers: it.answers||[],
+      miss: it.lastMiss==null?-1:it.lastMiss
+    };
+  });
   DB.logs.push({pid:p.id,at:Date.now(),mode:S.mode,kind:kindName(S.mode),ten:ten,sec:sec,items:items});
   dbSave();
 }
@@ -537,7 +547,7 @@ function startReview(){
   const add=function(x){
     if(list.length>=PRMSU||seen[x.q]) return false;
     seen[x.q]=1;
-    list.push({p:[x.q,String(x.ans)],tries:0,correct:false,user:"",times:[]});
+    list.push({p:[x.q,String(x.ans)],tries:0,correct:false,user:"",times:[],answers:[]});
     return true;
   };
   shuffled(pool.miss).forEach(function(x){ if(add(x)) fixed++; });
@@ -549,7 +559,7 @@ function startReview(){
     const q=all[rnd(0,all.length-1)];
     if(seen[q[0]]) continue;
     seen[q[0]]=1;
-    list.push({p:q,tries:0,correct:false,user:"",times:[]});
+    list.push({p:q,tries:0,correct:false,user:"",times:[],answers:[]});
   }
   S={mode:MODE_REVIEW,list:list,cur:0,input:"",locked:false,waiting:false,t0:Date.now()};
   $("modeChip").textContent = fixed===0 ? "まちがい直し（ランダム）" : "まちがい直し";
@@ -603,7 +613,7 @@ function startRound(mode){
   S={mode:mode,list:[],cur:0,input:"",locked:false,waiting:false,t0:Date.now()};
   const pool = MODES[mode].set===1?SET1 : (MODES[mode].set===2?SET2 : SET1.concat(SET2));
   const idx=[]; while(idx.length<PRMSU){ const r=rnd(0,pool.length-1); if(idx.indexOf(r)<0) idx.push(r); }
-  idx.forEach(function(r){ S.list.push({p:pool[r],tries:0,correct:false,user:"",times:[]}); });
+  idx.forEach(function(r){ S.list.push({p:pool[r],tries:0,correct:false,user:"",times:[],answers:[]}); });
   $("modeChip").textContent=kindName(mode);
   buildDots(); show("play"); startTimer(); render();
 }
@@ -662,6 +672,7 @@ function missType(u,c,isLast){
   if(sg(u)===sg(c)) return 3;
   return isLast?0:1;
 }
+
 function submit(){
   if(S.locked||S.waiting) return;
   const it=S.list[S.cur], cs=it.p[1];
@@ -669,7 +680,10 @@ function submit(){
   
   const spentSec = Math.max(0.1, Math.round(((Date.now() - (it.qStartTime || Date.now())) / 1000) * 10) / 10);
   if(!it.times) it.times = [];
+  if(!it.answers) it.answers = [];
+
   it.times.push(spentSec);
+  it.answers.push(S.input); // 各回の解答を保存
 
   it.tries++;
   const u=parseInt(S.input,10), c=parseInt(cs,10);
@@ -741,7 +755,7 @@ function finish(){
 }
 function hanamaru(){let p="";
   for(let i=0;i<8;i++){const a=i/8*Math.PI*2;p+='<circle cx="'+(60+30*Math.cos(a)).toFixed(1)+'" cy="'+(60+30*Math.sin(a)).toFixed(1)+'" r="17" fill="#F6B93B"/>';}
-  return '<svg width="115" height="115" viewBox="0 0 120 120">'+p+'<circle cx="60" cy="60" r="30" fill="#FDE9BE"/><circle cx="60" cy="60" r="24" fill="none" stroke="#EA5040" stroke-width="6"/><circle cx="60" cy="60" r="15" fill="none" stroke="#EA5040" stroke-width="5"/></svg>';}
+  return '<svg width="115" height="115" viewBox="0 0 120 120">'+p+'<circle cx="60" cy="60" r="30" fill="#FDE9BE"/><circle cx="60" cy="60" r="24" fill="none" stroke="#EA5040" stroke-width="6"/><circle cx="15" fill="none" stroke="#EA5040" stroke-width="5"/></svg>';}
 function star(){let pts="";
   for(let i=0;i<10;i++){const r=i%2===0?42:18,a=(-90+i*36)*Math.PI/180;pts+=(60+r*Math.cos(a)).toFixed(1)+","+(60+r*Math.sin(a)).toFixed(1)+" ";}
   return '<svg width="115" height="115" viewBox="0 0 120 120"><polygon points="'+pts+'" fill="#F6B93B" stroke="#D89A2C" stroke-width="4" stroke-linejoin="round"/></svg>';}
@@ -836,10 +850,14 @@ $("missStartBtn").addEventListener("click",function(){ beep("tap"); startReview(
 function detailHTML(g){
   let h='';
   g.items.forEach(function(it){
-    const timeStrs=(it.times||[]).map((t,idx)=>(idx+1)+'回目:'+t+'秒').join(' / ');
+    const tryDetails = (it.times||[]).map(function(t, idx){
+      const a = (it.answers && it.answers[idx] != null) ? String(it.answers[idx]).replace('-','－') : '';
+      return (idx+1) + '回目: ' + a + ' (' + t + '秒)';
+    }).join(' / ');
+
     h+='<div class="'+(it.ok?'':'ng')+'">'+(it.ok?'○':'✕')+' '+it.q+' χ＝'+String(it.user||'―').replace('-','－')
       +(it.ok?'':' （正解＝χ＝'+String(it.ans).replace('-','－')+'）')
-      +' <span class="time-meta">['+it.tries+'回目'+(timeStrs?' : '+timeStrs:'')+']</span>'
+      +' <span class="time-meta">['+it.tries+'回目'+(tryDetails?' : '+tryDetails:'')+']</span>'
       +'</div>';});
   return h;
 }
@@ -933,21 +951,48 @@ $("csvBtn").addEventListener("click",function(){
   const p=curPerson();
   const logs=DB.logs.filter(function(g){return p&&g.pid===p.id;});
   if(!p||!logs.length){ alert("書き出す記録が ありません。"); return; }
-  const rows=[["学年","組","番号","名前","日時","種類","点数","時間(秒)","問題","解答","正解","正誤","回数","1回目(秒)","2回目(秒)","3回目(秒)"]];
-  logs.forEach(function(g){ g.items.forEach(function(it){
-    const t1 = (it.times && it.times[0] != null) ? it.times[0] : "";
-    const t2 = (it.times && it.times[1] != null) ? it.times[1] : "";
-    const t3 = (it.times && it.times[2] != null) ? it.times[2] : "";
-    rows.push([
-      p.nen,p.kumi,p.ban,p.name,new Date(g.at).toLocaleString("ja-JP"),g.kind,g.ten,g.sec,
-      it.q,it.user,it.ans,it.ok?"○":"×",it.tries,
-      t1,t2,t3
-    ]);});});
+
+  const rows=[[
+    "学年","組","番号","名前","日時","種類","点数","時間(秒)","問題","最終解答","正解","正誤","回数",
+    "1回目(解答)","1回目(秒)","2回目(解答)","2回目(秒)","3回目(解答)","3回目(秒)"
+  ]];
+
+  logs.forEach(function(g){
+    g.items.forEach(function(it){
+      const a1 = (it.answers && it.answers[0] != null) ? it.answers[0] : "";
+      const t1 = (it.times && it.times[0] != null) ? it.times[0] : "";
+      const a2 = (it.answers && it.answers[1] != null) ? it.answers[1] : "";
+      const t2 = (it.times && it.times[1] != null) ? it.times[1] : "";
+      const a3 = (it.answers && it.answers[2] != null) ? it.answers[2] : "";
+      const t3 = (it.times && it.times[2] != null) ? it.times[2] : "";
+
+      rows.push([
+        p.nen,
+        p.kumi,
+        p.ban,
+        p.name,
+        new Date(g.at).toLocaleString("ja-JP"),
+        g.kind,
+        g.ten,
+        g.sec,
+        it.q,
+        it.user,
+        it.ans,
+        it.ok ? "○" : "×",
+        it.tries,
+        a1, t1,
+        a2, t2,
+        a3, t3
+      ]);
+    });
+  });
+
   const csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(",");}).join("\r\n");
   const blob=new Blob([new Uint8Array([0xEF,0xBB,0xBF]),csv],{type:"text/csv"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
   a.download="一次方程式_学習記録_"+p.nen+p.kumi+p.ban+".csv";
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);});
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+});
 
 /* =========================================================
    学習履歴の匿名送信（Google Drive自動連携）
@@ -986,13 +1031,21 @@ $("doSubmitBtn").addEventListener("click", async function(){
     return;
   }
 
-  // 個人名・学年・組・番号は完全に除外してCSVデータを生成
-  const rows = [["単元名","日時","種類","点数","時間(秒)","問題","解答","正解","正誤","回数","1回目(秒)","2回目(秒)","3回目(秒)"]];
+  // 個人名・学年・組・番号は完全に除外。各回の解答と秒数をペアで送信
+  const rows = [[
+    "単元名","日時","種類","点数","時間(秒)","問題","最終解答","正解","正誤","回数",
+    "1回目(解答)","1回目(秒)","2回目(解答)","2回目(秒)","3回目(解答)","3回目(秒)"
+  ]];
+
   logs.forEach(function(g){
     g.items.forEach(function(it){
+      const a1 = (it.answers && it.answers[0] != null) ? it.answers[0] : "";
       const t1 = (it.times && it.times[0] != null) ? it.times[0] : "";
+      const a2 = (it.answers && it.answers[1] != null) ? it.answers[1] : "";
       const t2 = (it.times && it.times[1] != null) ? it.times[1] : "";
+      const a3 = (it.answers && it.answers[2] != null) ? it.answers[2] : "";
       const t3 = (it.times && it.times[2] != null) ? it.times[2] : "";
+
       rows.push([
         UNIT_TITLE,
         new Date(g.at).toLocaleString("ja-JP"),
@@ -1004,9 +1057,9 @@ $("doSubmitBtn").addEventListener("click", async function(){
         it.ans,
         it.ok ? "○" : "×",
         it.tries,
-        t1,
-        t2,
-        t3
+        a1, t1,
+        a2, t2,
+        a3, t3
       ]);
     });
   });

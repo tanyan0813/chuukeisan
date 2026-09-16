@@ -359,7 +359,7 @@
       <a id="mainEnqueteBtn" class="enquete" href="https://forms.gle/f3zVUSiP8LqeNbvj9" target="_blank" rel="noopener">📋 アンケート</a>
     </div>
     <div class="credit">
-      岐阜女子大学（安藤忠展） Ver 5.06／ Web版
+      岐阜女子大学（安藤忠展） Ver 5.07／ Web版
     </div>
   </section>
 
@@ -505,7 +505,7 @@
       学習履歴を先生に提出して、教材の改善・研究に協力します。<br>
       <div class="modal-notice">
         ※ 個人名や学年・組・番号は提出されません。<br>
-        ※ 単元名、問題内容、解答、正誤、かかった時間のみが安全に送信されます。
+        ※ 単元名、問題内容、各回の解答、所要秒数、正誤のみが安全に送信されます。
       </div>
     </div>
     <div class="rowbtns">
@@ -867,6 +867,7 @@ function saveLog(ten, sec) {
     ok: it.correct,
     tries: it.tries,
     times: it.times || [],
+    answers: it.answers || [],
     miss: it.lastMiss === undefined ? -1 : it.lastMiss
   }));
   DB.logs.push({
@@ -920,7 +921,7 @@ function startReview() {
   const add = x => {
     if (list.length >= PRMSU || seen[x.q]) return false;
     seen[x.q] = 1;
-    list.push({ p: { q: x.q, ans: x.ans }, tries: 0, correct: false, user: "", times: [] });
+    list.push({ p: { q: x.q, ans: x.ans }, tries: 0, correct: false, user: "", times: [], answers: [] });
     return true;
   };
   shuffled(pool.miss).forEach(x => { if (add(x)) fixed++; });
@@ -931,7 +932,7 @@ function startReview() {
     const q = generateProblem("6.1");
     if (!q.q || seen[q.q]) continue;
     seen[q.q] = 1;
-    list.push({ p: q, tries: 0, correct: false, user: "", times: [] });
+    list.push({ p: q, tries: 0, correct: false, user: "", times: [], answers: [] });
   }
   S = { menu1: 0, menu2: 0, type: "review", kindName: REVIEW_KIND,
         list: list, cur: 0, input: "", locked: false, waiting: false, t0: Date.now() };
@@ -1030,7 +1031,7 @@ function startRound(m1, m2, type, kindName) {
       guard++;
     } while (seen[p.q] && guard < 60);
     seen[p.q] = 1;
-    S.list.push({ p: p, tries: 0, correct: false, user: "", times: [] });
+    S.list.push({ p: p, tries: 0, correct: false, user: "", times: [], answers: [] });
   }
   $("modeChip").innerHTML = mathHTML(kindName);
   buildDots(); show("play"); startTimer(); render();
@@ -1092,8 +1093,7 @@ function pressKey(k) {
     if (S.input === "－" && k === "+") { S.input = "±"; beep("type"); updateBox(); return; }
     const last = S.input.slice(-1);
     if (last === '＋' || last === '－' || last === '±') return;
-    S.input += k === "+" ? "＋" : "－"; beep("type"); updateBox(); return;
-  }
+    S.input += k === "+" ? "＋" : "－"; beep("type"); updateBox(); return; }
   if (k === "r") {
     S.input += "√"; beep("type"); updateBox(); return;
   }
@@ -1134,7 +1134,10 @@ function submit() {
   
   const spentSec = Math.max(0.1, Math.round(((Date.now() - (it.qStartTime || Date.now())) / 1000) * 10) / 10);
   if (!it.times) it.times = [];
+  if (!it.answers) it.answers = [];
+
   it.times.push(spentSec);
+  it.answers.push(S.input); // 各回の解答入力を保存
 
   it.tries++;
   const resCode = checkAnswer(S.input, c);
@@ -1233,7 +1236,7 @@ function hanamaru() {
     const a = i / 8 * Math.PI * 2;
     p += '<circle cx="' + (60 + 30 * Math.cos(a)).toFixed(1) + '" cy="' + (60 + 30 * Math.sin(a)).toFixed(1) + '" r="17" fill="#F6B93B"/>';
   }
-  return '<svg width="115" height="115" viewBox="0 0 120 120">' + p + '<circle cx="60" cy="60" r="30" fill="#FDE9BE"/><circle cx="60" cy="60" r="24" fill="none" stroke="#EA5040" stroke-width="6"/><circle cx="60" cy="60" r="15" fill="none" stroke="#EA5040" stroke-width="5"/></svg>';
+  return '<svg width="115" height="115" viewBox="0 0 120 120">' + p + '<circle cx="60" cy="60" r="30" fill="#FDE9BE"/><circle cx="60" cy="60" r="24" fill="none" stroke="#EA5040" stroke-width="6"/><circle cx="15" fill="none" stroke="#EA5040" stroke-width="5"/></svg>';
 }
 function star() {
   let pts = "";
@@ -1374,11 +1377,15 @@ function renderData() {
 function detailHTML(g) {
   let h = '';
   g.items.forEach(it => {
-    const timeStrs = (it.times || []).map((t, idx) => (idx + 1) + '回目:' + t + '秒').join(' / ');
+    const tryDetails = (it.times || []).map((t, idx) => {
+      const a = (it.answers && it.answers[idx] != null) ? it.answers[idx] : '';
+      return (idx + 1) + '回目: ' + mathHTML(a) + ' (' + t + '秒)';
+    }).join(' / ');
+
     h += '<div class="' + (it.ok ? '' : 'ng') + '">' + (it.ok ? '○' : '✕') + ' '
       + mathHTML(it.q) + ' ＝ ' + mathHTML(it.user || '―')
       + (it.ok ? '' : ' （正解＝' + mathHTML(it.ans) + '）')
-      + ' <span class="time-meta">[' + it.tries + '回目' + (timeStrs ? ' : ' + timeStrs : '') + ']</span>'
+      + ' <span class="time-meta">[' + it.tries + '回目' + (tryDetails ? ' : ' + tryDetails : '') + ']</span>'
       + '</div>';
   });
   return h;
@@ -1476,16 +1483,26 @@ $("csvBtn").addEventListener("click", () => {
   const p = curPerson();
   const logs = DB.logs.filter(g => p && g.pid === p.id);
   if (!p || !logs.length) { alert("書き出す記録がありません。"); return; }
-  const rows = [["学年", "組", "番号", "氏名", "日時", "コース", "点数", "時間(秒)", "問題", "解答入力", "正解", "判定", "試行回数", "1回目(秒)", "2回目(秒)", "3回目(秒)"]];
+  const rows = [[
+    "学年", "組", "番号", "氏名", "日時", "コース", "点数", "時間(秒)", "問題", "最終解答", "正解", "判定", "試行回数",
+    "1回目(解答)", "1回目(秒)", "2回目(解答)", "2回目(秒)", "3回目(解答)", "3回目(秒)"
+  ]];
+
   logs.forEach(g => {
     g.items.forEach(it => {
+      const a1 = (it.answers && it.answers[0] != null) ? it.answers[0] : "";
       const t1 = (it.times && it.times[0] != null) ? it.times[0] : "";
+      const a2 = (it.answers && it.answers[1] != null) ? it.answers[1] : "";
       const t2 = (it.times && it.times[1] != null) ? it.times[1] : "";
+      const a3 = (it.answers && it.answers[2] != null) ? it.answers[2] : "";
       const t3 = (it.times && it.times[2] != null) ? it.times[2] : "";
+
       rows.push([
         p.nen, p.kumi, p.ban, p.name, new Date(g.at).toLocaleString("ja-JP"), g.kind, g.ten, g.sec,
         it.q, it.user, it.ans, it.ok ? "○" : "×", it.tries,
-        t1, t2, t3
+        a1, t1,
+        a2, t2,
+        a3, t3
       ]);
     });
   });
@@ -1534,12 +1551,20 @@ $("doSubmitBtn").addEventListener("click", async function() {
   }
 
   // 個人名・学年・組・番号は完全に除外してCSVデータを生成
-  const rows = [["単元名", "日時", "コース", "点数", "時間(秒)", "問題", "解答入力", "正解", "判定", "試行回数", "1回目(秒)", "2回目(秒)", "3回目(秒)"]];
+  const rows = [[
+    "単元名", "日時", "コース", "点数", "時間(秒)", "問題", "最終解答", "正解", "判定", "試行回数",
+    "1回目(解答)", "1回目(秒)", "2回目(解答)", "2回目(秒)", "3回目(解答)", "3回目(秒)"
+  ]];
+
   logs.forEach(g => {
     g.items.forEach(it => {
+      const a1 = (it.answers && it.answers[0] != null) ? it.answers[0] : "";
       const t1 = (it.times && it.times[0] != null) ? it.times[0] : "";
+      const a2 = (it.answers && it.answers[1] != null) ? it.answers[1] : "";
       const t2 = (it.times && it.times[1] != null) ? it.times[1] : "";
+      const a3 = (it.answers && it.answers[2] != null) ? it.answers[2] : "";
       const t3 = (it.times && it.times[2] != null) ? it.times[2] : "";
+
       rows.push([
         UNIT_TITLE,
         new Date(g.at).toLocaleString("ja-JP"),
@@ -1551,9 +1576,9 @@ $("doSubmitBtn").addEventListener("click", async function() {
         it.ans,
         it.ok ? "○" : "×",
         it.tries,
-        t1,
-        t2,
-        t3
+        a1, t1,
+        a2, t2,
+        a3, t3
       ]);
     });
   });

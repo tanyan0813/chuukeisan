@@ -286,7 +286,7 @@
       <a id="mainEnqueteBtn" class="enquete" href="https://forms.gle/f3zVUSiP8LqeNbvj9" target="_blank" rel="noopener">📋 アンケート</a>
     </div>
     <div class="credit">
-      岐阜女子大学（安藤忠展） Ver. 5.06<br>
+      岐阜女子大学（安藤忠展） Ver. 5.07<br>
     </div>
   </section>
 
@@ -445,7 +445,7 @@
       学習履歴を先生に提出して、教材の改善・研究に協力します。<br>
       <div class="modal-notice">
         ※ 個人名や学年・組・番号は提出されません。<br>
-        ※ 単元名、問題内容、解答、正誤、かかった時間のみが安全に送信されます。
+        ※ 単元名、問題内容、各回の解答、所要秒数、正誤のみが安全に送信されます。
       </div>
     </div>
     <div class="rowbtns">
@@ -590,8 +590,16 @@ function kaisuu(cat,sub){
 function saveLog(ten,sec){
   const p=curPerson(); if(!p) return;
   const items=S.list.map(function(it){
-    return { q:it.p.q, ans:ansStr(it.p.ans), user:it.user||"", ok:it.correct,
-             tries:it.tries, times:it.times||[], miss:it.lastMiss==null?-1:it.lastMiss };
+    return {
+      q: it.p.q,
+      ans: ansStr(it.p.ans),
+      user: it.user||"",
+      ok: it.correct,
+      tries: it.tries,
+      times: it.times||[],
+      answers: it.answers||[],
+      miss: it.lastMiss==null?-1:it.lastMiss
+    };
   });
   DB.logs.push({ pid:p.id, at:Date.now(), cat:S.cat, sub:S.sub,
                  kind:kindName(S.cat,S.sub), ten:ten, sec:sec, items:items });
@@ -631,12 +639,12 @@ function startReview(){
   shuffled(pool.miss).forEach(function(x){
     if(list.length>=PRMSU||seen[x.q]) return;
     seen[x.q]=1; nMiss++;
-    list.push({p:{q:x.q,ans:x.ans,hint:''},tries:0,correct:false,user:"",times:[],src:"miss"});
+    list.push({p:{q:x.q,ans:x.ans,hint:''},tries:0,correct:false,user:"",times:[],answers:[],src:"miss"});
   });
   shuffled(pool.shaky).forEach(function(x){
     if(list.length>=PRMSU||seen[x.q]) return;
     seen[x.q]=1; nShaky++;
-    list.push({p:{q:x.q,ans:x.ans,hint:''},tries:0,correct:false,user:"",times:[],src:"shaky"});
+    list.push({p:{q:x.q,ans:x.ans,hint:''},tries:0,correct:false,user:"",times:[],answers:[],src:"shaky"});
   });
   let guard=0;
   while(list.length<PRMSU&&guard<300){
@@ -644,7 +652,7 @@ function startReview(){
     const p=randomOf(ALLSUB);
     if(seen[p.q]) continue;
     seen[p.q]=1; nNew++;
-    list.push({p:p,tries:0,correct:false,user:"",times:[],src:"new"});
+    list.push({p:p,tries:0,correct:false,user:"",times:[],answers:[],src:"new"});
   }
   const fixed=nMiss+nShaky;
   const chip = fixed===0 ? 'まちがい直し（ランダム）' : 'まちがい直し';
@@ -757,11 +765,15 @@ $("missStartBtn").addEventListener("click",function(){ beep("tap"); startReview(
 function detailHTML(g){
   let h='';
   g.items.forEach(function(it){
-    const timeStrs=(it.times||[]).map((t,idx)=>(idx+1)+'回目:'+t+'秒').join(' / ');
+    const tryDetails = (it.times||[]).map(function(t, idx){
+      const a = (it.answers && it.answers[idx] != null) ? it.answers[idx] : '';
+      return (idx+1) + '回目: ' + a + ' (' + t + '秒)';
+    }).join(' / ');
+
     h+='<div class="'+(it.ok?'':'ng')+'">'+(it.ok?'○':'✕')+' '+it.q.replace(/<sup>2<\/sup>/g,'²')
       +' ＝ '+(it.user||'―').replace('+','＋').replace('-','－')
       +(it.ok?'':' （正解＝'+it.ans.replace('+','＋').replace('-','－')+'）')
-      +' <span class="time-meta">['+it.tries+'回目'+(timeStrs?' : '+timeStrs:'')+']</span>'
+      +' <span class="time-meta">['+it.tries+'回目'+(tryDetails?' : '+tryDetails:'')+']</span>'
       +'</div>';
   });
   return h;
@@ -860,12 +872,21 @@ $("csvBtn").addEventListener("click",function(){
   const p=curPerson();
   const logs=DB.logs.filter(function(g){return p&&g.pid===p.id;});
   if(!p||!logs.length){ alert("書き出す記録が ありません。"); return; }
-  const rows=[["名前","日時","種類","点数","時間(秒)","問題","解答","正誤","回数","1回目(秒)","2回目(秒)","3回目(秒)"]];
+
+  const rows=[[
+    "名前","日時","種類","点数","時間(秒)","問題","解答","正誤","回数",
+    "1回目(解答)","1回目(秒)","2回目(解答)","2回目(秒)","3回目(解答)","3回目(秒)"
+  ]];
+
   logs.forEach(function(g){
     g.items.forEach(function(it){
+      const a1 = (it.answers && it.answers[0] != null) ? it.answers[0] : "";
       const t1 = (it.times && it.times[0] != null) ? it.times[0] : "";
+      const a2 = (it.answers && it.answers[1] != null) ? it.answers[1] : "";
       const t2 = (it.times && it.times[1] != null) ? it.times[1] : "";
+      const a3 = (it.answers && it.answers[2] != null) ? it.answers[2] : "";
       const t3 = (it.times && it.times[2] != null) ? it.times[2] : "";
+
       rows.push([
         personLabel(p),
         new Date(g.at).toLocaleString("ja-JP"),
@@ -876,12 +897,13 @@ $("csvBtn").addEventListener("click",function(){
         it.user,
         it.ok?"○":"×",
         it.tries,
-        t1,
-        t2,
-        t3
+        a1, t1,
+        a2, t2,
+        a3, t3
       ]);
     });
   });
+
   const csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(",");}).join("\r\n");
   const blob=new Blob([new Uint8Array([0xEF,0xBB,0xBF]),csv],{type:"text/csv"});
   const a=document.createElement("a");
@@ -889,6 +911,7 @@ $("csvBtn").addEventListener("click",function(){
   a.download="学習記録_"+p.nen+p.kumi+p.ban+".csv";
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
 });
+
 $("clearBtn").addEventListener("click",function(){
   const p=curPerson(); if(!p){ alert("学習者が えらばれていません。"); return; }
   if(!confirm(personLabel(p)+" の 記録を すべて 消しますか？")) return;
@@ -898,11 +921,10 @@ $("dataBackBtn").addEventListener("click",function(){ beep("tap"); show("main");
 $("whoBadge").addEventListener("click",function(){ beep("tap"); openData(); });
 
 /* =========================================================
-   学習履歴の匿名送信（Google Drive自動連携）
+   学習履歴の匿名送信（Google Apps Script連携）
    ========================================================= */
-// ★ Google Apps Script でウェブアプリとしてデプロイしたURLをここに貼り付けてください
 const GAS_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbzufJVdZcGVYkyoTrJ-_ozIOUgJ_3KvrYWqBEfk_lpFmUKwvFx_S7yitAs14qZ-34Gr/exec";
-const UNIT_TITLE = "正の数・負の数"; // 単元名
+const UNIT_TITLE = "正の数・負の数";
 
 const submitModal = $("submitModal");
 const submitStatus = $("submitStatus");
@@ -935,13 +957,21 @@ $("doSubmitBtn").addEventListener("click", async function(){
     return;
   }
 
-  // 個人名・学年・組・番号は完全に除外したデータのみをCSVに構成
-  const rows = [["単元名","日時","種類","点数","時間(秒)","問題","解答","正誤","回数","1回目(秒)","2回目(秒)","3回目(秒)"]];
+  // 個人名・学年・組・番号は完全に除外。各回の解答と秒数をペアで送信
+  const rows = [[
+    "単元名","日時","種類","点数","時間(秒)","問題","解答","正誤","回数",
+    "1回目(解答)","1回目(秒)","2回目(解答)","2回目(秒)","3回目(解答)","3回目(秒)"
+  ]];
+
   logs.forEach(function(g){
     g.items.forEach(function(it){
+      const a1 = (it.answers && it.answers[0] != null) ? it.answers[0] : "";
       const t1 = (it.times && it.times[0] != null) ? it.times[0] : "";
+      const a2 = (it.answers && it.answers[1] != null) ? it.answers[1] : "";
       const t2 = (it.times && it.times[1] != null) ? it.times[1] : "";
+      const a3 = (it.answers && it.answers[2] != null) ? it.answers[2] : "";
       const t3 = (it.times && it.times[2] != null) ? it.times[2] : "";
+
       rows.push([
         UNIT_TITLE,
         new Date(g.at).toLocaleString("ja-JP"),
@@ -952,14 +982,13 @@ $("doSubmitBtn").addEventListener("click", async function(){
         it.user,
         it.ok ? "○" : "×",
         it.tries,
-        t1,
-        t2,
-        t3
+        a1, t1,
+        a2, t2,
+        a3, t3
       ]);
     });
   });
 
-  // Excelでダブルクリックして開いた際の文字化けを防ぐため、先頭にBOM(\uFEFF)を付与
   const csvText = "\uFEFF" + rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(",")).join("\r\n");
 
   $("doSubmitBtn").disabled = true;
@@ -1074,7 +1103,7 @@ function startRound(cat,sub){
       guard++;
     }while(seen[p.q]&&guard<60);
     seen[p.q]=1;
-    list.push({p:p,tries:0,correct:false,user:"",times:[]});
+    list.push({p:p,tries:0,correct:false,user:"",times:[],answers:[]});
   }
   const chip = cat===7 ? '総合計算練習'
     : CATS[cat].name + (sub===-1?'／ランダム':' '+CATS[cat].sub[sub].t);
@@ -1146,7 +1175,10 @@ function submit(){
   
   const spentSec = Math.max(0.1, Math.round(((Date.now() - (it.qStartTime || Date.now())) / 1000) * 10) / 10);
   if(!it.times) it.times = [];
+  if(!it.answers) it.answers = [];
+
   it.times.push(spentSec);
+  it.answers.push(ansStr(u)); // 入力された解答を蓄積
 
   it.tries++;
   if(u===c){
