@@ -310,7 +310,6 @@
   <header class="bar">
     <div class="logo" id="appLogo"><span class="pin">📐</span><b>数学ドリル</b></div>
     <div class="who">
-      <button class="badge" id="whoBadge" title="学習者の切りかえ">学習者なし</button>
       <button class="icon-btn" id="soundBtn" title="おと">🔊</button>
     </div>
   </header>
@@ -344,7 +343,6 @@
     <div class="menu-head"><h2 id="gradeHead">1年生の単元</h2><p>クリックして選択</p></div>
     <div class="mlist" id="mainList"></div>
     <div class="foot" style="margin-top:20px;">
-      <button id="mainDataBtn" class="sbtn">📊 学習者反応データ処理</button>
       <button id="mainAboutBtn" class="sbtn">ℹ️ このアプリについて</button>
       <a id="mainEnqueteBtn" class="sbtn youbo" href="https://forms.gle/f3zVUSiP8LqeNbvj9" target="_blank" rel="noopener">📋 アンケート</a>
       <a id="mainYouboBtn" class="sbtn youbo" href="https://forms.gle/4Xn2iEos2LuAUATo9" target="_blank" rel="noopener">📝 要望など</a>
@@ -478,7 +476,11 @@ const screens = {
 };
 
 function show(n) {
-  for (const k in screens) screens[k].classList.toggle("active", k === n);
+  for (const k in screens) {
+    if (screens[k]) {
+      screens[k].classList.toggle("active", k === n);
+    }
+  }
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -615,22 +617,22 @@ function generateProblem(type) {
   // 1年生: 正負の数
   if (type === "1-1-1") {
     const a = rnd(-9, 9), b = rnd(-9, 9);
-    q = (a < 0 ? `(${a})` : `${a}`) + " ＋ " + (b < 0 ? `(${b})` : `${b}`) + " ＝";
+    q = (a < 0 ? "(" + a + ")" : a) + " ＋ " + (b < 0 ? "(" + b + ")" : b) + " ＝";
     ans = String(a + b);
   }
   else if (type === "1-1-2") {
     const a = rnd(-9, 9), b = rnd(-9, 9);
-    q = (a < 0 ? `(${a})` : `${a}`) + " － " + (b < 0 ? `(${b})` : `${b}`) + " ＝";
+    q = (a < 0 ? "(" + a + ")" : a) + " － " + (b < 0 ? "(" + b + ")" : b) + " ＝";
     ans = String(a - b);
   }
   else if (type === "1-1-3") {
     const a = rnd(-9, 9) || 1, b = rnd(-9, 9) || 1;
     if (rnd(1, 2) === 1) {
-      q = (a < 0 ? `(${a})` : `${a}`) + " × " + (b < 0 ? `(${b})` : `${b}`) + " ＝";
+      q = (a < 0 ? "(" + a + ")" : a) + " × " + (b < 0 ? "(" + b + ")" : b) + " ＝";
       ans = String(a * b);
     } else {
       const prod = a * b;
-      q = (prod < 0 ? `(${prod})` : `${prod}`) + " ÷ " + (b < 0 ? `(${b})` : `${b}`) + " ＝";
+      q = (prod < 0 ? "(" + prod + ")" : prod) + " ÷ " + (b < 0 ? "(" + b + ")" : b) + " ＝";
       ans = String(a);
     }
   }
@@ -638,16 +640,18 @@ function generateProblem(type) {
   else if (type === "1-2-1") {
     const a = rnd(-8, 8) || 1, b = rnd(-8, 8) || 1;
     const sum = a + b;
-    q = `${a === 1 ? '' : a === -1 ? '－' : a}χ ＋ ${b === 1 ? '' : b === -1 ? '－' : b}χ ＝`;
+    const aPart = (a === 1 ? "" : a === -1 ? "－" : a) + "χ";
+    const bPart = (b === 1 ? "" : b === -1 ? "－" : b) + "χ";
+    q = aPart + " ＋ " + bPart + " ＝";
     ans = sum === 0 ? "0" : (sum === 1 ? "" : sum === -1 ? "－" : String(sum)) + "χ";
   }
   else if (type === "1-2-3") {
     const k = rnd(2, 5), a = rnd(1, 5), b = rnd(-8, 8) || 1;
-    const bStr = b > 0 ? `＋ ${b}` : `－ ${Math.abs(b)}`;
-    q = `${k}(${a === 1 ? '' : a}χ ${bStr}) ＝`;
+    const bStr = b > 0 ? ("＋ " + b) : ("－ " + Math.abs(b));
+    q = k + "(" + (a === 1 ? "" : a) + "χ " + bStr + ") ＝";
     const ka = k * a, kb = k * b;
-    const kbStr = kb > 0 ? `＋${kb}` : `－${Math.abs(kb)}`;
-    ans = `${ka === 1 ? '' : ka}χ${kbStr}`;
+    const kbStr = kb > 0 ? ("＋" + kb) : ("－" + Math.abs(kb));
+    ans = (ka === 1 ? "" : ka) + "χ" + kbStr;
   }
   // 1年生: 方程式
   else if (type === "1-3-1" || type === "1-3-2") {
@@ -655,12 +659,12 @@ function generateProblem(type) {
     if (type === "1-3-1") {
       const a = rnd(-9, 9);
       const b = x + a;
-      q = `χ ${a >= 0 ? '＋ ' + a : '－ ' + Math.abs(a)} ＝ ${b} のとき、χ ＝`;
+      q = "χ " + (a >= 0 ? "＋ " + a : "－ " + Math.abs(a)) + " ＝ " + b + " のとき、χ ＝";
       ans = String(x);
     } else {
       const a = rnd(2, 6) * (rnd(1, 2) === 1 ? 1 : -1);
       const b = a * x;
-      q = `${a}χ ＝ ${b} のとき、χ ＝`;
+      q = a + "χ ＝ " + b + " のとき、χ ＝";
       ans = String(x);
     }
   }
@@ -668,22 +672,21 @@ function generateProblem(type) {
   else if (type === "3-1-2") {
     const a = rnd(-8, 8) || 1, b = rnd(-8, 8) || 1;
     const sum = a + b, prod = a * b;
-    const aS = a > 0 ? `＋${a}` : `－${Math.abs(a)}`;
-    const bS = b > 0 ? `＋${b}` : `－${Math.abs(b)}`;
-    q = `(χ${aS})(χ${bS}) ＝`;
-    const mid = sum === 0 ? "" : (sum > 0 ? `＋${sum === 1 ? '' : sum}χ` : `－${Math.abs(sum) === 1 ? '' : Math.abs(sum)}χ`);
-    const pS = prod > 0 ? `＋${prod}` : `－${Math.abs(prod)}`;
-    ans = `χ2${mid}${pS}`;
+    const aS = a > 0 ? ("＋" + a) : ("－" + Math.abs(a));
+    const bS = b > 0 ? ("＋" + b) : ("－" + Math.abs(b));
+    q = "(χ" + aS + ")(χ" + bS + ") ＝";
+    const mid = sum === 0 ? "" : (sum > 0 ? ("＋" + (sum === 1 ? "" : sum) + "χ") : ("－" + (Math.abs(sum) === 1 ? "" : Math.abs(sum)) + "χ"));
+    const pS = prod > 0 ? ("＋" + prod) : ("－" + Math.abs(prod));
+    ans = "χ2" + mid + pS;
   }
   else if (type === "3-3-1") {
     const a = rnd(1, 9);
-    q = `χ<sup>2</sup> ＝ ${a * a} のとき、χ ＝`;
-    ans = `±${a}`;
+    q = "χ<sup>2</sup> ＝ " + (a * a) + " のとき、χ ＝";
+    ans = "±" + a;
   }
   else {
-    // デフォルトフォールバック
     const a = rnd(1, 9), b = rnd(1, 9);
-    q = `${a} ＋ ${b} ＝`;
+    q = a + " ＋ " + b + " ＝";
     ans = String(a + b);
   }
 
@@ -708,16 +711,22 @@ function curPerson() {
 }
 function personLabel(p) {
   if (!p) return "学習者なし";
-  return `${p.nen}年${p.kumi}組${p.ban}番 ${p.name || ''}`.trim();
+  return (p.nen + "年" + p.kumi + "組" + p.ban + "番 " + (p.name || "")).trim();
 }
-function updateWhoBadge() { $("whoBadge").textContent = personLabel(curPerson()); }
+function updateWhoBadge() {
+  const el = $("whoBadge");
+  if (el) el.textContent = personLabel(curPerson());
+}
 
 /* サウンド機能 */
 let soundOn = true, actx = null;
 function beep(type) {
   if (!soundOn) return;
   try {
-    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    if (!actx) actx = new AudioContextClass();
+    if (actx.state === "suspended") actx.resume();
     const now = actx.currentTime;
     const pl = (f, s, d, v) => {
       const o = actx.createOscillator(), g = actx.createGain();
@@ -739,8 +748,11 @@ function beep(type) {
 /* メインメニュー & タブ生成 */
 let curGrade = 1;
 function buildMain() {
-  $("gradeHead").textContent = `${curGrade}年生の単元`;
-  const l = $("mainList"); l.innerHTML = "";
+  const gh = $("gradeHead");
+  if (gh) gh.textContent = curGrade + "年生の単元";
+  const l = $("mainList");
+  if (!l) return;
+  l.innerHTML = "";
   const list = DRILL_CURRICULUM[curGrade] || [];
   
   list.forEach((item, idx) => {
@@ -749,12 +761,12 @@ function buildMain() {
       el = document.createElement("a");
       el.className = "mcard";
       el.href = item.link;
-      el.innerHTML = `<span class="n">${idx + 1}</span><span class="lbl">${item.title}</span>`;
+      el.innerHTML = '<span class="n">' + (idx + 1) + '</span><span class="lbl">' + item.title + '</span>';
       el.addEventListener("click", () => { beep("tap"); });
     } else {
       el = document.createElement("button");
       el.className = "mcard";
-      el.innerHTML = `<span class="n">${idx + 1}</span><span class="lbl">${item.title}<span class="sm">問題数: 5問</span></span>`;
+      el.innerHTML = '<span class="n">' + (idx + 1) + '</span><span class="lbl">' + item.title + '<span class="sm">問題数: 5問</span></span>';
       el.addEventListener("click", () => { beep("tap"); openSub(item); });
     }
     l.appendChild(el);
@@ -775,13 +787,16 @@ document.querySelectorAll(".gtab").forEach(tab => {
 let curUnit = null;
 function openSub(unit) {
   curUnit = unit;
-  $("subTitle").textContent = unit.title;
-  const l = $("subList"); l.innerHTML = "";
+  const st = $("subTitle");
+  if (st) st.textContent = unit.title;
+  const l = $("subList");
+  if (!l) return;
+  l.innerHTML = "";
   
   unit.sub.forEach((s, si) => {
     const b = document.createElement("button");
     b.className = "mcard" + (s.name.includes("ランダム") ? " rand" : "");
-    b.innerHTML = `<span class="n">${si + 1}</span><span class="lbl"><span class="ex">${s.name}</span></span>`;
+    b.innerHTML = '<span class="n">' + (si + 1) + '</span><span class="lbl"><span class="ex">' + s.name + '</span></span>';
     b.addEventListener("click", () => { beep("tap"); startRound(s.type, s.name); });
     l.appendChild(b);
   });
@@ -799,18 +814,26 @@ function startRound(type, kindName) {
     const p = generateProblem(type);
     S.list.push({ p: p, tries: 0, correct: false, user: "" });
   }
-  $("modeChip").textContent = kindName;
-  buildDots(); show("play"); startTimer(); render();
+  const mc = $("modeChip");
+  if (mc) mc.textContent = kindName;
+  buildDots();
+  show("play");
+  startTimer();
+  render();
 }
 
 function buildDots() {
-  const d = $("dots"); d.innerHTML = "";
+  const d = $("dots");
+  if (!d) return;
+  d.innerHTML = "";
   for (let i = 0; i < PRMSU; i++) {
     const s = document.createElement("span"); s.className = "dot"; d.appendChild(s);
   }
 }
 function updateDots() {
-  const ch = $("dots").children;
+  const dt = $("dots");
+  if (!dt) return;
+  const ch = dt.children;
   for (let i = 0; i < ch.length; i++) {
     const el = ch[i], it = S.list[i]; el.className = "dot";
     if (i < S.cur) { el.classList.add(it.correct ? "ok" : "ng"); el.textContent = it.correct ? "○" : "✕"; }
@@ -822,12 +845,13 @@ function updateDots() {
 function render() {
   const it = S.list[S.cur];
   S.input = ""; S.locked = false;
-  $("msg").textContent = ""; $("msg").className = "msg";
-  $("reveal").classList.remove("show"); $("reveal").innerHTML = "";
-  $("stamp").innerHTML = "";
-
-  $("equation").innerHTML = it.p.q + '<span class="ansbox blink" id="ans"></span>';
-  updateDots(); updateBox();
+  const msg = $("msg"), rev = $("reveal"), stm = $("stamp"), eq = $("equation");
+  if (msg) { msg.textContent = ""; msg.className = "msg"; }
+  if (rev) { rev.classList.remove("show"); rev.innerHTML = ""; }
+  if (stm) stm.innerHTML = "";
+  if (eq) eq.innerHTML = it.p.q + '<span class="ansbox blink" id="ans"></span>';
+  updateDots();
+  updateBox();
 }
 
 function updateBox() {
@@ -860,13 +884,17 @@ function pressKey(k) {
   S.input += k; beep("type"); updateBox();
 }
 
-$("keypad").addEventListener("click", e => {
-  const b = e.target.closest(".key"); if (b && !b.disabled) pressKey(b.dataset.k);
-});
-$("enterBtn").addEventListener("click", () => pressKey("enter"));
+const kp = $("keypad");
+if (kp) {
+  kp.addEventListener("click", e => {
+    const b = e.target.closest(".key"); if (b && !b.disabled) pressKey(b.dataset.k);
+  });
+}
+const eb = $("enterBtn");
+if (eb) eb.addEventListener("click", () => pressKey("enter"));
 
 document.addEventListener("keydown", e => {
-  if (screens.play.classList.contains("active")) {
+  if (screens.play && screens.play.classList.contains("active")) {
     if (e.key >= "0" && e.key <= "9") { pressKey(e.key); e.preventDefault(); }
     else if (e.key === "+") { pressKey("+"); e.preventDefault(); }
     else if (e.key === "-") { pressKey("-"); e.preventDefault(); }
@@ -889,19 +917,30 @@ function submit() {
   if (normUser === normAns) {
     S.locked = true; it.correct = true; it.user = S.input;
     stamp("maru"); beep("correct");
-    $("msg").textContent = "正解！"; $("msg").className = "msg good";
+    const msg = $("msg");
+    if (msg) { msg.textContent = "正解！"; msg.className = "msg good"; }
     setTimeout(next, 1100);
   } else {
     stamp("batsu"); beep("wrong");
     const last = it.tries >= MISSN;
-    $("msg").textContent = "間違っていますよ！"; $("msg").className = "msg bad";
+    const msg = $("msg");
+    if (msg) { msg.textContent = "間違っていますよ！"; msg.className = "msg bad"; }
     if (last) {
       S.locked = true; it.correct = false; it.user = S.input;
-      $("reveal").innerHTML = '正解＝<b>' + c.replace(/χ/g, '<i>χ</i>') + '</b>';
-      $("reveal").classList.add("show");
+      const rev = $("reveal");
+      if (rev) {
+        rev.innerHTML = '正解＝<b>' + c.replace(/χ/g, '<i>χ</i>') + '</b>';
+        rev.classList.add("show");
+      }
       setTimeout(next, 2200);
     } else {
-      setTimeout(() => { $("stamp").innerHTML = ""; $("msg").textContent = ""; S.input = ""; updateBox(); }, 1200);
+      setTimeout(() => {
+        const stm = $("stamp"), m = $("msg");
+        if (stm) stm.innerHTML = "";
+        if (m) m.textContent = "";
+        S.input = "";
+        updateBox();
+      }, 1200);
     }
   }
 }
@@ -912,6 +951,7 @@ function next() {
 
 function stamp(t) {
   const el = $("stamp");
+  if (!el) return;
   if (t === "maru") {
     el.className = "stamp maru";
     el.innerHTML = '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="#EA5040" stroke-width="9"/><circle cx="50" cy="50" r="27" fill="none" stroke="#EA5040" stroke-width="7"/></svg>';
@@ -924,11 +964,12 @@ function stamp(t) {
 function startTimer() {
   clearInterval(timerId);
   timerId = setInterval(() => {
-    $("timerText").textContent = fmtTime(Math.floor((Date.now() - S.t0) / 1000));
+    const tt = $("timerText");
+    if (tt) tt.textContent = fmtTime(Math.floor((Date.now() - S.t0) / 1000));
   }, 500);
 }
 function fmtTime(s) {
-  const m = Math.floor(s / 60); return m === 0 ? s + "秒" : m + "分" + (s % 60) + "秒";
+  const m = Math.floor(s / 60); return m === 0 ? (s + "秒") : (m + "分" + (s % 60) + "秒");
 }
 
 function finish() {
@@ -938,23 +979,37 @@ function finish() {
   const sec = Math.floor((Date.now() - S.t0) / 1000);
   saveLog(ten, sec);
 
-  $("scoreNum").textContent = ten;
+  const sn = $("scoreNum");
+  if (sn) sn.textContent = ten;
   const w = $("hanamaruWrap"), m = $("resultMsg");
-  if (ten === 100) { m.textContent = "よくできました！"; m.style.color = "var(--red)"; w.innerHTML = hanamaru(); beep("fanfare"); }
-  else if (ten >= 80) { m.textContent = "あともうすこし！"; m.style.color = "var(--yellow-deep)"; w.innerHTML = star(); beep("correct"); }
-  else { m.textContent = "もっとがんばろう！"; m.style.color = "var(--green)"; w.innerHTML = face(); }
+  if (ten === 100) {
+    if (m) { m.textContent = "よくできました！"; m.style.color = "var(--red)"; }
+    if (w) w.innerHTML = hanamaru();
+    beep("fanfare");
+  } else if (ten >= 80) {
+    if (m) { m.textContent = "あともうすこし！"; m.style.color = "var(--yellow-deep)"; }
+    if (w) w.innerHTML = star();
+    beep("correct");
+  } else {
+    if (m) { m.textContent = "もっとがんばろう！"; m.style.color = "var(--green)"; }
+    if (w) w.innerHTML = face();
+  }
 
   const p0 = curPerson();
-  $("resultTime").textContent = "所要時間: " + fmtTime(sec) + (p0 ? (` (${personLabel(p0)})`) : "");
+  const rt = $("resultTime");
+  if (rt) rt.textContent = "所要時間: " + fmtTime(sec);
 
-  const rv = $("review"); rv.innerHTML = "";
-  S.list.forEach(it => {
-    const row = document.createElement("div"); row.className = "review-row";
-    row.innerHTML = `<span class="rmark ${it.correct ? "ok" : "ng"}">${it.correct ? "○" : "✕"}</span>`
-      + `<span class="rq">${it.p.q}</span>`
-      + `<span>${it.correct ? `<span class="rc">${it.p.ans}</span>` : `<span class="ra wrong">${it.user || "―"}</span><span class="rc">${it.p.ans}</span>`}</span>`;
-    rv.appendChild(row);
-  });
+  const rv = $("review");
+  if (rv) {
+    rv.innerHTML = "";
+    S.list.forEach(it => {
+      const row = document.createElement("div"); row.className = "review-row";
+      row.innerHTML = '<span class="rmark ' + (it.correct ? "ok" : "ng") + '">' + (it.correct ? "○" : "✕") + '</span>'
+        + '<span class="rq">' + it.p.q + '</span>'
+        + '<span>' + (it.correct ? ('<span class="rc">' + it.p.ans + '</span>') : ('<span class="ra wrong">' + (it.user || "―") + '</span><span class="rc">' + it.p.ans + '</span>')) + '</span>';
+      rv.appendChild(row);
+    });
+  }
   show("result");
 }
 
@@ -976,9 +1031,9 @@ function hanamaru() {
   let p = "";
   for (let i = 0; i < 8; i++) {
     const a = i / 8 * Math.PI * 2;
-    p += `<circle cx="${(60 + 30 * Math.cos(a)).toFixed(1)}" cy="${(60 + 30 * Math.sin(a)).toFixed(1)}" r="17" fill="#F6B93B"/>`;
+    p += '<circle cx="' + (60 + 30 * Math.cos(a)).toFixed(1) + '" cy="' + (60 + 30 * Math.sin(a)).toFixed(1) + '" r="17" fill="#F6B93B"/>';
   }
-  return `<svg width="115" height="115" viewBox="0 0 120 120">${p}<circle cx="60" cy="60" r="30" fill="#FDE9BE"/><circle cx="60" cy="60" r="24" fill="none" stroke="#EA5040" stroke-width="6"/><circle cx="60" cy="60" r="15" fill="none" stroke="#EA5040" stroke-width="5"/></svg>`;
+  return '<svg width="115" height="115" viewBox="0 0 120 120">' + p + '<circle cx="60" cy="60" r="30" fill="#FDE9BE"/><circle cx="60" cy="60" r="24" fill="none" stroke="#EA5040" stroke-width="6"/><circle cx="60" cy="60" r="15" fill="none" stroke="#EA5040" stroke-width="5"/></svg>';
 }
 function star() {
   let pts = "";
@@ -986,10 +1041,10 @@ function star() {
     const r = i % 2 === 0 ? 42 : 18, a = (-90 + i * 36) * Math.PI / 180;
     pts += (60 + r * Math.cos(a)).toFixed(1) + "," + (60 + r * Math.sin(a)).toFixed(1) + " ";
   }
-  return `<svg width="115" height="115" viewBox="0 0 120 120"><polygon points="${pts}" fill="#F6B93B" stroke="#D89A2C" stroke-width="4" stroke-linejoin="round"/></svg>`;
+  return '<svg width="115" height="115" viewBox="0 0 120 120"><polygon points="' + pts + '" fill="#F6B93B" stroke="#D89A2C" stroke-width="4" stroke-linejoin="round"/></svg>';
 }
 function face() {
-  return `<svg width="115" height="115" viewBox="0 0 120 120"><circle cx="60" cy="60" r="42" fill="#EAF6F0" stroke="#34B37A" stroke-width="5"/><circle cx="46" cy="52" r="5" fill="#34B37A"/><circle cx="74" cy="52" r="5" fill="#34B37A"/><path d="M42 74 Q60 90 78 74" fill="none" stroke="#34B37A" stroke-width="5" stroke-linecap="round"/></svg>`;
+  return '<svg width="115" height="115" viewBox="0 0 120 120"><circle cx="60" cy="60" r="42" fill="#EAF6F0" stroke="#34B37A" stroke-width="5"/><circle cx="46" cy="52" r="5" fill="#34B37A"/><circle cx="74" cy="52" r="5" fill="#34B37A"/><path d="M42 74 Q60 90 78 74" fill="none" stroke="#34B37A" stroke-width="5" stroke-linecap="round"/></svg>';
 }
 
 /* 成績・学習者画面 */
@@ -998,55 +1053,65 @@ function renderData() {
   renderWhoList();
   const p = curPerson();
   const logs = DB.logs.filter(g => p && g.pid === p.id);
-  $("stCount").textContent = logs.length;
+  const sc = $("stCount");
+  if (sc) sc.textContent = logs.length;
 
+  const sa = $("stAvg"), sb = $("stBest");
   if (logs.length) {
     let sum = 0, best = 0;
     logs.forEach(g => { sum += g.ten; if (g.ten > best) best = g.ten; });
-    $("stAvg").textContent = Math.round(sum / logs.length) + "点";
-    $("stBest").textContent = best + "点";
+    if (sa) sa.textContent = Math.round(sum / logs.length) + "点";
+    if (sb) sb.textContent = best + "点";
   } else {
-    $("stAvg").textContent = "—"; $("stBest").textContent = "—";
+    if (sa) sa.textContent = "—";
+    if (sb) sb.textContent = "—";
   }
 
-  const sp = $("spark"); sp.innerHTML = "";
-  if (!logs.length) sp.innerHTML = '<div class="empty" style="width:100%">記録がまだありません</div>';
-  else logs.slice(-24).forEach(g => {
-    const b = document.createElement("div");
-    b.className = "b" + (g.ten === 100 ? " s100" : (g.ten >= 80 ? " s80" : ""));
-    b.style.height = Math.max(6, g.ten * 0.6) + "px";
-    b.title = `${g.kind} ${g.ten}点`;
-    sp.appendChild(b);
-  });
+  const sp = $("spark");
+  if (sp) {
+    sp.innerHTML = "";
+    if (!logs.length) sp.innerHTML = '<div class="empty" style="width:100%">記録がまだありません</div>';
+    else logs.slice(-24).forEach(g => {
+      const b = document.createElement("div");
+      b.className = "b" + (g.ten === 100 ? " s100" : (g.ten >= 80 ? " s80" : ""));
+      b.style.height = Math.max(6, g.ten * 0.6) + "px";
+      b.title = g.kind + " " + g.ten + "点";
+      sp.appendChild(b);
+    });
+  }
 
   const hs = $("history");
-  if (!logs.length) hs.innerHTML = '<div class="empty">記録がまだありません</div>';
-  else {
-    let h = '<table class="rec"><tr><th>日時</th><th>コース</th><th style="text-align:right">点数</th><th style="text-align:right">時間</th></tr>';
-    logs.slice().reverse().slice(0, 30).forEach(g => {
-      const cls = g.ten === 100 ? "sp100" : (g.ten >= 80 ? "sp80" : "sp0");
-      const d = new Date(g.at);
-      const dt = `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${("0" + d.getMinutes()).slice(-2)}`;
-      h += `<tr><td>${dt}</td><td>${g.kind}</td><td class="n"><span class="scorepill ${cls}">${g.ten}点</span></td><td class="n">${fmtTime(g.sec)}</td></tr>`;
-    });
-    hs.innerHTML = h + '</table>';
+  if (hs) {
+    if (!logs.length) hs.innerHTML = '<div class="empty">記録がまだありません</div>';
+    else {
+      let h = '<table class="rec"><tr><th>日時</th><th>コース</th><th style="text-align:right">点数</th><th style="text-align:right">時間</th></tr>';
+      logs.slice().reverse().slice(0, 30).forEach(g => {
+        const cls = g.ten === 100 ? "sp100" : (g.ten >= 80 ? "sp80" : "sp0");
+        const d = new Date(g.at);
+        const dt = (d.getMonth() + 1) + "/" + d.getDate() + " " + d.getHours() + ":" + ("0" + d.getMinutes()).slice(-2);
+        h += '<tr><td>' + dt + '</td><td>' + g.kind + '</td><td class="n"><span class="scorepill ' + cls + '">' + g.ten + '点</span></td><td class="n">' + fmtTime(g.sec) + '</td></tr>';
+      });
+      hs.innerHTML = h + '</table>';
+    }
   }
 }
 
 function renderWhoList() {
-  const l = $("whoList"); l.innerHTML = "";
+  const l = $("whoList");
+  if (!l) return;
+  l.innerHTML = "";
   if (!DB.people.length) { l.innerHTML = '<div class="empty">学習者を登録すると個人別に記録を保存できます</div>'; return; }
   DB.people.forEach(p => {
     const d = document.createElement("div");
     d.className = "who-item" + (p.id === DB.cur ? " on" : "");
     const n = DB.logs.filter(g => g.pid === p.id).length;
-    d.innerHTML = `<span class="nm">${personLabel(p)} <span class="sm2">(${n}回練習)</span></span>`;
+    d.innerHTML = '<span class="nm">' + personLabel(p) + ' <span class="sm2">(' + n + '回練習)</span></span>';
     const b1 = document.createElement("button"); b1.className = "mini";
     b1.textContent = p.id === DB.cur ? "選択中" : "選択";
     b1.addEventListener("click", () => { DB.cur = p.id; dbSave(); updateWhoBadge(); renderData(); });
     const b2 = document.createElement("button"); b2.className = "mini red"; b2.textContent = "削除";
     b2.addEventListener("click", () => {
-      if (!confirm(`${personLabel(p)} を削除しますか？`)) return;
+      if (!confirm(personLabel(p) + " を削除しますか？")) return;
       DB.people = DB.people.filter(x => x.id !== p.id);
       DB.logs = DB.logs.filter(g => g.pid !== p.id);
       if (DB.cur === p.id) DB.cur = DB.people.length ? DB.people[0].id : null;
@@ -1057,53 +1122,64 @@ function renderWhoList() {
 }
 
 function pad2(s) { s = String(s).replace(/[^0-9]/g, ""); return s.length ? ("0" + s).slice(-2) : "00"; }
-$("addWhoBtn").addEventListener("click", () => {
-  const nen = (String($("fNen").value).replace(/[^0-9]/g, "") || "1").slice(0, 1);
-  const kumi = pad2($("fKumi").value), ban = pad2($("fBan").value), name = $("fName").value.trim();
-  const id = nen + kumi + ban + "-" + Date.now().toString(36);
-  DB.people.push({ id: id, nen: nen, kumi: kumi, ban: ban, name: name });
-  DB.cur = id; dbSave();
-  $("fNen").value = ""; $("fKumi").value = ""; $("fBan").value = ""; $("fName").value = "";
-  updateWhoBadge(); renderData(); beep("tap");
-});
 
-$("csvBtn").addEventListener("click", () => {
-  const p = curPerson();
-  const logs = DB.logs.filter(g => p && g.pid === p.id);
-  if (!p || !logs.length) { alert("出力できる記録がありません。"); return; }
-  const rows = [["学年", "組", "番号", "氏名", "日時", "コース", "点数", "時間(秒)"]];
-  logs.forEach(g => {
-    rows.push([p.nen, p.kumi, p.ban, p.name, new Date(g.at).toLocaleString("ja-JP"), g.kind, g.ten, g.sec]);
+const awBtn = $("addWhoBtn");
+if (awBtn) {
+  awBtn.addEventListener("click", () => {
+    const nen = (String($("fNen").value).replace(/[^0-9]/g, "") || "1").slice(0, 1);
+    const kumi = pad2($("fKumi").value), ban = pad2($("fBan").value), name = $("fName").value.trim();
+    const id = nen + kumi + ban + "-" + Date.now().toString(36);
+    DB.people.push({ id: id, nen: nen, kumi: kumi, ban: ban, name: name });
+    DB.cur = id; dbSave();
+    $("fNen").value = ""; $("fKumi").value = ""; $("fBan").value = ""; $("fName").value = "";
+    updateWhoBadge(); renderData(); beep("tap");
   });
-  const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(",")).join("\r\n");
-  const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: "text/csv" });
-  const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
-  a.download = `数学ドリル_学習記録_${p.nen}${p.kumi}${p.ban}.csv`;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-});
+}
 
-$("clearBtn").addEventListener("click", () => {
-  const p = curPerson(); if (!p) { alert("学習者が選択されていません。"); return; }
-  if (!confirm(`${personLabel(p)} の記録を消去しますか？`)) return;
-  DB.logs = DB.logs.filter(g => g.pid !== p.id); dbSave(); renderData();
-});
+const csvBtn = $("csvBtn");
+if (csvBtn) {
+  csvBtn.addEventListener("click", () => {
+    const p = curPerson();
+    const logs = DB.logs.filter(g => p && g.pid === p.id);
+    if (!p || !logs.length) { alert("出力できる記録がありません。"); return; }
+    const rows = [["学年", "組", "番号", "氏名", "日時", "コース", "点数", "時間(秒)"]];
+    logs.forEach(g => {
+      rows.push([p.nen, p.kumi, p.ban, p.name, new Date(g.at).toLocaleString("ja-JP"), g.kind, g.ten, g.sec]);
+    });
+    const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(",")).join("\r\n");
+    const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: "text/csv" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+    a.download = "数学ドリル_学習記録_" + p.nen + p.kumi + p.ban + ".csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  });
+}
 
-// イベントリスナー
-$("startSplashBtn").addEventListener("click", () => { beep("tap"); show("main"); buildMain(); });
-$("appLogo").addEventListener("click", () => { beep("tap"); show("main"); buildMain(); });
-$("mainDataBtn").addEventListener("click", () => { beep("tap"); openData(); });
-$("mainAboutBtn").addEventListener("click", () => { beep("tap"); show("about"); });
-$("mainEnqueteBtn").addEventListener("click", () => { beep("tap"); }); // アンケート（Googleフォームを別タブで開く）
-$("mainYouboBtn").addEventListener("click", () => { beep("tap"); });   // 要望など（Googleフォームを別タブで開く）
-$("aboutBackBtn").addEventListener("click", () => { beep("tap"); show("main"); });
-$("dataBackBtn").addEventListener("click", () => { beep("tap"); show("main"); });
-$("whoBadge").addEventListener("click", () => { beep("tap"); openData(); });
-$("playBackBtn").addEventListener("click", () => { clearInterval(timerId); if (curUnit) openSub(curUnit); else show("main"); });
-$("toMainBtn").addEventListener("click", () => { beep("tap"); show("main"); });
-$("againBtn").addEventListener("click", () => { beep("tap"); startRound(S.type, S.kindName); });
-$("otherBtn").addEventListener("click", () => { beep("tap"); if (curUnit) openSub(curUnit); else show("main"); });
-$("homeBtn").addEventListener("click", () => { beep("tap"); show("main"); });
-$("soundBtn").addEventListener("click", () => { soundOn = !soundOn; $("soundBtn").textContent = soundOn ? "🔊" : "🔇"; });
+const clrBtn = $("clearBtn");
+if (clrBtn) {
+  clrBtn.addEventListener("click", () => {
+    const p = curPerson(); if (!p) { alert("学習者が選択されていません。"); return; }
+    if (!confirm(personLabel(p) + " の記録を消去しますか？")) return;
+    DB.logs = DB.logs.filter(g => g.pid !== p.id); dbSave(); renderData();
+  });
+}
+
+// イベントリスナーの安全なバインド
+const bind = (id, fn) => { const el = $(id); if (el) el.addEventListener("click", fn); };
+
+bind("startSplashBtn", () => { beep("tap"); show("main"); buildMain(); });
+bind("appLogo", () => { beep("tap"); show("main"); buildMain(); });
+bind("mainAboutBtn", () => { beep("tap"); show("about"); });
+bind("mainEnqueteBtn", () => { beep("tap"); });
+bind("mainYouboBtn", () => { beep("tap"); });
+bind("aboutBackBtn", () => { beep("tap"); show("main"); });
+bind("dataBackBtn", () => { beep("tap"); show("main"); });
+bind("whoBadge", () => { beep("tap"); openData(); });
+bind("playBackBtn", () => { clearInterval(timerId); if (curUnit) openSub(curUnit); else show("main"); });
+bind("toMainBtn", () => { beep("tap"); show("main"); });
+bind("againBtn", () => { beep("tap"); startRound(S.type, S.kindName); });
+bind("otherBtn", () => { beep("tap"); if (curUnit) openSub(curUnit); else show("main"); });
+bind("homeBtn", () => { beep("tap"); show("main"); });
+bind("soundBtn", () => { soundOn = !soundOn; const sb = $("soundBtn"); if (sb) sb.textContent = soundOn ? "🔊" : "🔇"; });
 
 updateWhoBadge();
 </script>
