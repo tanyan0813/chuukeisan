@@ -455,7 +455,7 @@ const X='<i>χ</i>', X2='<i>χ</i><sup>2</sup>';
 function cf(n){ return Math.abs(n)===1?'':String(Math.abs(n)); }        // 係数（1は省く）
 function xd(n){ return (n<0?'－':'')+cf(n)+X; }                          // 先頭のχ項
 function xd2(n){ return (n<0?'－':'')+cf(n)+X2; }
-function opx(n){ return (n<0?'－':'')+cf(n)+X; }                       // 2つ目以降のχ項
+function opx(n){ return (n<0?'－':'＋')+cf(n)+X; }                       // 2つ目以降のχ項
 function opn(n){ return (n<0?'－':'＋')+String(Math.abs(n)); }
 function par(s){ return '（'+s+'）'; }
 
